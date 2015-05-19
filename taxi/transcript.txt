@@ -1,0 +1,48 @@
+
+bin/spark-shell --master yarn-client --num-executors 10 --executor-cores 1 --executor-memory 500M  --packages com.databricks:spark-csv_2.10:1.0.3
+
+import org.apache.spark.sql.SQLContext
+import com.databricks.spark.csv._
+
+val sqlContext = new SQLContext(sc)
+val cars = sqlContext.csvFile("/user/ds/data/kaggle/taxi/train1.csv")
+
+cars.select("TRIP_ID")
+
+cars.groupBy("CALL_TYPE").count().collect()
+-> Array[org.apache.spark.sql.Row] = Array([A,364770], [B,817881], [C,528019])
+
+val features = cars.map(x => tripDataFeatures(x)).take(5).foreach(y => println(y.toSeq))
+
+
+
+
+
+
+val a = data.map(t => ((t._1, t._2), t._3))
+
+
+
+
+
+///
+
+import org.apache.spark.sql.types._
+import org.apache.spark.sql._
+import com.databricks.spark.csv._
+
+
+val newtimes = tdata.map(d => Row(d.id, math.max(d.travelTime, 660)))
+val schema = StructType(Array(StructField("TRIP_ID", StringType, false), StructField("TRAVEL_TIME",IntegerType,false)))
+
+
+val times = sqlContext.createDataFrame(newtimes, schema)
+times.saveAsCsvFile("ss", Map("header"->"true"))
+
+
+//
+val schema = StructType(Array(StructField("SPEED", DoubleType, false), StructField("BEFORE",IntegerType,false), StructField("AFTER",IntegerType,false)))
+
+
+val times = sqlContext.createDataFrame(dirs, schema)
+times.saveAsCsvFile("obv3")
