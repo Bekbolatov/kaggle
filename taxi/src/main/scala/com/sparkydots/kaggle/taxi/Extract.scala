@@ -7,15 +7,28 @@ import org.apache.spark.sql.SQLContext
 
 object Extract extends Serializable {
 
-  def readTripData(
-                    sqlContext: SQLContext,
-                    fileName: String = "test",
-                    header: Boolean = false,
-                    filterOp: (TripData) => Boolean = (t: TripData) => t.travelTime < 3600,
-                    earth: Earth = Earth(Point(41.14, -8.62))
-                    ): (RDD[TripData], RDD[TripData]) = {
+  def info =
+    """
+      |
+      |def read(
+      |          sqlContext: SQLContext,
+      |          fileName: String = "test",
+      |          header: Boolean = false,
+      |          pathPrefix: String = "/user/ds/data",  //s3n://sparkydotsdata   or
+      |          filterOp: (TripData) => Boolean = (t: TripData) => t.travelTime < 3600)
+      |          (implicit earth: Earth = Earth(Point(41.14, -8.62))): (RDD[TripData], RDD[TripData]) = {
+      |
+    """.stripMargin
 
-    val fullFileOption = s"/user/ds/data/kaggle/taxi/$fileName.csv"
+  def read(
+          sqlContext: SQLContext,
+          fileName: String = "test",
+          header: Boolean = false,
+          pathPrefix: String = "/user/ds/data",  //s3n://sparkydotsdata   or
+          filterOp: (TripData) => Boolean = (t: TripData) => t.travelTime < 3600)
+          (implicit earth: Earth = Earth(Point(41.14, -8.62))): (RDD[TripData], RDD[TripData]) = {
+
+    val fullFileOption =  s"${pathPrefix}/kaggle/taxi/$fileName.csv"
     val headerOption = if (header) "true" else "false"
     val options = Map("path" -> fullFileOption, "header" -> headerOption)
 
@@ -26,7 +39,7 @@ object Extract extends Serializable {
     (cleanTripData, tripData)
   }
 
-  case class RawTripData(
+  private case class RawTripData(
                           TRIP_ID: String,
                           CALL_TYPE: String,
                           ORIGIN_CALL: String,
@@ -37,12 +50,12 @@ object Extract extends Serializable {
                           MISSING: String,
                           POLYLINE: String)
 
-  def createTripData(rawTripData: RawTripData, e: Earth): TripData = {
+  private def createTripData(rawTripData: RawTripData, e: Earth): TripData = {
     val rawPathPoints = Earth.parsePoints(rawTripData.POLYLINE, false)
       val pathPoints = e.cleanTaxiPath(rawPathPoints, 15)
       val pathSegments = e.pathPointsToPathSegments(pathPoints)
 
-      Some(TripData(
+      TripData(
         rawTripData.TRIP_ID,
         rawTripData.CALL_TYPE,
         rawTripData.ORIGIN_CALL match {
@@ -60,7 +73,7 @@ object Extract extends Serializable {
         rawPathPoints,
         pathPoints,
         pathSegments,
-        math.max(rawPathPoints.length - 1, 0) * 15))
+        math.max(rawPathPoints.length - 1, 0) * 15)
   }
 
 }

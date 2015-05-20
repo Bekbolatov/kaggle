@@ -3,10 +3,10 @@ package com.sparkydots.util.geo
 import scala.collection.mutable
 
 
-class Earth(p: Point, defaultIntervalSeconds: Int = 15) extends Serializable {
+class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_SEGMENT) extends Serializable {
 
-  val KM_PER_LAT_DEG = math.sin(1/180.0 * math.Pi)
-  val KM_PER_LON_DEG = math.sin(1/180.0 * math.Pi)*math.cos(p.lat/180.0 * math.Pi)
+  val KM_PER_LAT_DEG = math.sin(1 / 180.0 * math.Pi)
+  val KM_PER_LON_DEG = math.sin(1 / 180.0 * math.Pi) * math.cos(p.lat / 180.0 * math.Pi)
 
   /**
    *
@@ -17,7 +17,7 @@ class Earth(p: Point, defaultIntervalSeconds: Int = 15) extends Serializable {
     val (dxx, dyy) = (p.lon * KM_PER_LON_DEG, p.lat * KM_PER_LAT_DEG)
     val _theta = math.atan2(dyy, dxx)
     val theta = if (_theta >= 0) _theta else _theta + 2 * math.Pi
-    (Earth.RADIUS_KM * Math.sqrt(math.pow(dxx, 2) + math.pow(dyy,2)), theta)
+    (Earth.RADIUS_KM * Math.sqrt(math.pow(dxx, 2) + math.pow(dyy, 2)), theta)
   }
 
   /**
@@ -39,7 +39,7 @@ class Earth(p: Point, defaultIntervalSeconds: Int = 15) extends Serializable {
       var pointSets = Seq[mutable.MutableList[Point]]()
       var ps = pts
 
-      while(ps.nonEmpty) {
+      while (ps.nonEmpty) {
         val cur = ps.head
         ps = ps.tail
         var psets = pointSets
@@ -64,17 +64,29 @@ class Earth(p: Point, defaultIntervalSeconds: Int = 15) extends Serializable {
 
   def pathPointsToPathSegments(points: Seq[Point]): Seq[PathSegment] = {
     val numSegmentsAfter = points.length - 2
-    points.sliding(2).filter(_.length == 2).zipWithIndex.map { case (origin +: destination +: Nil, index) =>
-      val (distance, direction) = this.toPolar(destination - origin)
-      PathSegment(origin, destination, distance, direction, index, numSegmentsAfter - index)
+    val (origin, destination) = (points.headOption, points.lastOption)
+    points.sliding(2).filter(_.length == 2).zipWithIndex.map { case (begin +: end +: Nil, index) =>
+      val (distance, direction) = this.toPolar(end - begin)
+      PathSegment(begin, end, distance, direction, index, numSegmentsAfter - index, origin.get, destination.get)
     }.toList
   }
 
-  def isNear(p0: Point, p1: Point, maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED): Boolean = {
+  def isPointNear(p0: Point,
+                  p1: Point,
+                  maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED): Boolean = {
     val dp = p1 - p0
     val (dxx, dyy) = (dp.lon * KM_PER_LON_DEG, dp.lat * KM_PER_LAT_DEG)
     Math.pow(dxx, 2) + Math.pow(dyy, 2) < Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED
   }
+
+  def isSegmentNear(s0: PathSegment,
+                    s1: PathSegment,
+                    maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
+                    maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
+    isPointNear(s0.begin, s1.begin) &&
+      math.abs(s1.direction - s0.direction) < maxDir &&
+      s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds &&
+      s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds
 
 }
 
@@ -84,6 +96,10 @@ object Earth extends Serializable {
   val MAX_TAXI_SPEED_KM_PER_SEC = 200.0 / 60 / 60
   val MAX_HUMAN_SPEED_KM_PER_SEC = 450.0 / 60 / 60
 
+  val DEFAULT_SECONDS_PER_SEGMENT = 15
+
+  val MAX_TAXI_NEAR_DIRECTION = 20.0 * math.Pi / 180 // in radians (0 - 2Pi)
+  val MIN_TAXI_SPEED_KM_PER_SEC = 2.0 / 60 / 60
   val MAX_TAXI_NEAR_DIST_RAW = 15.0 / 1000 / Earth.RADIUS_KM
   val MAX_TAXI_NEAR_DIST_RAW_SQUARED = math.pow(MAX_TAXI_NEAR_DIST_RAW, 2)
 

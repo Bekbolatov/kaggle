@@ -1,20 +1,67 @@
 package com.sparkydots.kaggle.taxi
 
+import com.sparkydots.util.geo.{Point, Earth}
 import org.apache.spark.SparkContext
 import com.databricks.spark.csv._
-import Extract._
+import com.sparkydots.kaggle.taxi.Transform._
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.util.StatCounter
 
 
 object Script {
 
-  def run(sqlContext: SQLContext): Unit = {
 
-    val (tripData, tripDataAll) = com.sparkydots.kaggle.taxi.Extract.readTripData(sqlContext, "train_1_10th")
-    tripData.cache()
+  def run(sc: SparkContext): Unit = {
 
-    val tripDataTest = com.sparkydots.kaggle.taxi.Extract.readTripData(sqlContext, "test", true)._1
+    val sqlContext = new SQLContext(sc)
+    implicit val earth = Earth(Point(41.14, -8.62))
+
+    val (tripData, _) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "train", true, "s3n://sparkydotsdata")
+    val (tripDataTest, tripDataTestAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "test", true, "s3n://sparkydotsdata")
+
+    val segments = pathSegments(tripData).cache()
+
+    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toMap
+
+
+    val stats = lastSegs.toSeq.map { // .take(10).map {
+      case (tripId, Some(lastSeg)) =>
+        (tripId,
+          closeSegments(lastSeg, tripId, segments)
+          .map { case (segment, _) => math.log(15*(lastSeg.numSegmentsBefore + segment.numSegmentsAfter + 2)) }
+          .stats())
+      case (tripId, None) => (tripId, StatCounter())
+    }
+
+
+
+    val estimates2 = stats.toSeq.map(p => (p._1, p._2.mean)).sortBy(_._1.drop(1).toInt)
+    val known = tripDataTestAll.map( t=> (t.tripId, t.travelTime + 30)).collect().toSeq
+    val ests = estimates2.zip(known).map { case ((id1, e1), (id2, e2)) => (id1, math.max( math.max(e1, e2), 600.0).toInt ) }
+
+    ests.foreach(p => println(s"${p._1},${p._2}"))
+
+
+
+      val tripA = tripDataTest.take(1)(0)
+
+    val closest = closeSegments(tripA, segments).get.cache()
+    val closestp = closeSegments(tripA.pathSegments.last.begin, segments).cache()
+    val closestB = closeSegments(tripA.pathSegments.last.copy(direction = tripA.pathSegments.last.direction - 3.14), tripA.tripId, segments).cache()
+
+
+    //val sampleStrips = tripDataTest.take(3)
+    //val closest = sampleStrips.map { trip => closeSegments(trip, segments).map{_.cache()} }
+
+
+    // http://www.darrinward.com/lat-long/?id=586088
+    closest.take(30).foreach(p =>println(s"${p._1.begin.lat}, ${p._1.begin.lon}"))
+
+    closest.take(15).foreach(println)
+
+    val trip_1 = tripData.filter(_.tripId == "1385972694620000329").take(1)(0)
+
+
 
 
     // times by originCall

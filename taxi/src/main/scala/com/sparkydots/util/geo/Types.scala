@@ -11,9 +11,11 @@ case class Point(lat: Double, lon: Double) extends Serializable {
 
 
 case class PathSegment(
-                        origin: Point,
-                        destination: Point,
+                        begin: Point,
+                        end: Point,
                         distance: Double,
                         direction: Double,
                         numSegmentsBefore: Int,
-                        numSegmentsAfter: Int) extends Serializable
+                        numSegmentsAfter: Int,
+                        origin: Point,
+                        destination: Point) extends Serializable
