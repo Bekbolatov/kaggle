@@ -3,8 +3,7 @@ package com.sparkydots.util
 
 object Errors {
 
-  def pointErrorSquared(x: Double, y: Double): Double = math.pow(x - y, 2)
-  def pointLogErrorSquared(x: Double, y: Double): Double = math.pow(math.log(x) - math.log(y), 2)
-  def pointLogPlusOneErrorSquared(x: Double, y: Double): Double = math.pow(math.log(x + 1) - math.log(y + 1), 2)
+  def diffsSq(xy: (Double, Double)): Double = math.pow(xy._2 - xy._2, 2)
+  def diffLogsSq(xy: (Double, Double), a: Double = 1.0): Double = math.pow(math.log(xy._1 + a) - math.log(xy._2 + a), 2)
 
 }

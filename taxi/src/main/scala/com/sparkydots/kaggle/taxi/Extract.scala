@@ -2,22 +2,28 @@ package com.sparkydots.kaggle.taxi
 
 import com.github.nscala_time.time.Imports._
 import com.sparkydots.util.geo.{Earth, Point}
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.SQLContext
 
 object Extract extends Serializable {
 
-  def readTripData(sqlContext: SQLContext, fileName: String = "test", header: Boolean = false, earth: Earth = Earth(Point(41.14, -8.62))): RDD[TripData] = {
+  def readTripData(
+                    sqlContext: SQLContext,
+                    fileName: String = "test",
+                    header: Boolean = false,
+                    filterOp: (TripData) => Boolean = (t: TripData) => t.travelTime < 3600,
+                    earth: Earth = Earth(Point(41.14, -8.62))
+                    ): (RDD[TripData], RDD[TripData]) = {
 
     val fullFileOption = s"/user/ds/data/kaggle/taxi/$fileName.csv"
     val headerOption = if (header) "true" else "false"
     val options = Map("path" -> fullFileOption, "header" -> headerOption)
 
     val csvData = sqlContext.load("com.databricks.spark.csv", options)
-    val rawTripData =  csvData.map { r => RawTripData(r.getString(0), r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7), r.getString(8)) }
+    val rawTripData = csvData.map { r => RawTripData(r.getString(0), r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7), r.getString(8)) }
     val tripData = rawTripData.map(createTripData(_, earth))
-    tripData
+    val cleanTripData = tripData.filter(filterOp)
+    (cleanTripData, tripData)
   }
 
   case class RawTripData(
@@ -33,28 +39,28 @@ object Extract extends Serializable {
 
   def createTripData(rawTripData: RawTripData, e: Earth): TripData = {
     val rawPathPoints = Earth.parsePoints(rawTripData.POLYLINE, false)
-    val pathPoints = e.cleanTaxiPath(rawPathPoints, 15)
-    val pathSegments = e.pathPointsToPathSegments(pathPoints)
+      val pathPoints = e.cleanTaxiPath(rawPathPoints, 15)
+      val pathSegments = e.pathPointsToPathSegments(pathPoints)
 
-    TripData(
-      rawTripData.TRIP_ID,
-      rawTripData.CALL_TYPE,
-      rawTripData.ORIGIN_CALL match {
-        case s if s.nonEmpty && s != "NA" => Some(s.trim)
-        case _ => None
-      },
-      rawTripData.ORIGIN_STAND match {
-        case s if s.nonEmpty && s != "NA" => Some(s.trim)
-        case _ => None
-      },
-      rawTripData.TAXI_ID.toInt,
-      new DateTime(rawTripData.TIMESTAMP.toLong),
-      rawTripData.DAY_TYPE,
-      rawTripData.MISSING.toBoolean,
-      rawPathPoints,
-      pathPoints,
-      pathSegments,
-      math.max(rawPathPoints.length - 1, 0)* 15)
+      Some(TripData(
+        rawTripData.TRIP_ID,
+        rawTripData.CALL_TYPE,
+        rawTripData.ORIGIN_CALL match {
+          case s if s.nonEmpty && s != "NA" => Some(s.trim)
+          case _ => None
+        },
+        rawTripData.ORIGIN_STAND match {
+          case s if s.nonEmpty && s != "NA" => Some(s.trim)
+          case _ => None
+        },
+        rawTripData.TAXI_ID.toInt,
+        new DateTime(rawTripData.TIMESTAMP.toLong),
+        rawTripData.DAY_TYPE,
+        rawTripData.MISSING.toBoolean,
+        rawPathPoints,
+        pathPoints,
+        pathSegments,
+        math.max(rawPathPoints.length - 1, 0) * 15))
   }
 
 }

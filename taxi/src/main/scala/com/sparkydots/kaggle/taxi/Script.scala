@@ -11,8 +11,10 @@ object Script {
 
   def run(sqlContext: SQLContext): Unit = {
 
-    val tripData = com.sparkydots.kaggle.taxi.Extract.readTripData(sqlContext, "train_1_10th").cache()
-    val tripDataTest = com.sparkydots.kaggle.taxi.Extract.readTripData(sqlContext, "test", true).cache()
+    val (tripData, tripDataAll) = com.sparkydots.kaggle.taxi.Extract.readTripData(sqlContext, "train_1_10th")
+    tripData.cache()
+
+    val tripDataTest = com.sparkydots.kaggle.taxi.Extract.readTripData(sqlContext, "test", true)._1
 
 
     // times by originCall
