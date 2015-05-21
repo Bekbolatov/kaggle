@@ -1,6 +1,7 @@
 package com.sparkydots.util.geo
 
 import scala.collection.mutable
+import com.github.nscala_time.time.Imports._
 
 
 class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_SEGMENT) extends Serializable {
@@ -62,12 +63,54 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
     }
   }
 
-  def pathPointsToPathSegments(points: Seq[Point]): Seq[PathSegment] = {
+  def pathComponents(pts: Seq[Point], intervalSeconds: Int = defaultIntervalSeconds): (Int, Seq[Double]) = {
+    var jumps = mutable.MutableList[Double]()
+
+    if (pts.isEmpty)
+      (0, jumps.toList)
+    else {
+      var pointSets = Seq[mutable.MutableList[Point]]()
+      var ps = pts
+      var lastPt: Option[Point] = None
+
+      while (ps.nonEmpty) {
+        val cur = ps.head
+        // BEGIN: Compute jumps ///
+        if (lastPt.nonEmpty) {
+          val (dist, angle) = toPolar(cur - lastPt.get)
+          if (dist > Earth.MAX_TAXI_SPEED_KM_PER_SEC * intervalSeconds) {
+            jumps += dist
+          }
+        }
+        lastPt = Some(cur)
+        // END: Compute jumps ///
+        ps = ps.tail
+        var psets = pointSets
+        var connected = false
+        while (psets.nonEmpty && !connected) {
+          val pset = psets.head
+          val last = pset.last
+          val (dist, angle) = toPolar(cur - last)
+          if (dist < Earth.MAX_TAXI_SPEED_KM_PER_SEC * intervalSeconds) {
+            pset += cur
+            connected = true
+          }
+          psets = psets.tail
+        }
+        if (!connected) {
+          pointSets +:= mutable.MutableList(cur)
+        }
+      }
+      (pointSets.length, jumps.toList)
+    }
+  }
+
+  def pathPointsToPathSegments(points: Seq[Point], timestamp: DateTime, callType: String, originCall: Option[String], originStand: Option[String]): Seq[PathSegment] = {
     val numSegmentsAfter = points.length - 2
     val (origin, destination) = (points.headOption, points.lastOption)
     points.sliding(2).filter(_.length == 2).zipWithIndex.map { case (begin +: end +: Nil, index) =>
       val (distance, direction) = this.toPolar(end - begin)
-      PathSegment(begin, end, distance, direction, index, numSegmentsAfter - index, origin.get, destination.get)
+      PathSegment(begin, end, distance, direction, index, numSegmentsAfter - index, origin.get, destination.get, timestamp, callType, originCall, originStand)
     }.toList
   }
 

@@ -1,5 +1,7 @@
 package com.sparkydots.util.geo
 
+import com.github.nscala_time.time.Imports._
+
 /**
  *
  * @param lat in degrees (360 for 2Pi)
@@ -18,4 +20,8 @@ case class PathSegment(
                         numSegmentsBefore: Int,
                         numSegmentsAfter: Int,
                         origin: Point,
-                        destination: Point) extends Serializable
+                        destination: Point,
+                        originTimestamp: DateTime,
+                        callType: String,
+                        originCall: Option[String],
+                        originStand: Option[String]) extends Serializable

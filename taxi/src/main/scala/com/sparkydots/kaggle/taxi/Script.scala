@@ -1,9 +1,12 @@
 package com.sparkydots.kaggle.taxi
 
 import com.sparkydots.util.geo.{Point, Earth}
+import com.sparkydots.util.io.FileIO
 import org.apache.spark.SparkContext
 import com.databricks.spark.csv._
 import com.sparkydots.kaggle.taxi.Transform._
+import com.sparkydots.kaggle.taxi._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.util.StatCounter
 
@@ -11,28 +14,74 @@ import org.apache.spark.util.StatCounter
 object Script {
 
 
-  def run(sc: SparkContext): Unit = {
+  def writePaths(sc: SparkContext, tripA: TripData, tripData: RDD[TripData])(implicit earth: Earth) = {
+    val closeTripsA = closeTrips(tripA.pathSegments.last, tripA.tripId, tripData)(earth)
+    val closeTripsSetA = closeTripsA.collect.toSet
+    val bctr = sc.broadcast(closeTripsSetA)
+    val paths = tripData.collect { case t if bctr.value(t.tripId) => (t.tripId,  t.rawPathPoints) }.flatMap(t => t._2.map(s => s"${t._1},${s.lon},${s.lat}")).collect
+    FileIO.write(paths, "/Users/renatb/data/kaggle/taxi_trip/pathsForTripA.csv")
+  }
 
-    val sqlContext = new SQLContext(sc)
+  def writePathsWithHour(sc: SparkContext, tripA: TripData, tripData: RDD[TripData])(implicit earth: Earth) = {
+    val closeTripsA = closeTrips(tripA.pathSegments.last, tripA.tripId, tripData)(earth)
+    val closeTripsSetA = closeTripsA.collect.toSet
+    val bctr = sc.broadcast(closeTripsSetA)
+    val paths = tripData.collect {
+      case t if bctr.value(t.tripId) => (t.timestamp.hourOfDay().getAsText,  t.rawPathPoints) }
+      .flatMap(t => t._2.map(s => s"${t._1},${s.lon},${s.lat}")).collect
+    FileIO.write(paths, "/Users/renatb/data/kaggle/taxi_trip/pathsForTripAWithHours.csv")
+  }
+
+  def writePathsWithHourOtherFactors(sc: SparkContext, tripA: TripData, tripData: RDD[TripData])(implicit earth: Earth) = {
+    val closeTripsA = closeTrips(tripA.pathSegments.last, tripA.tripId, tripData)(earth)
+    val closeTripsSetA = closeTripsA.collect.toSet
+    val bctr = sc.broadcast(closeTripsSetA)
+    val paths = tripData.collect {
+      case t if bctr.value(t.tripId) => (t.rawPathPoints, t.timestamp.hourOfDay().getAsText, t.callType, t.originCall.getOrElse("O"), t.originStand.getOrElse("O")) }
+      .flatMap(t => t._1.map(s => s"${s.lon},${s.lat},${t._2},${t._3},${t._4},${t._5}")).collect
+    FileIO.write(paths, "/Users/renatb/data/kaggle/taxi_trip/pathsForTripAWithHours.csv")
+  }
+
+  def run(sc: SparkContext): Unit = {
     implicit val earth = Earth(Point(41.14, -8.62))
 
-    val (tripData, _) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "train", true, "s3n://sparkydotsdata")
-    val (tripDataTest, tripDataTestAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "test", true, "s3n://sparkydotsdata")
 
-    val segments = pathSegments(tripData).cache()
+        val (tripData, tripDataAll, tripDataTestAll, segments, lastSegs) = com.sparkydots.kaggle.taxi.Extract.readHDFS(sc)
+//    val (tripData, tripDataAll, tripDataTestAll, segments, lastSegs) = com.sparkydots.kaggle.taxi.Extract.readS3(sc)
 
-    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toMap
+    val tripA = tripDataTestAll.take(1)(0)
+    Script.writePathsWithHourOtherFactors(sc, tripA, tripData)
 
 
-    val stats = lastSegs.toSeq.map { // .take(10).map {
+
+
+    //    val lastSegsList = lastSegs.toSeq.take(5)
+//    val emptyStats = lastSegsList.map(a => StatCounter())
+//    val bcLastSegs = sc.broadcast(lastSegsList)
+//    segments.aggregate(emptyStats)(
+//    seqOp = (stats, nextSeg) => {
+//      if (nextSeg._1)
+//    },
+//    combOp = ???)
+//
+//      segment =>
+//      bcLastSegs.value.foreach {
+//        case (thisTripId, Some(thisSegment)) => ???
+//        case (thisTripId, None) => StatCounter()
+//
+//      }
+//    }
+//
+//
+
+    val stats = lastSegs.take(5).map { // .take(10).map {
       case (tripId, Some(lastSeg)) =>
         (tripId,
           closeSegments(lastSeg, tripId, segments)
-          .map { case (segment, _) => math.log(15*(lastSeg.numSegmentsBefore + segment.numSegmentsAfter + 2)) }
-          .stats())
+            .map { case (segment, _) => math.log(15*(lastSeg.numSegmentsBefore + segment.numSegmentsAfter + 2)) }
+            .stats())
       case (tripId, None) => (tripId, StatCounter())
     }
-
 
 
     val estimates2 = stats.toSeq.map(p => (p._1, p._2.mean)).sortBy(_._1.drop(1).toInt)
@@ -43,12 +92,14 @@ object Script {
 
 
 
-      val tripA = tripDataTest.take(1)(0)
 
     val closest = closeSegments(tripA, segments).get.cache()
     val closestp = closeSegments(tripA.pathSegments.last.begin, segments).cache()
     val closestB = closeSegments(tripA.pathSegments.last.copy(direction = tripA.pathSegments.last.direction - 3.14), tripA.tripId, segments).cache()
 
+
+    closest.map { case (segment, _) => segment.numSegmentsAfter }.stats
+    closest.map { case (segment, _) => (segment.numSegmentsAfter) }.stats
 
     //val sampleStrips = tripDataTest.take(3)
     //val closest = sampleStrips.map { trip => closeSegments(trip, segments).map{_.cache()} }
@@ -65,7 +116,7 @@ object Script {
 
 
     // times by originCall
-    tripDataTest.
+    tripDataTestAll.
       map(t => (t.originCall, t.travelTime)).
       mapValues(d => StatCounter(d)).
       reduceByKey(_.merge(_)).
@@ -74,7 +125,7 @@ object Script {
       take(10).foreach(println)
 
     // times by originStand
-    tripDataTest.
+    tripDataTestAll.
       map(t => (t.originStand, t.travelTime)).
       mapValues(d => StatCounter(d)).
       reduceByKey(_.merge(_)).
@@ -85,7 +136,7 @@ object Script {
 
     // MISSING, also totalTravel time < 3600 is 99.4% of data
 
-    val newguess = tripDataTest.map { t =>
+    val newguess = tripDataTestAll.map { t =>
       val segs = t.pathSegments
        val newtime =
          math.max(
@@ -104,8 +155,8 @@ object Script {
       (t.tripId, newtime.toInt)
        }
 
-    import sqlContext.implicits._
-    newguess.toDF().saveAsCsvFile("hello2.csv")
+//    import sqlContext.implicits._
+//    newguess.toDF().saveAsCsvFile("hello2.csv")
 
     /*
   val dirs = data.flatMap(d => {
