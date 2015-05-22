@@ -3,6 +3,7 @@ package com.sparkydots.kaggle.taxi
 import com.github.nscala_time.time.Imports._
 import com.sparkydots.kaggle.taxi.Transform._
 import com.sparkydots.util.geo.{Earth, Point}
+import com.sparkydots.util.io.FileIO
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
@@ -35,8 +36,12 @@ object Extract extends Serializable {
     val (tripDataTest, tripDataTestAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "test", true, "s3n://sparkydotsdata")
 
     val segments = pathSegments(tripData).cache()
-    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toMap
-    (tripData, tripDataAll, tripDataTestAll, segments, lastSegs)
+    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toList.sortBy(_._1.drop(1).toInt)
+
+    val tripIds = tripDataTestAll.map(_.tripId).collect.toList.sortBy(_.drop(1).toInt)
+    val knownLowerBound = tripDataTestAll.map { t => (t.tripId, t.travelTime) }.collect().toMap
+
+    (tripData, tripDataAll, tripDataTestAll, segments, lastSegs, tripIds, knownLowerBound)
   }
 
   def readHDFS(sc: SparkContext) = {
@@ -47,8 +52,12 @@ object Extract extends Serializable {
     val (tripDataTest, tripDataTestAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "test", true)
 
     val segments = pathSegments(tripData).cache()
-    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toMap
-    (tripData, tripDataAll, tripDataTestAll, segments, lastSegs)
+    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toList.sortBy(_._1.drop(1).toInt)
+
+    val tripIds = tripDataTestAll.map(_.tripId).collect.toList.sortBy(_.drop(1).toInt)
+    val knownLowerBound = tripDataTestAll.map { t => (t.tripId, t.travelTime) }.collect().toMap
+
+    (tripData, tripDataAll, tripDataTestAll, segments, lastSegs, tripIds, knownLowerBound)
   }
 
 
@@ -84,7 +93,7 @@ object Extract extends Serializable {
                           POLYLINE: String)
 
   private def createTripData(rawTripData: RawTripData, e: Earth): TripData = {
-    val timestamp = new DateTime(rawTripData.TIMESTAMP.toLong)
+    val timestamp = new DateTime(rawTripData.TIMESTAMP.toLong * 1000L)
     val originCall = rawTripData.ORIGIN_CALL match {
       case s if s.nonEmpty && s != "NA" => Some(s.trim)
       case _ => None
@@ -112,6 +121,11 @@ object Extract extends Serializable {
         pathComponents,
         pathSegments,
         math.max(rawPathPoints.length - 1, 0) * 15)
+  }
+
+  def writeResults(results: Seq[(String, Int)], path: String = "/home/hadoop/results.csv") ={
+    val withHeader = "\"TRIP_ID\",\"TRAVEL_TIME\"" +: results.map(p => s"${p._1},${p._2}")
+    FileIO.write(withHeader, path)
   }
 
 }

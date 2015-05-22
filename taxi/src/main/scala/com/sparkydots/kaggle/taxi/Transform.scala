@@ -5,11 +5,18 @@ import org.apache.spark.rdd.RDD
 
 object Transform extends Serializable {
 
-  def pathSegments(trips: RDD[TripData]): RDD[(PathSegment, String)] =
+  def pathSegments(trips: RDD[TripData])(implicit earth: Earth): RDD[(PathSegment, String)] =
     for {
       trip <- trips
-      segment <- trip.pathSegments
+      segment <- trip.pathSegments if earth.isValidSegment(segment)
     } yield (segment, trip.tripId)
+
+
+
+
+
+
+
 
 
   def closeSegments(thisSegment: PathSegment,
@@ -32,6 +39,41 @@ object Transform extends Serializable {
                    (implicit earth: Earth): Option[RDD[(PathSegment, String)]] =
     trip.pathSegments.lastOption.map(segment => closeSegments(segment, trip.tripId, pathSegments)(earth))
 
+
+
+
+
+
+  def closeSegmentsStricter(thisSegment: PathSegment,
+                    thisTripId: String,
+                    pathSegments: RDD[(PathSegment, String)])
+                   (implicit earth: Earth): RDD[(PathSegment, String)] = {
+
+    val allCloseSegments = for {
+      (segment, tripId) <- pathSegments if earth.isSegmentNearStricter(segment, thisSegment) && tripId != thisTripId
+    } yield (segment, tripId)
+
+    allCloseSegments
+      .groupBy { case (segment, tripId) => tripId }
+      .mapValues(_.head)
+      .map { case (_, (segment, tripId)) => (segment, tripId) }
+  }
+
+  def closeSegmentsStricter(trip: TripData,
+                    pathSegments: RDD[(PathSegment, String)])
+                   (implicit earth: Earth): Option[RDD[(PathSegment, String)]] =
+    trip.pathSegments.lastOption.map(segment => closeSegmentsStricter(segment, trip.tripId, pathSegments)(earth))
+
+
+
+
+
+
+
+
+
+
+
   def closeSegments(begin: Point, pathSegments: RDD[(PathSegment, String)])
                    (implicit earth: Earth): RDD[(PathSegment, String)] = {
     for {
@@ -44,7 +86,7 @@ object Transform extends Serializable {
                  trips: RDD[TripData])
                 (implicit earth: Earth): RDD[String] = {
 
-    val pathSegment = pathSegments(trips)
+    val pathSegment = pathSegments(trips)(earth)
     closeSegments(thisSegment, thisTripId, pathSegment)
       .map { case (segment, tripId) => tripId }
   }

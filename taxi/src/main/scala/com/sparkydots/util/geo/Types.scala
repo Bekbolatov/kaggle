@@ -9,6 +9,7 @@ import com.github.nscala_time.time.Imports._
  */
 case class Point(lat: Double, lon: Double) extends Serializable {
   def -(other: Point): Point = Point(this.lat - other.lat, this.lon - other.lon)
+  def p = s"$lat,$lon"
 }
 
 

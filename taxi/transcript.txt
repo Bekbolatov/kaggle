@@ -46,3 +46,70 @@ val schema = StructType(Array(StructField("SPEED", DoubleType, false), StructFie
 
 val times = sqlContext.createDataFrame(dirs, schema)
 times.saveAsCsvFile("obv3")
+
+val statsR = "\\((.*),\\(count: .+, mean: (.+), stdev: .+\\)\\)".r
+
+val striLines =Source.fromFile("/Users/renatb/data/kaggle/taxi_trip/statsstricter.csv").getLines
+val stri = striLines.map { case statsR(tripId, mean) => (tripId, mean.toDouble) }.toMap
+
+val nonstriLines =Source.fromFile("/Users/renatb/data/kaggle/taxi_trip/statsnotstricter.csv").getLines
+val nonstri = nonstriLines.map { case statsR(tripId, mean) => (tripId, mean.toDouble) }.toMap
+
+val tripIds = nonstri.toList.map(_._1).sortBy(_.drop(1).toInt)
+
+val PLAINEST = math.log(660.0 + 1)
+val knownLowerBound = tripDataTestAll.map { t => (t.tripId, t.travelTime) }.collect().toMap
+
+
+//tripDataTestAll.collect { case t if t.rawPathPoints.length > 1 => t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds }.take(25).foreach(println)
+
+val timesO = tripDataTestAll.collect { case t if t.rawPathPoints.length > 1 =>
+    val a1 = Math.abs((1408039200000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
+    val a2 = Math.abs((1412065800000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
+    val a3 = Math.abs((1412617500000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
+    val a4 = Math.abs((1414814400000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
+    val a5 = Math.abs((1419175800000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
+    val a = math.min(a1, math.min(a2, math.min(a3, math.min(a4, a5))))
+    (t.tripId, a)
+     }.collect
+
+val completed = timesO.filter(_._2 > 1200).toMap
+
+
+
+val guessedTimesFirst = tripIds.map { case tripId =>
+(tripId, {
+    if (completed.get(tripId).nonEmpty) {
+        knownLowerBound(tripId)
+    } else {
+        math.max(
+            {
+            val sv = stri(tripId)
+            val nsv = nonstri(tripId)
+            val ss =
+                if (sv > 0.0) sv
+                else if (nsv > 0.0) nsv
+                else PLAINEST
+            math.exp(ss)
+            },
+            knownLowerBound(tripId))
+    } })
+}.map(p => (p._1, p._2.toInt))
+
+
+
+2014-08-14T10:59:52.000-07:00
+val dt = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss")
+dt.parseDateTime("14/08/2014 18:00:00")
+
+val dts = Seq("14/08/2014 11:00:00","30/09/2014 01:30:00","06/10/2014 10:45:00","31/10/2014 21:00:00","21/12/2014 07:30:00").map(t => dt.parseDateTime(t).getMillis)
+dts: Seq[Long] = List(1408039200000, 1412065800000, 1412617500000, 1414814400000, 1419175800000)
+
+
+
+14/08/2014 18:00:00
+30/09/2014 08:30:00
+06/10/2014 17:45:00
+01/11/2014 04:00:00
+21/12/2014 14:30:00
+

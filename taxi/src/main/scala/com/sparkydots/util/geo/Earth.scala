@@ -122,14 +122,51 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
     Math.pow(dxx, 2) + Math.pow(dyy, 2) < Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED
   }
 
+  def isValidSegment(s: PathSegment): Boolean = {
+    s.distance > (Earth.MIN_TAXI_SPEED_KM_PER_SEC * Earth.DEFAULT_SECONDS_PER_SEGMENT)
+  }
+
   def isSegmentNear(s0: PathSegment,
+                    s1: PathSegment,
+                    maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
+                    maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
+    isPointNear(s0.begin, s1.begin) && math.abs(s1.direction - s0.direction) < maxDir && s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds && s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds
+
+  def isSegmentNearStricter(s0: PathSegment,
                     s1: PathSegment,
                     maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
                     maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
     isPointNear(s0.begin, s1.begin) &&
       math.abs(s1.direction - s0.direction) < maxDir &&
       s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds &&
-      s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds
+      s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds &&
+      s0.callType == s1.callType &&
+      {
+        val originStand0 = s0.originStand match {
+          case None => None
+          case Some("57") => Some("57")
+          case Some("15") => Some("15")
+          case other => Some("O")
+        }
+        val originStand1 = s1.originStand match {
+          case None => None
+          case Some("57") => Some("57")
+          case Some("15") => Some("15")
+          case other => Some("O")
+        }
+        originStand0 == originStand1
+      } &&
+      {
+        val originCall0 = s0.originCall match {
+          case None => None
+          case other => Some("1")
+        }
+        val originCall1 = s1.originCall match {
+          case None => None
+          case other => Some("1")
+        }
+        originCall0 == originCall1
+      }
 
 }
 
@@ -141,9 +178,9 @@ object Earth extends Serializable {
 
   val DEFAULT_SECONDS_PER_SEGMENT = 15
 
-  val MAX_TAXI_NEAR_DIRECTION = 20.0 * math.Pi / 180 // in radians (0 - 2Pi)
-  val MIN_TAXI_SPEED_KM_PER_SEC = 2.0 / 60 / 60
-  val MAX_TAXI_NEAR_DIST_RAW = 15.0 / 1000 / Earth.RADIUS_KM
+  val MAX_TAXI_NEAR_DIRECTION = 90.0 * math.Pi / 180 // in radians (0 - 2Pi)
+  val MIN_TAXI_SPEED_KM_PER_SEC = 1.0 / 60 / 60
+  val MAX_TAXI_NEAR_DIST_RAW = 50.0 / 1000 / Earth.RADIUS_KM
   val MAX_TAXI_NEAR_DIST_RAW_SQUARED = math.pow(MAX_TAXI_NEAR_DIST_RAW, 2)
 
   def apply(p: Point): Earth = new Earth(p)
