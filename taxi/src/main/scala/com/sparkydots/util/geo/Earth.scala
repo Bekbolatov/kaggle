@@ -1,8 +1,12 @@
 package com.sparkydots.util.geo
 
+import com.sparkydots.kaggle.taxi.PathSegment
+
 import scala.collection.mutable
 import com.github.nscala_time.time.Imports._
-
+import org.json4s._
+import org.json4s.JsonDSL._
+import org.json4s.jackson.JsonMethods._
 
 class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_SEGMENT) extends Serializable {
 
@@ -31,13 +35,13 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
    *
    * @param pts   Seq[(lat,lon)]
    * @param intervalSeconds  number of seconds between data points
-   * @return  cleaned path
+   * @return  cleaned path and avg segment length
    */
-  def cleanTaxiPath(pts: Seq[Point], intervalSeconds: Int = defaultIntervalSeconds): Seq[Point] = {
+  def cleanTaxiPath(pts: Seq[Point], intervalSeconds: Int = defaultIntervalSeconds): (Seq[Point], Double) = {
     if (pts.isEmpty)
-      Seq()
+      (Seq(), 0.0)
     else {
-      var pointSets = Seq[mutable.MutableList[Point]]()
+      var pointSets = Seq[mutable.MutableList[(Point, Double)]]()
       var ps = pts
 
       while (ps.nonEmpty) {
@@ -45,24 +49,43 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
         ps = ps.tail
         var psets = pointSets
         var connected = false
+        var dist = 0.0
+        var angle = 0.0
         while (psets.nonEmpty && !connected) {
           val pset = psets.head
-          val last = pset.last
-          val (dist, angle) = toPolar(cur - last)
+          val (last, lastDistSum) = pset.last
+          val da = toPolar(cur - last)
+          dist = da._1
+          angle = da._2
           if (dist < Earth.MAX_TAXI_SPEED_KM_PER_SEC * intervalSeconds) {
-            pset += cur
+            val newPt = (cur, lastDistSum + dist)
+            pset += newPt
             connected = true
+          } else {
+
           }
           psets = psets.tail
         }
         if (!connected) {
-          pointSets +:= mutable.MutableList(cur)
+          pointSets +:= mutable.MutableList((cur, dist))
         }
       }
-      pointSets.maxBy(_.length).toList
+      val longest = pointSets.maxBy(_.length).toList
+      val size = longest.length
+      if (size > 0) {
+        (longest.map(_._1), longest.last._2 / size)
+      } else {
+        (longest.map(_._1), 0.0)
+      }
     }
   }
 
+  /**
+   *
+   * @param pts
+   * @param intervalSeconds
+   * @return
+   */
   def pathComponents(pts: Seq[Point], intervalSeconds: Int = defaultIntervalSeconds): (Int, Seq[Double]) = {
     var jumps = mutable.MutableList[Double]()
 
@@ -105,14 +128,6 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
     }
   }
 
-  def pathPointsToPathSegments(points: Seq[Point], timestamp: DateTime, callType: String, originCall: Option[String], originStand: Option[String]): Seq[PathSegment] = {
-    val numSegmentsAfter = points.length - 2
-    val (origin, destination) = (points.headOption, points.lastOption)
-    points.sliding(2).filter(_.length == 2).zipWithIndex.map { case (begin +: end +: Nil, index) =>
-      val (distance, direction) = this.toPolar(end - begin)
-      PathSegment(begin, end, distance, direction, index, numSegmentsAfter - index, origin.get, destination.get, timestamp, callType, originCall, originStand)
-    }.toList
-  }
 
   def isPointNear(p0: Point,
                   p1: Point,
@@ -122,16 +137,29 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
     Math.pow(dxx, 2) + Math.pow(dyy, 2) < Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED
   }
 
-  def isValidSegment(s: PathSegment): Boolean = {
-    s.distance > (Earth.MIN_TAXI_SPEED_KM_PER_SEC * Earth.DEFAULT_SECONDS_PER_SEGMENT)
-  }
-
+  /**
+   *
+   * @param s0
+   * @param s1
+   * @param maxDistSquared
+   * @param maxDir
+   * @return
+   */
   def isSegmentNear(s0: PathSegment,
                     s1: PathSegment,
                     maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
                     maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
     isPointNear(s0.begin, s1.begin) && math.abs(s1.direction - s0.direction) < maxDir && s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds && s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds
 
+
+  /**
+   *
+   * @param s0
+   * @param s1
+   * @param maxDistSquared
+   * @param maxDir
+   * @return
+   */
   def isSegmentNearStricter(s0: PathSegment,
                     s1: PathSegment,
                     maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
@@ -205,22 +233,6 @@ object Earth extends Serializable {
     d * RADIUS_KM
   }
 
-  /**
-   * Parse path
-   * @param path String in format:  [ [23.00,22.43],[21.2,44.7] ]
-   * @param latLon if true then [lat, lon]   else [lon, lat]
-   * @return
-   */
-  def parsePoints(path: String, latLon: Boolean = true): Seq[Point] = {
-    val parts = path.split(Array(' ', '[', ']', ',', '\n', '\t', '\r')).filter(_.trim.nonEmpty)
-    val (xs, ys) = parts.zipWithIndex.partition(_._2 % 2 == 0)
-    val pairs = xs.zip(ys).map(xiyi => (xiyi._1._1.toDouble, xiyi._2._1.toDouble)).toSeq
-    if (latLon)
-      pairs.map(p => Point(p._1, p._2))
-    else
-      pairs.map(p => Point(p._2, p._1))
-  }
-
-
+  def isValidSegment(s: PathSegment): Boolean = s.distance > (MIN_TAXI_SPEED_KM_PER_SEC * DEFAULT_SECONDS_PER_SEGMENT)
 
 }

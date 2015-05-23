@@ -113,3 +113,21 @@ dts: Seq[Long] = List(1408039200000, 1412065800000, 1412617500000, 1414814400000
 01/11/2014 04:00:00
 21/12/2014 14:30:00
 
+
+
+
+
+
+    val tripDataCut = rawTripDataAll.
+      filter(t => t.POLYLINE.length > 1 && t.POLYLINE.length < 240).
+      map { case rawTripData =>
+      val cutoff = (
+        (rawTripData.TRIP_ID.hashCode +
+          rawTripData.TIMESTAMP.hashCode +
+          rawTripData.POLYLINE.headOption.map(p => (p.lon * 1e6).toInt).getOrElse(0)
+          ) % rawTripData.POLYLINE.length) + 1
+          cutoff
+    }
+
+
+          (math.log(15.0 * (rawTripData.POLYLINE.length - 1) + 1), rawTripData.copy(POLYLINE = rawTripData.POLYLINE.take(cutoff)))

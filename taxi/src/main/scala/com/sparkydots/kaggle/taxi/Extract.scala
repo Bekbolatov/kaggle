@@ -1,99 +1,62 @@
 package com.sparkydots.kaggle.taxi
 
 import com.github.nscala_time.time.Imports._
-import com.sparkydots.kaggle.taxi.Transform._
 import com.sparkydots.util.geo.{Earth, Point}
-import com.sparkydots.util.io.FileIO
 import org.apache.spark.SparkContext
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
+import org.json4s.jackson.JsonMethods._
 
-object Extract extends Serializable {
+class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, earth: Earth = Earth(Point(41.14, -8.62))) extends Serializable {
 
-  def info =
-    """
-      |
-      |def read(
-      |          sqlContext: SQLContext,
-      |          fileName: String = "test",
-      |          header: Boolean = false,
-      |          pathPrefix: String = "/user/ds/data",  //s3n://sparkydotsdata   or
-      |          filterOp: (TripData) => Boolean = (t: TripData) => t.travelTime < 3600)
-      |          (implicit earth: Earth = Earth(Point(41.14, -8.62))): (RDD[TripData], RDD[TripData]) = {
-      |
-      |
-      | def readS3(sc: SparkContext) = { ...
-      | def readHDFS(sc: SparkContext) = { ...
-      |         (tripData, tripDataAll, tripDataTestAll, segments, lastSegs)
-      |
-    """.stripMargin
+  def data(s3: Boolean = false, hdfs: Boolean = false) = {
 
-  def readS3(sc: SparkContext) = {
-    val sqlContext = new SQLContext(sc)
-    implicit val earth = Earth(Point(41.14, -8.62))
+    val (rawTripDataAll, rawTestDataAll) = if (s3) {
+      (_readRawTripData("train", header = true, pathPrefix = "s3n://sparkydotsdata"),
+        _readRawTripData("test", header = true, pathPrefix = "s3n://sparkydotsdata"))
+    } else {
+      (_readRawTripData("train_1_10th", header = false, pathPrefix = "/user/ds/data"),
+        _readRawTripData("test", header = true, pathPrefix = "/user/ds/data"))
+    }
 
-    val (tripData, tripDataAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "train", true, "s3n://sparkydotsdata")
-    val (tripDataTest, tripDataTestAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "test", true, "s3n://sparkydotsdata")
+    val totalCount = rawTripDataAll.count()
+    val partitionCount = rawTripDataAll.partitions.length
+    val tripDataCut = rawTripDataAll.
+      filter(t => t.POLYLINE.length > 1 && t.POLYLINE.length < 240).
+      map { case rawTripData =>
+      val cutoff = (
+        math.abs((rawTripData.TRIP_ID.hashCode +
+          rawTripData.TIMESTAMP.hashCode +
+          rawTripData.POLYLINE.headOption.map(p => (p.lon * 1e6).toInt).getOrElse(0)
+          )) % rawTripData.POLYLINE.length) + 1
+      (math.log(15.0 * (rawTripData.POLYLINE.length - 1) + 1), rawTripData.copy(POLYLINE = rawTripData.POLYLINE.take(cutoff)))
+    }
 
-    val segments = pathSegments(tripData).cache()
-    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toList.sortBy(_._1.drop(1).toInt)
 
-    val tripIds = tripDataTestAll.map(_.tripId).collect.toList.sortBy(_.drop(1).toInt)
-    val knownLowerBound = tripDataTestAll.map { t => (t.tripId, t.travelTime) }.collect().toMap
+    val tripData = tripDataCut map { case (actualTime, trip) => (actualTime, createTripData(trip)) }
+    val testData = rawTestDataAll map { trip => (-1.0, createTripData(trip)) }
 
-    (tripData, tripDataAll, tripDataTestAll, segments, lastSegs, tripIds, knownLowerBound)
+    val tripIds = testData.map(_._2.tripId).collect.toList.sortBy(_.drop(1).toInt)
+    val knownLowerBound = testData.map { case (_, trip) => (trip.tripId, trip.elapsedTime) }.collect().toMap
+
+    (testData, tripData, rawTripDataAll, tripIds, knownLowerBound)
   }
 
-  def readHDFS(sc: SparkContext) = {
-    val sqlContext = new SQLContext(sc)
-    implicit val earth = Earth(Point(41.14, -8.62))
-
-    val (tripData, tripDataAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "train_1_10th")
-    val (tripDataTest, tripDataTestAll) = com.sparkydots.kaggle.taxi.Extract.read(sqlContext, "test", true)
-
-    val segments = pathSegments(tripData).cache()
-    val lastSegs = tripDataTestAll.map(t => (t.tripId, t.pathSegments.lastOption)).collect().toList.sortBy(_._1.drop(1).toInt)
-
-    val tripIds = tripDataTestAll.map(_.tripId).collect.toList.sortBy(_.drop(1).toInt)
-    val knownLowerBound = tripDataTestAll.map { t => (t.tripId, t.travelTime) }.collect().toMap
-
-    (tripData, tripDataAll, tripDataTestAll, segments, lastSegs, tripIds, knownLowerBound)
+  private def _readRawTripData(fileName: String = "test", header: Boolean = false, pathPrefix: String = "/user/ds/data"): RDD[RawTripData] = {
+    val csvData = sqlContext.load("com.databricks.spark.csv", Map("path" -> s"${pathPrefix}/kaggle/taxi/$fileName.csv", "header" -> header.toString))
+    csvData.map { r =>
+      RawTripData(r.getString(0), r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7),
+        Extract._parsePoints(r.getString(8), false)
+      )
+    }
   }
 
 
-  def read(
-          sqlContext: SQLContext,
-          fileName: String = "test",
-          header: Boolean = false,
-          pathPrefix: String = "/user/ds/data",  //s3n://sparkydotsdata   or
-          filterOp: (TripData) => Boolean = (t: TripData) => t.travelTime < 3600)
-          (implicit earth: Earth = Earth(Point(41.14, -8.62))): (RDD[TripData], RDD[TripData]) = {
+  private def createTripData(rawTripData: RawTripData): TripData = {
 
-    val fullFileOption =  s"${pathPrefix}/kaggle/taxi/$fileName.csv"
-    val headerOption = if (header) "true" else "false"
-    val options = Map("path" -> fullFileOption, "header" -> headerOption)
-
-    val csvData = sqlContext.load("com.databricks.spark.csv", options)
-    val rawTripData = csvData.map { r => RawTripData(r.getString(0), r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7), r.getString(8)) }
-
-    val tripData = rawTripData.map(createTripData(_, earth))
-    val cleanTripData = tripData.filter(filterOp)
-    (cleanTripData, tripData)
-  }
-
-  private case class RawTripData(
-                          TRIP_ID: String,
-                          CALL_TYPE: String,
-                          ORIGIN_CALL: String,
-                          ORIGIN_STAND: String,
-                          TAXI_ID: String,
-                          TIMESTAMP: String,
-                          DAY_TYPE: String,
-                          MISSING: String,
-                          POLYLINE: String)
-
-  private def createTripData(rawTripData: RawTripData, e: Earth): TripData = {
-    val timestamp = new DateTime(rawTripData.TIMESTAMP.toLong * 1000L)
+    val hourOfDay = new DateTime(rawTripData.TIMESTAMP.toLong * 1000L).hourOfDay().get()
     val originCall = rawTripData.ORIGIN_CALL match {
       case s if s.nonEmpty && s != "NA" => Some(s.trim)
       case _ => None
@@ -102,30 +65,88 @@ object Extract extends Serializable {
       case s if s.nonEmpty && s != "NA" => Some(s.trim)
       case _ => None
     }
-    val rawPathPoints = Earth.parsePoints(rawTripData.POLYLINE, false)
-      val pathPoints = e.cleanTaxiPath(rawPathPoints, 15)
-      val pathComponents = e.pathComponents(rawPathPoints, 15)
-      val pathSegments = e.pathPointsToPathSegments(pathPoints, timestamp, rawTripData.CALL_TYPE, originCall, originStand)
+    val (pathPoints, avgSpeed) = earth.cleanTaxiPath(rawTripData.POLYLINE, 15)
 
-      TripData(
-        rawTripData.TRIP_ID,
-        rawTripData.CALL_TYPE,
-        originCall,
-        originStand,
-        rawTripData.TAXI_ID.toInt,
-        timestamp,
-        rawTripData.DAY_TYPE,
-        rawTripData.MISSING.toBoolean,
-        rawPathPoints,
-        pathPoints,
-        pathComponents,
-        pathSegments,
-        math.max(rawPathPoints.length - 1, 0) * 15)
+
+    val approximateOrigin = Point(pathPoints.take(3).map(_.lat).sum / 3, pathPoints.take(3).map(_.lon).sum / 3)
+    val approximateDestination = Point(pathPoints.takeRight(3).map(_.lat).sum / 3, pathPoints.take(3).map(_.lon).sum / 3)
+    val (north, est) = (approximateDestination - approximateOrigin).dirs(earth)
+
+
+
+    TripData(
+      rawTripData.TRIP_ID,
+      rawTripData.CALL_TYPE,
+      originCall,
+      originStand,
+      rawTripData.TAXI_ID.toInt,
+      hourOfDay,
+
+      approximateOrigin, //origin
+      approximateDestination, //dest
+      avgSpeed, // avg speed
+      north, //north
+      est, //east
+
+
+      math.max(rawTripData.POLYLINE.length - 1, 0) * 15)
   }
 
-  def writeResults(results: Seq[(String, Int)], path: String = "/home/hadoop/results.csv") ={
-    val withHeader = "\"TRIP_ID\",\"TRAVEL_TIME\"" +: results.map(p => s"${p._1},${p._2}")
-    FileIO.write(withHeader, path)
+
+  /**
+   * make sure to cache this tripData RDD before running this method
+   * @param tripData
+   * @return
+   */
+  def featurize(tripData: RDD[(Double, TripData)]): (RDD[LabeledPoint], Map[Int, Int], Map[String, Int], Map[Option[String], Int]) = {
+
+    val callTypes = tripData.map(_._2.callType).distinct().collect().zipWithIndex.toMap
+
+    val originStands = tripData.map(_._2.originStand).distinct().collect().zipWithIndex.toMap
+
+    val bcCallTypes = sc.broadcast(callTypes)
+    val bcOriginStands = sc.broadcast(originStands)
+
+    val dataPoints = tripData.map { case (travelTime, trip) =>
+      Extract.featureVector(travelTime, trip, bcCallTypes.value, bcOriginStands.value)
+    }
+
+    (dataPoints, Map(0 -> callTypes.size, 1 -> originStands.size), callTypes, originStands)
+  }
+
+}
+
+
+object Extract extends Serializable {
+  /**
+   * Parse path
+   * @param path String in format:  [ [23.00,22.43],[21.2,44.7] ]
+   * @param latLon if true then [lat, lon]   else [lon, lat]
+   * @return
+   */
+  def _parsePoints(path: String, latLon: Boolean = true): Seq[Point] = {
+    implicit val formats = org.json4s.DefaultFormats
+    val parts = parse(path).extract[List[List[Double]]]
+    if (latLon)
+      parts.map(p => Point(p(0), p(1)))
+    else
+      parts.map(p => Point(p(1), p(0)))
+  }
+
+  def featureVector(label: Double, trip: TripData, callTypes: Map[String, Int], originStands: Map[Option[String], Int]) = {
+    val features = Vectors.dense(
+      callTypes(trip.callType),
+      originStands(trip.originStand),
+      trip.hourOfDay,
+      trip.approximateOrigin.lat,
+      trip.approximateOrigin.lon,
+      trip.approximateDestination.lat,
+      trip.approximateDestination.lon,
+      trip.avgSpeed,
+      trip.avgNorthDirection,
+      trip.avgEastDirection
+    )
+    LabeledPoint(label, features)
   }
 
 }
