@@ -21,10 +21,12 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
         _readRawTripData("test", header = true, pathPrefix = "/user/ds/data"))
     }
 
-    val totalCount = rawTripDataAll.count()
-    val partitionCount = rawTripDataAll.partitions.length
-    val tripDataCut = rawTripDataAll.
-      filter(t => t.POLYLINE.length > 1 && t.POLYLINE.length < 240).
+    rawTripDataAll.cache()
+
+    val tripDataFiltered = rawTripDataAll.
+      filter(t => t.POLYLINE.length > 1 && t.POLYLINE.length < 240)
+
+    val tripDataCut = tripDataFiltered.
       map { case rawTripData =>
       val cutoff = (
         math.abs((rawTripData.TRIP_ID.hashCode +
@@ -34,6 +36,7 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
       (math.log(15.0 * (rawTripData.POLYLINE.length - 1) + 1), rawTripData.copy(POLYLINE = rawTripData.POLYLINE.take(cutoff)))
     }
 
+    val origTripData = tripDataFiltered.map(createTripData)
 
     val tripData = tripDataCut map { case (actualTime, trip) => (actualTime, createTripData(trip)) }
     val testData = rawTestDataAll map { trip => (-1.0, createTripData(trip)) }
@@ -41,10 +44,10 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
     val tripIds = testData.map(_._2.tripId).collect.toList.sortBy(_.drop(1).toInt)
     val knownLowerBound = testData.map { case (_, trip) => (trip.tripId, trip.elapsedTime) }.collect().toMap
 
-    (testData, tripData, rawTripDataAll, tripIds, knownLowerBound)
+    (testData, origTripData, tripData, tripDataFiltered, rawTestDataAll, rawTripDataAll, tripIds, knownLowerBound)
   }
 
-  private def _readRawTripData(fileName: String = "test", header: Boolean = false, pathPrefix: String = "/user/ds/data"): RDD[RawTripData] = {
+  def _readRawTripData(fileName: String = "test", header: Boolean = false, pathPrefix: String = "/user/ds/data"): RDD[RawTripData] = {
     val csvData = sqlContext.load("com.databricks.spark.csv", Map("path" -> s"${pathPrefix}/kaggle/taxi/$fileName.csv", "header" -> header.toString))
     csvData.map { r =>
       RawTripData(r.getString(0), r.getString(1), r.getString(2), r.getString(3), r.getString(4), r.getString(5), r.getString(6), r.getString(7),
@@ -54,9 +57,10 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
   }
 
 
-  private def createTripData(rawTripData: RawTripData): TripData = {
+  def createTripData(rawTripData: RawTripData): TripData = {
 
-    val hourOfDay = new DateTime(rawTripData.TIMESTAMP.toLong * 1000L).hourOfDay().get()
+    val timestamp =  new DateTime(rawTripData.TIMESTAMP.toLong * 1000L)
+    val hourOfDay = timestamp.hourOfDay().get()
     val originCall = rawTripData.ORIGIN_CALL match {
       case s if s.nonEmpty && s != "NA" => Some(s.trim)
       case _ => None
@@ -67,12 +71,10 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
     }
     val (pathPoints, avgSpeed) = earth.cleanTaxiPath(rawTripData.POLYLINE, 15)
 
-
-    val approximateOrigin = Point(pathPoints.take(3).map(_.lat).sum / 3, pathPoints.take(3).map(_.lon).sum / 3)
-    val approximateDestination = Point(pathPoints.takeRight(3).map(_.lat).sum / 3, pathPoints.take(3).map(_.lon).sum / 3)
-    val (north, est) = (approximateDestination - approximateOrigin).dirs(earth)
-
-
+    val avgOver = 2
+    val approximateOrigin = Point(pathPoints.take(avgOver).map(_.lat).sum / avgOver, pathPoints.take(avgOver).map(_.lon).sum / avgOver)
+    val approximateDestination = Point(pathPoints.takeRight(avgOver).map(_.lat).sum / avgOver, pathPoints.takeRight(avgOver).map(_.lon).sum / avgOver)
+    val (north, est, mag, dir) = (approximateDestination - approximateOrigin).dirs(earth)
 
     TripData(
       rawTripData.TRIP_ID,
@@ -80,6 +82,8 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
       originCall,
       originStand,
       rawTripData.TAXI_ID.toInt,
+      timestamp,
+      rawTripData.POLYLINE,
       hourOfDay,
 
       approximateOrigin, //origin
@@ -87,7 +91,8 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
       avgSpeed, // avg speed
       north, //north
       est, //east
-
+      mag,
+      dir,
 
       math.max(rawTripData.POLYLINE.length - 1, 0) * 15)
   }

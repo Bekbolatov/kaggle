@@ -63,19 +63,23 @@ val knownLowerBound = tripDataTestAll.map { t => (t.tripId, t.travelTime) }.coll
 
 //tripDataTestAll.collect { case t if t.rawPathPoints.length > 1 => t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds }.take(25).foreach(println)
 
-val timesO = tripDataTestAll.collect { case t if t.rawPathPoints.length > 1 =>
-    val a1 = Math.abs((1408039200000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
-    val a2 = Math.abs((1412065800000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
-    val a3 = Math.abs((1412617500000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
-    val a4 = Math.abs((1414814400000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
-    val a5 = Math.abs((1419175800000L - (t.timestamp + ( (t.rawPathPoints.length - 1) *15).seconds).getMillis)/1000)
-    val a = math.min(a1, math.min(a2, math.min(a3, math.min(a4, a5))))
-    (t.tripId, a)
+val timesO = testData.collect { case t if t._2.rawDataPoints.length > 1 =>
+    val tts = Seq(1408039200000L, 1412065800000L, 1412617500000L, 1414814400000L, 1419172200000L)
+    val ttss = tts.map { ts =>
+         (ts, Math.abs((ts - (t._2.timestamp + ( (t._2.rawDataPoints.length - 1) *15).seconds).getMillis)/1000))
+    }
+//    val a1 = Math.abs((1408039200000L - (t._2.timestamp + ( (t._2.rawDataPoints.length - 1) *15).seconds).getMillis)/1000)
+//    val a2 = Math.abs((1412065800000L - (t._2.timestamp + ( (t._2.rawDataPoints.length - 1) *15).seconds).getMillis)/1000)
+//    val a3 = Math.abs((1412617500000L - (t._2.timestamp + ( (t._2.rawDataPoints.length - 1) *15).seconds).getMillis)/1000)
+//    val a4 = Math.abs((1414814400000L - (t._2.timestamp + ( (t._2.rawDataPoints.length - 1) *15).seconds).getMillis)/1000)
+//    val a5 = Math.abs((1419175800000L - (t._2.timestamp + ( (t._2.rawDataPoints.length - 1) *15).seconds).getMillis)/1000)
+//    val a = math.min(a1, math.min(a2, math.min(a3, math.min(a4, a5))))
+    (t._2.tripId, ttss.minBy(_._2))
      }.collect
 
-val completed = timesO.filter(_._2 > 1200).toMap
+val completed = timesO.sortBy(-_._2._2)
 
-
+completed
 
 val guessedTimesFirst = tripIds.map { case tripId =>
 (tripId, {

@@ -137,6 +137,12 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
     Math.pow(dxx, 2) + Math.pow(dyy, 2) < Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED
   }
 
+  def isDirNear(d0: Double, d1: Double): Boolean = {
+    val d = math.abs(d1 - d0)
+    val ds = math.abs(360.0 + d1 - d0)
+    d < 45.0 || ds < 45.0
+  }
+
   /**
    *
    * @param s0

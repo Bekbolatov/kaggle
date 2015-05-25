@@ -26,5 +26,10 @@ object Runner extends App {
   val npts = e.cleanTaxiPath( pts )._1
   println(s"new points = ${npts.length}")
 
+
+
+  println(e.isDirNear(35.0, 45.0))
+  println(e.isDirNear(25.0, 355.0))
+  println(e.isDirNear(35.0, 145.0))
 }
 

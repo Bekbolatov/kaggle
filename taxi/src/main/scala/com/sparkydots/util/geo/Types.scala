@@ -15,7 +15,7 @@ case class Point(lat: Double, lon: Double) extends Serializable {
   def dirs(e: Earth) = {
     val (mag, dir) = e.toPolar(this)
     val dirRad = math.Pi * dir / 180
-    (math.cos(dirRad), math.sin(dirRad))
+    (math.cos(dirRad), math.sin(dirRad), mag, dir)
   }
 }
 
