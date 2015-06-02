@@ -1,7 +1,5 @@
 package com.sparkydots.util.geo
 
-import com.github.nscala_time.time.Imports._
-
 /**
  *
  * @param lat in degrees (360 for 2Pi)

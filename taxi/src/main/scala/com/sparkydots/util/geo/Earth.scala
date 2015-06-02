@@ -1,14 +1,8 @@
 package com.sparkydots.util.geo
 
-import com.sparkydots.kaggle.taxi.PathSegment
-
 import scala.collection.mutable
-import com.github.nscala_time.time.Imports._
-import org.json4s._
-import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
 
-class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_SEGMENT) extends Serializable {
+class Earth(p: Point, defaultIntervalSeconds: Int = Earth.DEFAULT_SECONDS_PER_SEGMENT) extends Serializable {
 
   val KM_PER_LAT_DEG = math.sin(1 / 180.0 * math.Pi)
   val KM_PER_LON_DEG = math.sin(1 / 180.0 * math.Pi) * math.cos(p.lat / 180.0 * math.Pi)
@@ -37,11 +31,11 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
    * @param intervalSeconds  number of seconds between data points
    * @return  cleaned path and avg segment length
    */
-  def cleanTaxiPath(pts: Seq[Point], intervalSeconds: Int = defaultIntervalSeconds): (Seq[Point], Double) = {
+  def cleanTaxiPath(pts: Seq[Point], intervalSeconds: Int = defaultIntervalSeconds): (Seq[Point], Seq[(Point, Double, Double)], Double) = {
     if (pts.isEmpty)
-      (Seq(), 0.0)
+      (Seq(), Seq(), 0.0)
     else {
-      var pointSets = Seq[mutable.MutableList[(Point, Double)]]()
+      var pointSets = Seq[mutable.MutableList[((Point, Double, Double), Double)]]()
       var ps = pts
 
       while (ps.nonEmpty) {
@@ -53,12 +47,12 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
         var angle = 0.0
         while (psets.nonEmpty && !connected) {
           val pset = psets.head
-          val (last, lastDistSum) = pset.last
+          val ((last, _, _), lastDistSum) = pset.last
           val da = toPolar(cur - last)
           dist = da._1
           angle = da._2
           if (dist < Earth.MAX_TAXI_SPEED_KM_PER_SEC * intervalSeconds) {
-            val newPt = (cur, lastDistSum + dist)
+            val newPt = ((cur, dist, angle), lastDistSum + dist)
             pset += newPt
             connected = true
           } else {
@@ -67,15 +61,15 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
           psets = psets.tail
         }
         if (!connected) {
-          pointSets +:= mutable.MutableList((cur, dist))
+          pointSets +:= mutable.MutableList(((cur, 0.0, 0.0), dist))
         }
       }
       val longest = pointSets.maxBy(_.length).toList
       val size = longest.length
       if (size > 0) {
-        (longest.map(_._1), longest.last._2 / size)
+        (longest.map(_._1._1), longest.map(_._1), longest.last._2 / size)
       } else {
-        (longest.map(_._1), 0.0)
+        (longest.map(_._1._1), longest.map(_._1), 0.0)
       }
     }
   }
@@ -128,6 +122,13 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
     }
   }
 
+  val centralPoint = Point(41.157802, -8.622630)
+  val (centralWidth, centralHeight) = (5.86 * 1.6, 3.0 * 1.6)
+
+  def centrality(p: Point): Double = {
+    val (dist, _) = toPolar(p - centralPoint)
+    math.exp(-dist / 20.00)
+  }
 
   def isPointNear(p0: Point,
                   p1: Point,
@@ -143,64 +144,80 @@ class Earth(p: Point, defaultIntervalSeconds: Int =  Earth.DEFAULT_SECONDS_PER_S
     d < 45.0 || ds < 45.0
   }
 
-  /**
-   *
-   * @param s0
-   * @param s1
-   * @param maxDistSquared
-   * @param maxDir
-   * @return
-   */
-  def isSegmentNear(s0: PathSegment,
-                    s1: PathSegment,
-                    maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
-                    maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
-    isPointNear(s0.begin, s1.begin) && math.abs(s1.direction - s0.direction) < maxDir && s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds && s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds
-
+  def isSpeedNear(s0: Double, s1: Double): Boolean = {
+    math.abs(s0 - s1) < Earth.MAX_TAXI_SPEED_DIFF_KM_PER_SEC
+  }
 
   /**
    *
-   * @param s0
+   * @param p0
+   * @param p1
+   * @param s0  speed
    * @param s1
-   * @param maxDistSquared
-   * @param maxDir
+   * @param d0  dir
+   * @param d1
    * @return
    */
-  def isSegmentNearStricter(s0: PathSegment,
-                    s1: PathSegment,
-                    maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
-                    maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
-    isPointNear(s0.begin, s1.begin) &&
-      math.abs(s1.direction - s0.direction) < maxDir &&
-      s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds &&
-      s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds &&
-      s0.callType == s1.callType &&
-      {
-        val originStand0 = s0.originStand match {
-          case None => None
-          case Some("57") => Some("57")
-          case Some("15") => Some("15")
-          case other => Some("O")
-        }
-        val originStand1 = s1.originStand match {
-          case None => None
-          case Some("57") => Some("57")
-          case Some("15") => Some("15")
-          case other => Some("O")
-        }
-        originStand0 == originStand1
-      } &&
-      {
-        val originCall0 = s0.originCall match {
-          case None => None
-          case other => Some("1")
-        }
-        val originCall1 = s1.originCall match {
-          case None => None
-          case other => Some("1")
-        }
-        originCall0 == originCall1
-      }
+  def lastSegmentNear(p0: Point, p1: Point, maxDistSquared: Double, s0: Double, s1: Double, d0: Double, d1: Double): Boolean =
+    isPointNear(p0, p1, maxDistSquared) && isDirNear(d0, d1) && isSpeedNear(s0, s1)
+
+//
+//  /**
+//   *
+//   * @param s0
+//   * @param s1
+//   * @param maxDistSquared
+//   * @param maxDir
+//   * @return
+//   */
+//  def isSegmentNear(s0: PathSegment,
+//                    s1: PathSegment,
+//                    maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
+//                    maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
+//    isPointNear(s0.begin, s1.begin) && math.abs(s1.direction - s0.direction) < maxDir && s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds && s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds
+//
+//
+//  /**
+//   *
+//   * @param s0
+//   * @param s1
+//   * @param maxDistSquared
+//   * @param maxDir
+//   * @return
+//   */
+//  def isSegmentNearStricter(s0: PathSegment,
+//                            s1: PathSegment,
+//                            maxDistSquared: Double = Earth.MAX_TAXI_NEAR_DIST_RAW_SQUARED,
+//                            maxDir: Double = Earth.MAX_TAXI_NEAR_DIRECTION): Boolean =
+//    isPointNear(s0.begin, s1.begin) &&
+//      math.abs(s1.direction - s0.direction) < maxDir &&
+//      s0.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds &&
+//      s1.distance > Earth.MIN_TAXI_SPEED_KM_PER_SEC * defaultIntervalSeconds &&
+//      s0.callType == s1.callType && {
+//      val originStand0 = s0.originStand match {
+//        case None => None
+//        case Some("57") => Some("57")
+//        case Some("15") => Some("15")
+//        case other => Some("O")
+//      }
+//      val originStand1 = s1.originStand match {
+//        case None => None
+//        case Some("57") => Some("57")
+//        case Some("15") => Some("15")
+//        case other => Some("O")
+//      }
+//      originStand0 == originStand1
+//    } && {
+//      val originCall0 = s0.originCall match {
+//        case None => None
+//        case other => Some("1")
+//      }
+//      val originCall1 = s1.originCall match {
+//        case None => None
+//        case other => Some("1")
+//      }
+//      originCall0 == originCall1
+//    }
 
 }
 
@@ -212,8 +229,10 @@ object Earth extends Serializable {
 
   val DEFAULT_SECONDS_PER_SEGMENT = 15
 
-  val MAX_TAXI_NEAR_DIRECTION = 90.0 * math.Pi / 180 // in radians (0 - 2Pi)
+  val MAX_TAXI_NEAR_DIRECTION = 90.0 * math.Pi / 180
+  // in radians (0 - 2Pi)
   val MIN_TAXI_SPEED_KM_PER_SEC = 1.0 / 60 / 60
+  val MAX_TAXI_SPEED_DIFF_KM_PER_SEC = 40.0 / 60 / 60
   val MAX_TAXI_NEAR_DIST_RAW = 50.0 / 1000 / Earth.RADIUS_KM
   val MAX_TAXI_NEAR_DIST_RAW_SQUARED = math.pow(MAX_TAXI_NEAR_DIST_RAW, 2)
 
@@ -226,19 +245,19 @@ object Earth extends Serializable {
    * @return distance in km
    */
   def haversineDistance(p1: Point, p2: Point): Double = {
-    val la1 = p1.lat * math.Pi/180
-    val lo1 = p1.lon * math.Pi/180
-    val la2 = p2.lat * math.Pi/180
-    val lo2 = p2.lon * math.Pi/180
+    val la1 = p1.lat * math.Pi / 180
+    val lo1 = p1.lon * math.Pi / 180
+    val la2 = p2.lat * math.Pi / 180
+    val lo2 = p2.lon * math.Pi / 180
 
     val la = math.abs(la1 - la2)
-    val lo = math.abs(lo1-lo2)
+    val lo = math.abs(lo1 - lo2)
 
-    val a = math.sin(la/2)*math.sin(la/2)+math.cos(la1)*math.cos(la2)*math.sin(lo/2)*math.sin(lo/2)
-    val d = 2*math.atan2(math.sqrt(a),math.sqrt(1-a))
+    val a = math.sin(la / 2) * math.sin(la / 2) + math.cos(la1) * math.cos(la2) * math.sin(lo / 2) * math.sin(lo / 2)
+    val d = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d * RADIUS_KM
   }
 
-  def isValidSegment(s: PathSegment): Boolean = s.distance > (MIN_TAXI_SPEED_KM_PER_SEC * DEFAULT_SECONDS_PER_SEGMENT)
+//  def isValidSegment(s: PathSegment): Boolean = s.distance > (MIN_TAXI_SPEED_KM_PER_SEC * DEFAULT_SECONDS_PER_SEGMENT)
 
 }

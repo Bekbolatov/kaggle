@@ -135,3 +135,18 @@ dts: Seq[Long] = List(1408039200000, 1412065800000, 1412617500000, 1414814400000
 
 
           (math.log(15.0 * (rawTripData.POLYLINE.length - 1) + 1), rawTripData.copy(POLYLINE = rawTripData.POLYLINE.take(cutoff)))
+
+
+
+import breeze.linalg._
+import breeze.plot._
+
+val f = Figure()
+val p = f.subplot(0)
+val x = linspace(0.0,1.0)
+p += plot(x, x :^ 2.0)
+p += plot(x, x :^ 3.0, '.')
+p.xlabel = "x axis"
+p.ylabel = "y axis"
+f.saveas("lines.png") // save current figure as a .png, eps and pdf also supported
+

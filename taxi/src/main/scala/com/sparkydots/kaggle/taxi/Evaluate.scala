@@ -33,6 +33,8 @@ case class TripData(
 
   def error(preds: RDD[(Double, Double)]) = math.sqrt(preds.map(diffsSq(_)).sum / preds.count)
 
+  def error(preds: Array[(Double, Double)]) = math.sqrt(preds.map(diffsSq(_)).sum / preds.length)
+
   def logError(preds: RDD[(Double, Double)]) = math.sqrt(preds.map(diffLogsSq(_)).sum / preds.count)
 
 }
