@@ -64,7 +64,7 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
         r.getString(0), r.getString(4).toInt,
 
         if (dow < 5) 0 else 1,  // 0 weekday, 1 weekend
-        if (hod < 11) 0 else if (hod < 4) 1 else if (hod < 7) 2 else 3,  //0 morning, 1 midday, 2 evening, 3 night
+        if (hod < 11) 0 else if (hod < 16) 1 else if (hod < 19) 2 else 3,  //0 morning, 1 midday, 2 evening, 3 night
 
         Try(r.getString(2).toInt).toOption, Try(r.getString(3).toInt).toOption,
         Extract.parsePoints(r.getString(8), false)
@@ -77,7 +77,9 @@ class Extract(@transient sc: SparkContext, @transient sqlContext: SQLContext, ea
 object Extract extends Serializable {
 
   // Mon, 11 Aug 2014 00:00:00
-  val timeOrigin = 1407715200
+  //  val timeOrigin = 1407715200
+  //  Mon, 30 Dec 2013 00:00:00
+  val timeOrigin = 1388361600
   val secsInWeek = 604800
   val secsInDay = 86400
   val secsInHour = 3600

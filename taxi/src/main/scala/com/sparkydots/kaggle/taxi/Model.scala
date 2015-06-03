@@ -4,10 +4,7 @@ import com.sparkydots.util.geo.Point
 
 case class TripData(
     tripId: String, taxiId: Int,
-
-    weekday: Int,
-    timeOfDay: Int,
-
+    weekday: Int, timeOfDay: Int,
     originCall: Option[Int], originStand: Option[Int],
     polyline: Seq[Point])
 
