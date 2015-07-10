@@ -1,0 +1,77 @@
+
+aws emr create-default-roles
+aws emr create-cluster --name SparkCluster --ami-version 3.7 --applications Name=Ganglia --instance-type m3.xlarge --instance-count 3 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.elasticmapreduce/spark/install-spark,Args=["-u s3://sparkydotsdata/jars","-x"] 
+aws emr describe-cluster --cluster-id j-38FQ7PTVQHOH6
+
+noglob aws emr create-cluster --name SparkCluster_R3_2X --ami-version 3.7 --applications Name=Ganglia --instance-type r3.2xlarge --instance-count 1 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.elasticmapreduce/spark/install-spark,Args=["-x"]
+
+ssh hadoop@ec2-52-25-172-194.us-west-2.compute.amazonaws.com   -i ~/.ssh/keys/panerapig.pem
+ssh -i ~/panerapig.pem -ND 8157 hadoop@ec2-52-25-172-194.us-west-2.compute.amazonaws.com
+
+scp -i ~/.ssh/keys/panerapig.pem target/scala-2.10/taxi-assembly-1.0.jar hadoop@ec2-52-25-172-194.us-west-2.compute.amazonaws.com:/home/hadoop/renat/.
+MASTER=yarn-client /home/hadoop/spark/bin/spark-shell --executor-memory 9G --driver-memory 1G --jars taxi-assembly-1.0.jar
+
+val hadoopConf=sc.hadoopConfiguration
+hadoopConf.set("fs.s3.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
+hadoopConf.set("fs.s3.awsAccessKeyId", "AKIAJXQN6FVPDDSENYHAR")
+hadoopConf.set("fs.s3.awsSecretAccessKey","LvTXbdOosvF4KtmUTZsKxTx+3N//RofSiM+1BN6bR")
+val a = sc.textFile("s3n://sparkydotsdata/kaggle/taxi/test.csv")
+
+
+
+==============================
+For 11x c3.4xlarge:
+noglob aws emr create-cluster --name SparkCluster_N11_C3_4X --ami-version 3.7 --applications Name=Ganglia Name=Hive --instance-type c3.4xlarge --instance-count 11 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.elasticmapreduce/spark/install-spark,Args=["-x"]
+
+/home/hadoop/spark/bin/spark-shell --master yarn-client --executor-cores 16 --num-executors 12 --executor-memory  20G --driver-memory 1G --jars taxi-assembly-1.0.jar
+==============================
+For r3.8xlarge:
+noglob aws emr create-cluster --name SparkCluster_R3_8X --ami-version 3.7 --applications Name=Hive Name=Ganglia --instance-type r3.8xlarge --instance-count 1 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.elasticmapreduce/spark/install-spark,Args=["-x"]
+
+/home/hadoop/spark/bin/spark-shell --master local[32] --executor-memory  236G --driver-memory 236G --jars taxi-assembly-1.0.jar
+
+
+==============================
+For 7 of r3.2xlarge:
+noglob aws emr create-cluster --name SparkCluster_C3_4X --ami-version 3.7 --applications Name=Ganglia --instance-type c3.4xlarge --instance-count 7 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.elasticmapreduce/spark/install-spark,Args=["-x"]
+
+/home/hadoop/spark/bin/spark-shell --master yarn-client --executor-cores 16 --num-executors 7 --executor-memory  20G --driver-memory 1G --jars taxi-assembly-1.0.jar
+
+==============================
+For 11 of r3.2xlarge:
+noglob aws emr create-cluster --name SparkCluster_N11_C3_4X --ami-version 3.7 --applications Name=Hive Name=Ganglia --instance-type c3.4xlarge --instance-count 11 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.elasticmapreduce/spark/install-spark,Args=["-x"]
+
+aws emr describe-cluster --cluster-id  ...
+
+/home/hadoop/spark/bin/spark-shell --master yarn-client --num-executors 12 --executor-cores 16 --executor-memory  20G --driver-memory 1G --jars taxi-assembly-1.0.jar
+========================
+========================
+For 5x r3.2xlarge:
+noglob aws emr create-cluster --name KaggleCluster --ami-version 3.7 --applications Name=Ganglia Name=Hive --instance-type r3.2xlarge --instance-count 5 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.el    asticmapreduce/spark/install-spark,Args=["-x"]
+
+/home/hadoop/spark/bin/spark-shell --master yarn-client --num-executors 5 --executor-cores 8 --executor-memory  48G --driver-memory 1G --jars taxi-assembly-1.0.jar
+===========================
+========================
+========================
+========================
+For 9x r3.xlarge:
+noglob aws emr create-cluster --name KaggleCluster --ami-version 3.7 --applications Name=Ganglia Name=Hive --instance-type r3.xlarge --instance-count 9 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --bootstrap-actions Path=s3://support.el    asticmapreduce/spark/install-spark,Args=["-x"]
+
+/home/hadoop/spark/bin/spark-shell --master yarn-client --num-executors 9 --executor-cores 4 --executor-memory  20G --driver-memory 1G --jars taxi-assembly-1.0.jar
+===========================
+========================
+
+Memory Optimized - Current Generation
+r3.large  2 6.5 15  1 x 32 SSD  $0.175 per Hour
+r3.xlarge 4 13  30.5  1 x 80 SSD  $0.350 per Hour
+[r3.2xlarge  8 26  61  1 x 160 SSD $0.700 per Hour]
+r3.4xlarge  16  52  122 1 x 320 SSD $1.400 per Hour
+r3.8xlarge  32  104 244 2 x 320 SSD $2.800 per Hour
+
+Model vCPU  Mem (GiB) SSD Storage  (GB)
+c3.large  2 3.75  2 x 16
+c3.xlarge 4 7.5 2 x 40
+c3.2xlarge  8 15  2 x 80
+[c3.4xlarge  16  30  2 x 160]
+c3.8xlarge  32  60  2 x 320
+

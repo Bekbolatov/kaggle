@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#echo -ne "\\e]1;$1\\a"
+
+#ec2-52-25-159-61.us-west-2.compute.amazonaws.com
+
+#EC2USER=ec2-user
+
+
+echo "  "
+echo "scp target/scala-2.10/taxi-assembly-1.0.jar $1:/home/hadoop/."
+echo "scp $1:/home/hadoop/results.csv ."
+echo "ssh  -ND 8157 $1"
+echo "  "
+#ssh  -ND 8157 $EC2USER@$1 -i ~/.ssh/keys/panerapig.pem
