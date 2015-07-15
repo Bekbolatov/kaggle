@@ -1,19 +1,29 @@
 package com.sparkydots.kaggle.avito
 
 import org.apache.spark.SparkContext
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 
 /*
 spark-shell --jars AvitoProject-assembly-1.0.jar
-val sqlctx = com.sparkydots.kaggle.avito.ReadData.ingest(sc)
+val (sqlContext, dfCategory, dfLocation, dfUser, dfAd, dfVisit, dfPhone, dfSearchInfo, dfSearchStream, dfSearchStreamToFind) = com.sparkydots.kaggle.avito.ReadData.ingest(sc)
  */
 
 object ReadData {
 
   def ingest(sc: SparkContext) = {
+    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
+    Logger.getLogger("org").setLevel(Level.WARN)
+    Logger.getLogger("akka").setLevel(Level.WARN)
+
+    import Functions._
     import UdfFunctions._
 
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     sqlContext.udf.register("strLen", (s: String) => s.length())
+    sqlContext.udf.register("errf", _error)
+    //val df2 = sqlctx.sql("select id, errf(histctr, 0) as err from searchStreamToFind where histctr >= 0.0 ")
+
     //import sqlContext.implicits._
     def loadDF(filename: String) = sqlContext.load("com.databricks.spark.csv",
       Map("header" -> "true", "delimiter" -> "\t", "path" -> s"s3n://sparkydotsdata/kaggle/avito/${filename}.tsv"))
@@ -62,9 +72,9 @@ object ReadData {
       withColumn("categoryId", toIntOrMinus(_dfAd("CategoryID"))).
       withColumn("params", parseParams(_dfAd("Params"))).
       withColumn("price", toDoubleOrMinus(_dfAd("Price"))).
-      withColumn("titleLength", length(_dfAd("Title"))). // skipping this column, since can't process much - maybe later can look at only length
+      withColumn("title", toLower(_dfAd("Title"))).
       withColumn("isContext", toInt(_dfAd("IsContext"))).
-      select("id", "locationId", "categoryId", "params", "price", "isContext").
+      select("id", "locationId", "categoryId", "params", "price", "title", "isContext").
       cache()
 
     dfAd.registerTempTable("ad")
@@ -129,13 +139,43 @@ object ReadData {
 
     dfSearchStream.registerTempTable("searchStream")
 
+    // SearchStream : 0.5G  -- testSearchStream.tsv
+    //ID	SearchID	AdID	Position	ObjectType	HistCTR
+    //1	1	10915336	1	3	0.004999
+    //2	1	12258424	6	1
+    val _dfSearchStreamToFind = loadDF("testSearchStream")
+    val dfSearchStreamToFind = _dfSearchStreamToFind.
+      withColumn("id", toInt(_dfSearchStreamToFind("ID"))).
+      withColumn("searchId", toInt(_dfSearchStreamToFind("SearchID"))).
+      withColumn("adId", toInt(_dfSearchStreamToFind("AdID"))).
+      withColumn("position", toInt(_dfSearchStreamToFind("Position"))).
+      withColumn("type", toInt(_dfSearchStreamToFind("ObjectType"))). //1, 2, 3
+      withColumn("histctr", toDoubleOrMinus(_dfSearchStreamToFind("HistCTR"))). // only for ObjectType 3
+      select("id", "searchId", "adId", "position", "type", "histctr").
+      cache()
+
+    dfSearchStreamToFind.registerTempTable("searchStreamToFind")
+
+
+    // force reads
+    sqlContext.sql("select count(1) from ad").show
+    sqlContext.sql("select count(1) from location").show
+    sqlContext.sql("select count(1) from category").show
+    sqlContext.sql("select count(1) from user").show
+    sqlContext.sql("select count(1) from visit").show
+    sqlContext.sql("select count(1) from phoneRequest").show
+    sqlContext.sql("select count(1) from searchInfo").show
+    sqlContext.sql("select count(1) from searchStream").show
+    sqlContext.sql("select count(1) from searchStreamToFind").show
+
+
 
     /*
 
     val sqlctx = sqlContext
     // Some queries
     sqlctx.sql(
-      """
+
       select v.userId, v.ipId, v.adId, v.eventTime, r.eventTime,
       (r.eventTime -  v.eventTime)*1.0/60 as betweenTime
       from visit v join phoneRequest r
@@ -173,8 +213,80 @@ object ReadData {
         group by v.userId
         order by cnt desc
                                     """)
+
+
+
+
+val (sqlContext, dfCategory, dfLocation, dfUser, dfAd, dfVisit, dfPhone, dfSearchInfo, dfSearchStream, dfSearchStreamToFind) = com.sparkydots.kaggle.avito.ReadData.ingest(sc)
+sqlContext.sql("select count(1) from ad").show
+sqlContext.sql("select count(1) from location").show
+sqlContext.sql("select count(1) from category").show
+sqlContext.sql("select count(1) from user").show
+sqlContext.sql("select count(1) from visit").show
+sqlContext.sql("select count(1) from phoneRequest").show
+sqlContext.sql("select count(1) from searchInfo").show
+sqlContext.sql("select count(1) from searchStream").show
+sqlContext.sql("select count(1) from searchStreamToFind").show
+
+//there is a searchInfo for each search item
+sqlContext.sql("select count(1) from searchStreamToFind s left outer join searchInfo i on (s.searchId = i.id) where i.id is not null").show()
+sqlContext.sql("select count(distinct i.userId, s.eventTime) from searchStreamToFind s left outer join searchInfo i on (s.searchId = i.id) where s.type = 3 and i.id is not null").show()
+sqlContext.sql("select i.userId, count(1) as cnt from searchStreamToFind s left outer join searchInfo i on (s.searchId = i.id) where s.type = 3 and i.id is not null group by i.userId order by cnt desc limit 10").show()
+
+sqlContext.sql("select count(distinct i.userId) from searchStream s left outer join searchInfo i on (s.searchId = i.id)").show()
+
+sqlContext.sql("select i.id, count(distinct s.position) as cnt from searchStreamToFind s left outer join searchInfo i on (s.searchId = i.id) where s.type = 3 group by i.id order by cnt desc limit 20").show(20)
+
+sqlContext.sql("select *  from searchStreamToFind s left outer join searchInfo i on (s.searchId = i.id)  order by i.userId limit 50").show(50)
+
+sqlContext.sql("select min(i.eventTime), max(i.eventTime) from searchStreamToFind s left outer join searchInfo i on (s.searchId = i.id) where s.type = 3 and i.id is not null").show()
+
+    val inters = sqlContext.sql("""
+      select s.searchId, s.adId, s.position, s.type, s.histctr, s.isClick,
+      i.id, i.eventTime, i.ipId, i.userId, i.userLogged, i.searchQuery, i.locationId, i.categoryId, i.params,
+      a.id, a.locationId, a.categoryId, a.params, a.price, a.title, a.isContext
+      from searchStream s
+      left outer join searchInfo i on (s.searchId = i.id)
+      left outer join ad a on (s.adId = a.id)
+      """).cache()
+
+    sqlContext.sql(
+      """
+        | select count(1)
+        | from searchStream s left outer join
+      """.stripMargin
+
+
+
+
+
+    // User Ids: touched in test set and the ones not touched yet
+    // We need to remove all users that are involved in final test/submission set to avoid data contamination
+    val dfTouchedUsers = sqlContext.sql(
+      """
+        |select distinct i.userId as id
+        |from searchStreamToFind s
+        |left outer join searchInfo i on (s.searchId = i.id)
+        |where i.id is not null
+      """.stripMargin).cache()
+
+    dfTouchedUsers.registerTempTable("touchedUsers")
+
+    val dfUntouchedUsers = sqlContext.sql(
+      """
+        |select distinct i.userId as id
+        |from searchStream s
+        |left outer join searchInfo i on (s.searchId = i.id)
+        |left outer join touchedUsers tu on (tu.id = i.userId)
+        |where i.id is not null and tu.id is null
+      """.stripMargin).cache()
+
+    dfUntouchedUsers.registerTempTable("untouchedUsers")
+
+
+
                                     */
 
-    sqlContext
+    (sqlContext, dfCategory, dfLocation, dfUser, dfAd, dfVisit, dfPhone, dfSearchInfo, dfSearchStream, dfSearchStreamToFind)
   }
 }

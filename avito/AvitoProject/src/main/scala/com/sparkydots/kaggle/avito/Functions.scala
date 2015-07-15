@@ -28,6 +28,10 @@ object Functions extends Serializable {
       terms.map(x => x.split(":")(0)).mkString(",")
     }
   }
+
+  val _error = (guess: Double, actual: Int) => {
+    - math.log(math.max(if (actual == 0) 1 - guess else guess, 1e-15))
+  }
 }
 
 object UdfFunctions extends Serializable {
@@ -41,6 +45,6 @@ object UdfFunctions extends Serializable {
   val toLower = udf[String, String](_toLower)
   val parseTime = udf(_parseTime)
   val parseParams = udf(_parseParams)
-
+  val error = udf[Double, Double, Int](_error)
 }
 

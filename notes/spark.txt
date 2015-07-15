@@ -8,3 +8,5 @@ Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
 Logger.getLogger("org").setLevel(Level.WARN)
 Logger.getLogger("akka").setLevel(Level.WARN)
 
+spark.shuffle.blockTransferService    nio
+
