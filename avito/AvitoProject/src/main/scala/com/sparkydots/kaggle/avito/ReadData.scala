@@ -5,6 +5,7 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import Functions._
 import UdfFunctions._
+import org.apache.spark.sql.functions._
 
 /*
 spark-shell --jars AvitoProject-assembly-1.0.jar
@@ -152,18 +153,19 @@ object ReadData {
 
     val trainError = ctxImpression.
       join(trainSet, trainSet("mid") === ctxImpression("mid")).
-      select(ctxImpression("histctr"), ctxImpression("isClick")).
-      map(r => _error(r.getDouble(0), r.getInt(1))).mean()
+      select(error(ctxImpression("histctr"), ctxImpression("isClick")).as("e")).
+      agg(avg("e"))
 
     val validateError = ctxImpression.
       join(validateSet, validateSet("mid") === ctxImpression("mid")).
-      select(ctxImpression("histctr"), ctxImpression("isClick")).
-      map(r => _error(r.getDouble(0), r.getInt(1))).mean()
+      select(error(ctxImpression("histctr"), ctxImpression("isClick")).as("e")).
+      agg(avg("e"))
 
     val testError = ctxImpression.
       join(testSet, testSet("mid") === ctxImpression("mid")).
-      select(ctxImpression("histctr"), ctxImpression("isClick")).
-      map(r => _error(r.getDouble(0), r.getInt(1))).mean()
+      select(error(ctxImpression("histctr"), ctxImpression("isClick")).as("e")).
+      agg(avg("e"))
+
 
     println(s"Errors:\nTrain\tValidate\tTest\n${trainError}\t${validateError}\t${testError}")
 
