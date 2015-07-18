@@ -1,6 +1,4 @@
-package com.sparkydots.kaggle.avito
-
-import org.joda.time.DateTime
+package com.sparkydots.kaggle.avito.functions
 
 import scala.util.Try
 
@@ -46,34 +44,19 @@ object Functions extends Serializable {
 
   val _parseParams = (tt: String) => {
     if (tt.isEmpty) {
-      ""
+      Seq.empty
     } else {
       val terms = tt.substring(1, tt.length - 1)
         .replaceAll("\\:\\{[^\\}]+\\}",":'XX'")
         .replaceAll("\\:\\[[^\\]]+\\]",":'XX'")
         .replaceAll("\\:'[^']+'",":'XX'")
         .split(", ")
-      terms.map(x => x.split(":")(0)).mkString(",")
+      terms.map(x => x.split(":")(0)).filter(_.nonEmpty).map(_.toInt).toSeq.sorted
     }
   }
 
   val _error = (guess: Double, actual: Int) => {
     - math.log(math.max(if (actual == 0) 1 - guess else guess, 1e-15))
   }
+
 }
-
-object UdfFunctions extends Serializable {
-  import org.apache.spark.sql.functions._
-  import Functions._
-
-  val toInt = udf[Int, String](_toInt)
-  val toIntOrMinus = udf[Int, String](_toIntOrMinus)
-  val toDoubleOrMinus = udf[Double, String](_toDoubleOrMinus)
-  val length = udf[Int, String](_length)
-  val toLower = udf[String, String](_toLower)
-  val toMid = udf[Long, String, String](_toMid)
-  val parseTime = udf(_parseTime)
-  val parseParams = udf(_parseParams)
-  val error = udf[Double, Double, Int](_error)
-}
-

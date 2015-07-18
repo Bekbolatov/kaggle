@@ -1,5 +1,6 @@
 package com.sparkydots.kaggle.avito
 
+import com.sparkydots.kaggle.avito.functions.Functions
 import org.scalatest.{Matchers, FlatSpec}
 import Functions._
 
@@ -14,20 +15,22 @@ class TestFunctions extends FlatSpec with Matchers {
     _length("Katelo") shouldBe 6
     _length("Продам ходули складные") shouldBe 22
 
-    _parseParams("{}") shouldBe ""
-    _parseParams("") shouldBe ""
-    _parseParams("{817:'Кузов', 5:'Запчасти', 598:'Для автомобилей'}") shouldBe "817,5,598"
-    _parseParams("{45:'Кровати, диваны и кресла'}") shouldBe "45"
-    _parseParams("{593:{to:400000, from:350000}, 187:['Фургон', Минивэн', Микроавтобус'], 210:'Citroen'}") shouldBe "593,187,210"
-    _parseParams("{797:'15', 709:'Диски', 799:'5', 5:'Шины, диски и колёса', 801:{to:'45', from:'30'}, 800:'100'}") shouldBe "797,709,799,5,801,800"
-    _parseParams("{797:'16', 796:'Литые', 709:'Диски', 799:'5', 798:'6.5', 5:'Шины, диски и колёса', 801:{to:'47', from:'47'}, 800:'114.3'}") shouldBe "797,796,709,799,798,5,801,800"
-    _parseParams("{797:'15', 709:'Диски', 799:'5', 5:'Шины, диски и колёса', 801:{from:'-40'}, 800:'139.7'}") shouldBe "797,709,799,5,801,800"
+    _parseParams("{}") shouldBe Seq()
+    _parseParams("") shouldBe Seq()
+    _parseParams("{817:'Кузов', 5:'Запчасти', 598:'Для автомобилей'}") shouldBe Seq(5,598,817)
+    _parseParams("{45:'Кровати, диваны и кресла'}") shouldBe  Seq(45)
+    _parseParams("{593:{to:400000, from:350000}, 187:['Фургон', Минивэн', Микроавтобус'], 210:'Citroen'}") shouldBe  Seq(187,210,593)
+    _parseParams("{797:'15', 709:'Диски', 799:'5', 5:'Шины, диски и колёса', 801:{to:'45', from:'30'}, 800:'100'}") shouldBe  Seq(5,709,797,799,800,801)
+    _parseParams("{797:'16', 796:'Литые', 709:'Диски', 799:'5', 798:'6.5', 5:'Шины, диски и колёса', 801:{to:'47', from:'47'}, 800:'114.3'}") shouldBe  Seq(5,709,796,797,798,799,800,801)
+    _parseParams("{797:'15', 709:'Диски', 799:'5', 5:'Шины, диски и колёса', 801:{from:'-40'}, 800:'139.7'}") shouldBe  Seq(5,709,797,799,800,801)
 
 
-    _parseParams("{45:'Кровати, диваны и кресла'}").split(",").map(_.toInt).toSeq shouldBe Seq(45)
-    _parseParams("{817:'Кузов', 5:'Запчасти', 598:'Для автомобилей'}").split(",").filter(_.nonEmpty).map(_.toInt).toSeq shouldBe Seq(817, 5, 598)
-    _parseParams("").split(",").filter(_.nonEmpty).map(_.toInt).toSeq shouldBe Seq()
-    _parseParams("{}").split(",").filter(_.nonEmpty).map(_.toInt).toSeq shouldBe Seq()
+    _parseParams("{45:'Кровати, диваны и кресла'}") shouldBe Seq(45)
+    _parseParams("{817:'Кузов', 5:'Запчасти', 598:'Для автомобилей'}") shouldBe Seq(5,598,817)
+    _parseParams("") shouldBe Seq()
+    _parseParams("{12:}") shouldBe Seq(12)
+    _parseParams("{12:{}}") shouldBe Seq(12)
+    _parseParams("{}") shouldBe Seq()
 
 
     _parseTime("2015-04-20 00:00:00.0") shouldBe 0
