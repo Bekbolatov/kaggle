@@ -9,4 +9,6 @@ Logger.getLogger("org").setLevel(Level.WARN)
 Logger.getLogger("akka").setLevel(Level.WARN)
 
 spark.shuffle.blockTransferService    nio
+spark.serializer org.apache.spark.serializer.KryoSerializer
+spark.storage.memoryFraction 0.3
 

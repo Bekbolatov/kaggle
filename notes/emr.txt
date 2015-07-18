@@ -71,7 +71,7 @@ r3.8xlarge  32  104 244 2 x 320 SSD $2.800 per Hour
 Model vCPU  Mem (GiB) SSD Storage  (GB)
 c3.large  2 3.75  2 x 16
 c3.xlarge 4 7.5 2 x 40
-c3.2xlarge  8 15  2 x 80
+c3.2xlarge  8 15  2 x 80  <-
 [c3.4xlarge  16  30  2 x 160]
 c3.8xlarge  32  60  2 x 320
 
@@ -88,4 +88,6 @@ noglob aws emr create-cluster --name Avito1  --ami-version 3.8 --applications  N
 
 13 node: 0.42 + 0.105 per hour per host of c3.2xlarge
 => about $20 per 3 hours
+
+noglob aws emr create-cluster --name Avito3  --ami-version 3.8 --applications  Name=Ganglia Name=Hive Name=Spark,Args=[-x] --bootstrap-action Path=s3://support.elasticmapreduce/bootstrap-actions/ami/3.3.1/ridetherocket-workaround.bash --instance-type c3.2xlarge --instance-count 13 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373
 
