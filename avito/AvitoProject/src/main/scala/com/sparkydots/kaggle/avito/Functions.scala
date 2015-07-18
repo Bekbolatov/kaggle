@@ -49,8 +49,9 @@ object Functions extends Serializable {
       ""
     } else {
       val terms = tt.substring(1, tt.length - 1)
-        .replaceAll("\\:\\{[^}]+'}",":'XX'")
-        .replaceAll("'[^']+'","'XX'")
+        .replaceAll("\\:\\{[^\\}]+\\}",":'XX'")
+        .replaceAll("\\:\\[[^\\]]+\\]",":'XX'")
+        .replaceAll("\\:'[^']+'",":'XX'")
         .split(", ")
       terms.map(x => x.split(":")(0)).mkString(",")
     }
