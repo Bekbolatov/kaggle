@@ -25,8 +25,8 @@ object FeatureGeneration {
 
       // get source values
       val isClick = r.getInt(0).toDouble
-      val os = r.getInt(1)
-      val uafam = r.getInt(2)
+      val os = Try(r.getInt(1)).getOrElse(-1)
+      val uafam = Try(r.getInt(2)).getOrElse(-1)
 
       val visitCount = Try(r.getLong(3).toInt).getOrElse(0)
       val phoneCount = Try(r.getLong(4).toInt).getOrElse(0)
@@ -34,24 +34,38 @@ object FeatureGeneration {
       val impCount = Try(r.getLong(5).toInt).getOrElse(0)
       val clickCount = Try(r.getLong(6).toInt).getOrElse(0)
 
-      val searchTime = r.getInt(7)
+      val searchTime = Try(r.getInt(7)).getOrElse(0)
       val searchTime_hour = _hourOfDay(searchTime)
 
-      val searchQuery = r.getString(8)
-      val searchLoc = r.getInt(9)
-      val searchCat = r.getInt(10)
-      val searchParams = r.getSeq[Int](11)
+      val searchQuery = Try(r.getString(8).toLowerCase).getOrElse("")
+      val searchLoc = Try(r.getInt(9)).getOrElse(-1)
+      val searchCat = Try(r.getInt(10)).getOrElse(-1)
+      val searchParams = Try ({
+        val  l = r.getSeq[Int](11)
+        if( l == null) {
+          Seq.empty
+        } else {
+          l
+        }
+      }).getOrElse(Seq.empty)
 
-      val loggedIn = r.getInt(12)
+      val loggedIn = Try(r.getInt(12)).getOrElse(-1)
 
       val position = r.getInt(13)
       val histctr = r.getDouble(14)
 
-      val category = r.getInt(15)
-      val params = r.getSeq[Int](16)
-      val price = r.getDouble(17)
+      val category = Try(r.getInt(15)).getOrElse(-1)
+      val params = Try({
+        val  l = r.getSeq[Int](16)
+        if( l == null) {
+          Seq.empty
+        } else {
+          l
+        }
+      }).getOrElse(Seq.empty)
+      val price = Try(r.getDouble(17)).getOrElse(-1.0)
 
-      val title = r.getString(18)
+      val title = Try(r.getString(18).toLowerCase).getOrElse("")
 
       val adImpCount =  Try(r.getLong(19).toInt).getOrElse(0)
       val adClickCount =  Try(r.getLong(20).toInt).getOrElse(0)

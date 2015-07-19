@@ -21,10 +21,40 @@ Logger.getLogger("akka").setLevel(Level.WARN)
 
 
 
+
+val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, evalData, trainData, validateData, smallData) = Script.run(sc)
+
+evalData.cache()
+smallData.cache()
+LoadSave.saveDF(sqlContext, evalData, "ANAL_EVAL")
+LoadSave.saveDF(sqlContext, smallData, "ANAL_SMALL")
+LoadSave.saveDF(sqlContext, trainData, "ANAL_TRAIN")
+LoadSave.saveDF(sqlContext, validateData, "ANAL_VALIDATE")
+
+val eval = featurize(evalOrig).toDF.cache()
+val small = featurize(smallOrig).toDF.cache()
+
+val lr = new LogisticRegression()
+lr.setMaxIter(10).setRegParam(0.01)
+
+val paramMap = ParamMap(lr.maxIter -> 10)
+
+val modelx = lr.fit(eval, ParamMap(lr.maxIter -> 40, lr.regParam -> 0.01))
+import sqlContext.implicits._
+val smallPred = modelx.transform(small).select("label", "probability").map(x => (x.getDouble(0), x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1))).toDF("id", "pred").orderBy("id").cache()
+smallPred.repartition(1).save(s"s3n://sparkydotsdata/kaggle/avito/processed/smallPred1.csv", "com.databricks.spark.csv")
+
+smallPred.save(s"s3n://sparkydotsdata/kaggle/avito/processed/smallPred", "com.databricks.spark.csv")
+
+
 val trainData = LoadSave.loadDF(sqlContext, "FINAL_TRAIN")
 val validateData = LoadSave.loadDF(sqlContext, "FINAL_VALIDATE")
 val train = featurize(trainData).toDF.cache()
 val validate = featurize(validateData).toDF.cache()
+
+val eval = featurize(evalData).toDF.cache()
+val small = featurize(smallData).toDF.cache()
+
 
 val lr = new LogisticRegression()
 lr.setMaxIter(10).setRegParam(0.01)
@@ -86,6 +116,16 @@ validate.cache()
 val model = lr.fit(train, ParamMap(lr.maxIter -> 40, lr.regParam -> 0.01))
 calcError(model.transform(train).select("label", "probability").map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 calcError(model.transform(validate).select("label", "probability").map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+
+
+
+>>>
+val modelx = lr.fit(eval, ParamMap(lr.maxIter -> 40, lr.regParam -> 0.01))
+calcError(modelx.transform(eval).select("label", "probability").map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+val smallPred = modelx.transform(small).select("probability").map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](0)(1))).toDF("pred")
+
+>>>
 
 ---- overfitting
 

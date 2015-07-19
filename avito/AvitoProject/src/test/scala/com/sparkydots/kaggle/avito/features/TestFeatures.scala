@@ -13,6 +13,9 @@ class TestFeatures extends FlatSpec with Matchers {
 
   it should "work with lists of Ints" in {
     FeatureHashing.intsFeatures("searchParams", Seq(1, 2, 3)) shouldBe Seq((10344,1.0), (23039,1.0), (23802,1.0))
+    FeatureHashing.hashValues("sd", Seq(1,2,3): _*) shouldBe Seq(2207, 30128, 24448)
+    FeatureHashing.hashValues("sd", Seq(): _*) shouldBe Seq()
+    FeatureHashing.hashValues("sd") shouldBe Seq()
   }
 
   it should "count param overlap" in {
