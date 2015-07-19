@@ -16,7 +16,7 @@ import org.apache.spark.sql.{Row, SQLContext}
 
 object Script {
 
-  //   SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=512m" spark-shell --jars AvitoProject-assembly-1.0.jar
+  //   SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=512m -Xmx=4g" spark-shell --jars AvitoProject-assembly-1.0.jar
   //   import com.sparkydots.kaggle.avito._
   //   val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, trainData, validateData, testData) = Script.run(sc)
   //   TrainingData.calcErrors(ctxAdImpressions, trainSet, validateSet, testSet)
@@ -43,18 +43,18 @@ object Script {
       else
         LoadSave.load(sqlContext)
 
-    val (trainData, validateData, testData) =
+    val (evalData, trainData, validateData, smallData) =
       TrainingData.split(sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests)
 
-    (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, trainData, validateData, testData)
+    (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, evalData, trainData, validateData, smallData)
   }
 
 
   def loadThem(sc: SparkContext) = {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-    val rawTrain = LoadSave.loadDF(sqlContext, "data_train_1")
-    val rawValidate = LoadSave.loadDF(sqlContext, "data_validate_1")
-    val rawTest = LoadSave.loadDF(sqlContext, "data_test_1")
+    val rawTrain = LoadSave.loadDF(sqlContext, "data_train_1").cache()
+    val rawValidate = LoadSave.loadDF(sqlContext, "data_validate_1").cache()
+    val rawTest = LoadSave.loadDF(sqlContext, "data_test_1").cache()
 
     val lr = new LogisticRegression()
     lr.setMaxIter(10).setRegParam(0.01)
@@ -64,11 +64,14 @@ object Script {
     (sqlContext, rawTrain, rawValidate, rawTest, lr, paramMap)
   }
 
-  def fit(sc: SparkContext, sqlContext: SQLContext, trainData: DataFrame, validateData: DataFrame, lr: LogisticRegression, paramMap: ParamMap) = {
+  def fit(sc: SparkContext, sqlContext: SQLContext, trainData: DataFrame, testData: DataFrame, validateData: DataFrame, lr: LogisticRegression, paramMap: ParamMap) = {
     import sqlContext.implicits._
 
-    val train = featurize(trainData).toDF
-    val validate = featurize(validateData).toDF
+//    val eval = featurize(evalData).toDF.cache()
+//    val small = featurize(smallData).toDF.cache()
+    val train = featurize(trainData).toDF.cache()
+    val validate = featurize(validateData).toDF.cache()
+    val test = featurize(testData).toDF.cache()
 
     val model = lr.fit(train, paramMap)
 
@@ -77,7 +80,7 @@ object Script {
 
     println(s"Train error: $errorTrain, Test error: $errorValidate")
 
-    (train, validate, model)
+    (train, validate, test, model)
   }
 
   def fitExample(sc: SparkContext, sqlContext: SQLContext) = {

@@ -38,13 +38,6 @@ object Functions extends Serializable {
   val _time_late_evening = (hour: Int) => if (hour >= 19 && hour < 23) 1 else 0
   val _time_night = (hour: Int) => if (hour >= 23 || hour < 6) 1 else 0
 
-  val _price_high = (price: Double) => if(price >= 3000000.0) 1 else 0
-  val _price_medhigh = (price: Double) => if(price >= 1000000.0 && price < 3000000.0) 1 else 0
-  val _price_med = (price: Double) => if(price >= 30000.0 && price < 1000000.0) 1 else 0
-  val _price_medlow = (price: Double) => if(price >= 3000.0 && price < 30000.0) 1 else 0
-  val _price_low = (price: Double) => if(price >= 1.0 && price < 3000.0) 1 else 0
-  val _price_99 = (price: Double) => if( (price*100).toInt % 100 == 99) 1 else 0
-  val _price_miss = (price: Double) => if(price < 0.01) 1 else 0
 
   // Other //
   val _toInt = (text: String) => text.toInt
