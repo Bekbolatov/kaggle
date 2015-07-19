@@ -1,8 +1,7 @@
-package com.sparkydots.kaggle.avito
+package com.sparkydots.kaggle.avito.functions
 
-import com.sparkydots.kaggle.avito.functions.Functions
-import org.scalatest.{Matchers, FlatSpec}
-import Functions._
+import com.sparkydots.kaggle.avito.functions.Functions._
+import org.scalatest.{FlatSpec, Matchers}
 
 class TestFunctions extends FlatSpec with Matchers {
 

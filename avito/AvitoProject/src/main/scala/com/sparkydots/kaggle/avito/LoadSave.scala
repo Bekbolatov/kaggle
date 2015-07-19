@@ -5,9 +5,11 @@ import org.apache.spark.sql.{SQLContext, DataFrame}
 
 object LoadSave {
 
+  val processedDir = "processed"
+
   def loadOrigDF(sqlContext: SQLContext, filename: String) = sqlContext.load("com.databricks.spark.csv", Map("header" -> "true", "delimiter" -> "\t", "path" -> s"s3n://sparkydotsdata/kaggle/avito/${filename}.tsv"))
-  def loadDF(sqlContext: SQLContext, filename: String) = sqlContext.load(s"s3n://sparkydotsdata/kaggle/avito/parsed/${filename}.parquet")
-  def saveDF(sqlContext: SQLContext, df: DataFrame, filename: String) = df.saveAsParquetFile(s"s3n://sparkydotsdata/kaggle/avito/parsed/${filename}.parquet")
+  def loadDF(sqlContext: SQLContext, filename: String) = sqlContext.load(s"s3n://sparkydotsdata/kaggle/avito/${processedDir}/${filename}.parquet")
+  def saveDF(sqlContext: SQLContext, df: DataFrame, filename: String) = df.saveAsParquetFile(s"s3n://sparkydotsdata/kaggle/avito/${processedDir}/${filename}.parquet")
 
   def origLoad(sqlContext: SQLContext) = {
 
@@ -17,23 +19,25 @@ object LoadSave {
       .withColumn("os", toInt(_users("UserAgentOSID")))
       .withColumn("uafam", toInt(_users("UserAgentFamilyID")))
       .select("id", "os", "uafam")
+      .repartition(1)
       .cache()
     saveDF(sqlContext, users, "users")
 
     val _ads = loadOrigDF(sqlContext, "AdsInfo")
-    val ads = _ads
-      .withColumn("id", toInt(_ads("AdID")))
-      .withColumn("category", toIntOrMinus(_ads("CategoryID")))
-      .withColumn("params", parseParams(_ads("Params")))
-      .withColumn("price", toDoubleOrMinus(_ads("Price")))
-      .withColumn("title", toLower(_ads("Title")))
-      .withColumn("isContext", toInt(_ads("IsContext")))
-      .select("id", "category", "params", "price", "title", "isContext")
-      .filter("isContext = 1")
-      .cache()
+    val ads = _ads.
+      withColumn("id", toInt(_ads("AdID"))).
+      withColumn("category", toIntOrMinus(_ads("CategoryID"))).
+      withColumn("params", parseParams(_ads("Params"))).
+      withColumn("price", toDoubleOrMinus(_ads("Price"))).
+      withColumn("title", toLower(_ads("Title"))).
+      withColumn("isContext", toInt(_ads("IsContext"))).
+      select("id", "category", "params", "price", "title", "isContext").
+      filter("isContext = 1").
+      repartition(8).
+      cache()
     saveDF(sqlContext, ads, "ads")
 
-    val ctxAds = ads.filter("isContext = 1").cache()
+    val ctxAds = ads.filter("isContext = 1").repartition(2).cache()
     saveDF(sqlContext, ctxAds, "ctxAds")
 
     val nonCtxAds = ads.filter("isContext != 1").cache()
@@ -50,6 +54,7 @@ object LoadSave {
       withColumn("searchCat", toIntOrMinus(_searches("CategoryID"))).
       withColumn("searchParams", parseParams(_searches("SearchParams"))).
       select("id", "searchTime", "userId", "loggedIn", "searchQuery", "searchLoc", "searchCat", "searchParams").
+      repartition(24).
       cache()
     saveDF(sqlContext, searches, "searches")
 
@@ -63,7 +68,9 @@ object LoadSave {
       withColumn("histctr", toDoubleOrMinus(_adImpressions("HistCTR"))). // only for ObjectType 3
       withColumn("isClick", toIntOrMinus(_adImpressions("IsClick"))). // now: -1, 0, 1
       select("mid", "searchId", "adId", "position", "type", "histctr", "isClick").
-      filter("type = 3").select("mid", "searchId", "adId", "position", "histctr", "isClick").
+      filter("type = 3").
+      select("mid", "searchId", "adId", "position", "histctr", "isClick").
+      repartition(24).
       cache()
     saveDF(sqlContext, ctxAdImpressions, "ctxAdImpressions")
 
@@ -77,6 +84,8 @@ object LoadSave {
       .withColumn("histctr", toDoubleOrMinus(_adImpressionsToFind("HistCTR"))) // only for ObjectType 3
       .select("id", "searchId", "adId", "position", "type", "histctr")
       .filter("type = 3")
+      .select("id", "searchId", "adId", "position", "histctr")
+      .repartition(24)
       .cache()
     saveDF(sqlContext, ctxAdImpressionsToFind, "ctxAdImpressionsToFind")
 
@@ -86,6 +95,7 @@ object LoadSave {
       withColumn("ad", toInt(_visits("AdID"))).
       withColumn("visitTime", parseTime(_visits("ViewDate"))).
       select("userId", "ad", "visitTime").
+      repartition(32).
       cache()
     saveDF(sqlContext, visits, "visits")
 
@@ -95,6 +105,7 @@ object LoadSave {
       withColumn("ad", toInt(_dfPhone("AdID"))).
       withColumn("phoneTime", parseTime(_dfPhone("PhoneRequestDate"))).
       select("userId", "ad", "phoneTime").
+      repartition(1).
       cache()
     saveDF(sqlContext, phoneRequests, "phoneRequests")
 

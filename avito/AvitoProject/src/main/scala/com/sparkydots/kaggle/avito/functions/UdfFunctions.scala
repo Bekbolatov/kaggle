@@ -18,7 +18,7 @@ object UdfFunctions extends Serializable {
 
   val parseParams = udf[Seq[Int], String](_parseParams)
 
-  val error = udf[Double, Double, Int](_error)
+  val error = udf[Double, Double, Double](_error)
 
 }
 

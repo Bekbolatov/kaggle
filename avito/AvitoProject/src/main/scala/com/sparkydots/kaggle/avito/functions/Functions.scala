@@ -22,12 +22,29 @@ object Functions extends Serializable {
    * 6: Sunday
    */
   val _dayOfWeek = (t: Int) => t/_SECONDS_IN_DAY % 7
+  val _weekend = (t: Int) => {
+    val d = _dayOfWeek(t)
+    if(d == 5 || d == 6) 1 else 0
+  }
 
   /**
    * 0, 1, ..., 23
    */
   val _hourOfDay = (t: Int) => t/_SECONDS_IN_HOUR % 24
+  val _time_morning = (hour: Int) => if (hour >= 6 && hour < 10) 1 else 0
+  val _time_noon = (hour: Int) => if (hour >= 10 && hour < 14) 1 else 0
+  val _time_afternoon = (hour: Int) => if (hour >= 14 && hour < 17) 1 else 0
+  val _time_evening = (hour: Int) => if (hour >= 17 && hour < 7) 1 else 0
+  val _time_late_evening = (hour: Int) => if (hour >= 19 && hour < 23) 1 else 0
+  val _time_night = (hour: Int) => if (hour >= 23 || hour < 6) 1 else 0
 
+  val _price_high = (price: Double) => if(price >= 3000000.0) 1 else 0
+  val _price_medhigh = (price: Double) => if(price >= 1000000.0 && price < 3000000.0) 1 else 0
+  val _price_med = (price: Double) => if(price >= 30000.0 && price < 1000000.0) 1 else 0
+  val _price_medlow = (price: Double) => if(price >= 3000.0 && price < 30000.0) 1 else 0
+  val _price_low = (price: Double) => if(price >= 1.0 && price < 3000.0) 1 else 0
+  val _price_99 = (price: Double) => if( (price*100).toInt % 100 == 99) 1 else 0
+  val _price_miss = (price: Double) => if(price < 0.01) 1 else 0
 
   // Other //
   val _toInt = (text: String) => text.toInt
@@ -55,8 +72,8 @@ object Functions extends Serializable {
     }
   }
 
-  val _error = (guess: Double, actual: Int) => {
-    - math.log(math.max(if (actual == 0) 1 - guess else guess, 1e-15))
+  val _error = (guess: Double, actual: Double) => {
+    - math.log(math.max(if (actual == 0.0) 1 - guess else guess, 1e-15))
   }
 
 }
