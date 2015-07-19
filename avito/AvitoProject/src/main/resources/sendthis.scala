@@ -38,8 +38,16 @@ trainData.filter("isClick = 0 ").agg(avg("price"), max("price"), min("price"), a
 trainData.filter("isClick = 0 ").withColumn("huy", trainData("clickCount")/trainData("impCount")).agg(avg("huy"), avg("visitCount"), max("visitCount"), min("visitCount"), avg("phoneCount"), max("phoneCount"), min("phoneCount"), avg("impCount"), avg("clickCount")).show(30)
 
 
+trainData.filter("isClick = 1 ").withColumn("huy", trainData("clickCount")/trainData("impCount")).withColumn("ahuy", trainData("adClickCount")/trainData("adImpCount")).
+  agg(avg("huy"), avg("ahuy"), avg("visitCount"), avg("impCount"), avg("clickCount"), avg("phoneCount"), max("phoneCount"), min("phoneCount")).show(30)
 
-scala> trainData.filter("isClick = 1 ").withColumn("huy", trainData("clickCount")/trainData("impCount")).agg(avg("huy"), avg("visitCount"), max("visitCount"), min("visitCount"), avg("phoneCount"), max("phoneCount"), min("phoneCount"), avg("impCount"), avg("clickCount")).show(30)
+trainData.filter("isClick = 0").withColumn("huy", trainData("clickCount")/trainData("impCount")).withColumn("ahuy", trainData("adClickCount")/trainData("adImpCount")).
+  agg(avg("huy"), avg("ahuy"), avg("visitCount"), avg("impCount"), avg("clickCount"), avg("phoneCount"), max("phoneCount"), min("phoneCount")).show(30)
+
+
+scala>
+
+trainData.filter("isClick = 1 ").withColumn("huy", trainData("clickCount")/trainData("impCount")).agg(avg("huy"), avg("visitCount"), max("visitCount"), min("visitCount"), avg("phoneCount"), max("phoneCount"), min("phoneCount"), avg("impCount"), avg("clickCount")).show(30)
 AVG(huy)            AVG(visitCount)   MAX(visitCount) MIN(visitCount) AVG(phoneCount)    MAX(phoneCount) MIN(phoneCount) AVG(impCount)      AVG(clickCount)
 0.06670347475079208 203.5222677995898 3920            1               10.448871960152358 1444            1               122.45912686785819 2.231614415470261
 

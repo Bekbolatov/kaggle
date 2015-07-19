@@ -9,6 +9,8 @@ import FeatureHashing._
 
 import com.sparkydots.kaggle.avito.functions.Functions._
 
+import scala.util.Try
+
 object FeatureGeneration {
 
   val numFeatures = FeatureHashing.numBuckets
@@ -26,11 +28,11 @@ object FeatureGeneration {
       val os = r.getInt(1)
       val uafam = r.getInt(2)
 
-      val visitCount = r.getLong(3)
-      val phoneCount = r.getLong(4)
+      val visitCount = Try(r.getLong(3).toInt).getOrElse(0)
+      val phoneCount = Try(r.getLong(4).toInt).getOrElse(0)
 
-      val impCount = r.getLong(5)
-      val clickCount = r.getLong(6)
+      val impCount = Try(r.getLong(5).toInt).getOrElse(0)
+      val clickCount = Try(r.getLong(6).toInt).getOrElse(0)
 
       val searchTime = r.getInt(7)
       val searchTime_hour = _hourOfDay(searchTime)
@@ -51,8 +53,8 @@ object FeatureGeneration {
 
       val title = r.getString(18)
 
-      val adImpCount = r.getLong(19)
-      val adClickCount = r.getLong(20)
+      val adImpCount =  Try(r.getLong(19).toInt).getOrElse(0)
+      val adClickCount =  Try(r.getLong(20).toInt).getOrElse(0)
 
       val ctr = if (impCount > 0)
         clickCount * 1.0 / impCount
@@ -64,8 +66,8 @@ object FeatureGeneration {
       else
         0.0
 
-      val hiCtr = if (impCount > 2 && ctr >= 0.049067) 1 else 0
-      val hiAdCtr = if (adImpCount > 10 && adCtr >= 0.009775) 1 else 0
+      val hiCtr = if (impCount > 2 && ctr >= 0.0679276) 1 else 0
+      val hiAdCtr = if (adImpCount > 10 && adCtr >= 0.010245) 1 else 0
 
       val spammer = if (impCount > 2000 || visitCount > 2000) 1 else 0
 
@@ -89,16 +91,16 @@ object FeatureGeneration {
         hashValues("Cat", category) ++
         hashValues("adpars", params:_*) ++
         hashValues("titleLen", _length(title)) ++
-        //hashValues("PriceHigh", if (price > 0 && price < 21000) 1 else 0) ++
-        //hashValues("PriceLow", if (price > 21000) 1 else 0) ++
-        //hashValues("Price99", if( (price*100).toInt % 100 == 99) 1 else 0) ++
-        hashValues("PriceNo", if (price < 0) 1 else 0)
-        //hashValues("HiCTR", hiCtr)
-        //hashValues("HiAdCTR", hiAdCtr) ++
-        //hashValues("spammer", spammer) ++
-        //hashValues("HiVisit", if (visitCount > 240) 1 else 0 ) ++
-        //hashValues("HiImp", if(impCount > 197) 1 else 0) ++
-        //hashValues("HiPhone", if(phoneCount > 11) 1 else 0)
+        hashValues("PriceHigh", if (price > 0 && price < 21000) 1 else 0) ++
+        hashValues("PriceLow", if (price > 21000) 1 else 0) ++
+        hashValues("Price99", if( (price*100).toInt % 100 == 99) 1 else 0) ++
+        hashValues("PriceNo", if (price < 0) 1 else 0) ++
+        hashValues("HiCTR", hiCtr) ++
+        hashValues("HiAdCTR", hiAdCtr) ++
+        hashValues("spammer", spammer) ++
+        hashValues("HiVisit", if (visitCount > 90) 1 else 0 ) ++
+        hashValues("HiPhone", if(phoneCount > 8) 1 else 0) ++
+        hashValues("HiImp", if(impCount > 68) 1 else 0)
 
       val features = combine(featureIndices) ++
         Seq(hashFeatureAmount("HistCTR", math.max(histctr, 0.0))) ++
@@ -106,9 +108,9 @@ object FeatureGeneration {
         sentenceFeatures("query", searchQuery) ++
         Seq(hashFeatureAmount("paramMatch", paramOverlap(searchParams, params).toDouble))
       val singleFeatures = combinePairs(features)
-      //val finalFeatures = combinePairs(singleFeatures ++ interactions(singleFeatures))
+      val finalFeatures = combinePairs(singleFeatures ++ interactions(singleFeatures))
 
-      LabeledPoint(isClick, Vectors.sparse(numFeatures, singleFeatures))
+      LabeledPoint(isClick, Vectors.sparse(numFeatures, finalFeatures))
     }
   }
 
