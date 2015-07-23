@@ -119,12 +119,12 @@ object Script {
     println(s"[maxIter=${maxIter}} numBits=${numBits}}] Train error: $errorTrain, Validate error: $errorValidate")
 //
 //
-//    val eval = featurize(rawEval, sqlContext).cache()
-//    val small = featurize(rawSmall, sqlContext).cache()
-//    val model = LogisticRegressionLogLoss.fit(eval, maxIter, regParam, numFeatures)
-//    val errorEval = df_calcError(model.transform(eval))
-//    val predsRaw = model.transform(small)
-//    println(s"[maxIter=${maxIter}} numBits=${numBits}}] Train error: $errorTrain, Validate error: $errorValidate")
+    val eval = featurize(rawEval, sqlContext).cache()
+    val small = featurize(rawSmall, sqlContext).cache()
+    val model = LogisticRegressionLogLoss.fit(eval, maxIter, regParam, numFeatures)
+    val errorEval = df_calcError(model.transform(eval))
+    val predsRaw = model.transform(small)
+    println(s"[maxIter=${maxIter}} numBits=${numBits}}] Train error: $errorTrain, Validate error: $errorValidate")
 
 
     val errors = Seq(30).map { maxIter =>
