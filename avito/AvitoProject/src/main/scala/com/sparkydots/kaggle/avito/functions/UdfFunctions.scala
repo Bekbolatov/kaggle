@@ -5,20 +5,20 @@ import org.apache.spark.sql.functions._
 
 object UdfFunctions extends Serializable {
 
-  val toInt = udf[Int, String](_toInt)
-  val toIntOrMinus = udf[Int, String](_toIntOrMinus)
-  val toDoubleOrMinus = udf[Double, String](_toDoubleOrMinus)
+  val udf_toInt = udf[Int, String](toInt)
+  val udf_toIntOrMinus = udf[Int, String](toIntOrMinus)
+  val udf_toDoubleOrMinus = udf[Double, String](toDoubleOrMinus)
 
-  val length = udf[Int, String](_length)
-  val toLower = udf[String, String](_toLower)
+  val udf_length = udf[Int, String](length)
+  val udf_toLower = udf[String, String](toLower)
 
-  val toMid = udf[Long, String, String](_toMid)
+  val udf_toMid = udf[Long, String, String](toMid)
 
-  val parseTime = udf[Int, String](_parseTime)
+  val udf_parseTime = udf[Int, String](parseTime)
 
-  val parseParams = udf[Seq[Int], String](_parseParams)
+  val udf_parseParams = udf[Seq[Int], String](parseParams)
 
-  val error = udf[Double, Double, Double](_error)
+  val udf_error = udf[Double, Double, Double](error)
 
 }
 

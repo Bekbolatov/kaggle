@@ -10,5 +10,8 @@ Logger.getLogger("akka").setLevel(Level.WARN)
 
 spark.shuffle.blockTransferService    nio
 spark.serializer org.apache.spark.serializer.KryoSerializer
-spark.storage.memoryFraction 0.3
+spark.driver.memory     39163M
+spark.storage.memoryFraction 0.5
+spark.executor.extraJavaOptions  -server -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:MaxHeapFreeRatio=70 -XX:NewRatio=2
+
 

@@ -10,6 +10,6 @@ object DFFunctions extends Serializable {
    * preds = DataFrame (pred: prob CTR (Double), isClick/label: actual isClick (Double))
    * out = DataFrame error
    */
-  val calcError = (preds: DataFrame) => preds.select(error(preds(preds.columns(0)), preds(preds.columns(1))).as("e")).agg(avg("e")).collect()(0).getDouble(0)
+  val df_calcError = (preds: DataFrame) => preds.select(udf_error(preds(preds.columns(0)), preds(preds.columns(1))).as("e")).agg(avg("e")).collect()(0).getDouble(0)
 
 }

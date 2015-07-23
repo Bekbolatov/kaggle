@@ -1,15 +1,52 @@
 #!/bin/bash
 
-#echo -ne "\\e]1;$1\\a"
+MASTER=""
+STATE=""
 
-#ec2-52-25-159-61.us-west-2.compute.amazonaws.com
+CLUSTERID=$(aws emr list-clusters --active | grep "\"Id\"" | awk -F "\"" '{ print $4 }')
+if [[ -z $CLUSTERID ]]; then 
+    echo "No active cluster"
+    exit
+fi
 
-#EC2USER=ec2-user
+echo "ClusterID: $CLUSTERID"
 
+MASTER=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "MasterPu" | awk -F "\"" '{ print $4 }')
+STATE=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "State\":" | head -n 1 | awk -F "\"" ' { print $4 }')
+COUNTER=20
+while [[ -z $MASTER ]] && [[ $COUNTER -gt 1 ]]; do
+    let COUNTER=COUNTER-1 
+    sleep 15
+    MASTER=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "MasterPu" | awk -F "\"" '{ print $4 }')
+done
+if [[ $COUNTER -lt 2 ]]; then
+    echo "No Master Public DNS name yet"
+    exit
+fi
 
-echo "  "
-echo "scp target/scala-2.10/taxi-assembly-1.0.jar $1:/home/hadoop/."
-echo "scp $1:/home/hadoop/results.csv ."
-echo "ssh  -ND 8157 $1"
-echo "  "
-#ssh  -ND 8157 $EC2USER@$1 -i ~/.ssh/keys/panerapig.pem
+echo -e "Master:\t$MASTER"
+STATE=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "State\":" | head -n 1 | awk -F "\"" ' { print $4 }')
+echo "$STATE"
+
+COUNTER=40
+while [[ "$STATE" != "WAITING" ]] && [[ $COUNTER -gt 1 ]]; do
+    let COUNTER=COUNTER-1 
+    sleep 15
+    STATE=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "State\":" | head -n 1 | awk -F "\"" ' { print $4 }')
+done
+if [[ $COUNTER -lt 2 ]]; then
+    echo "State is not yet RUNNING"
+    exit
+fi
+echo -e "Status:\t$STATE"
+
+echo ""
+
+TYPE=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep "InstanceType" | head -n 1 | awk -F "\"" '{ print $4 }')
+NUM=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep "RequestedInstanceCount" | head -n 1 | awk -F " " '{ print  $2 }' | awk -F "," '{print $1}')
+
+echo "ssh $MASTER"
+scp ../avito/AvitoProject/target/scala-2.10/AvitoProject-assembly-1.0.jar $MASTER:/home/hadoop/.
+scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/spark/conf/.
+
+ssh  -ND 8157 $MASTER

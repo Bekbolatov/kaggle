@@ -1,7 +1,7 @@
 package com.sparkydots.kaggle.avito
 
-import org.apache.spark.sql.{DataFrame, SQLContext}
-import com.sparkydots.kaggle.avito.LoadSave.saveDF
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{Row, DataFrame, SQLContext}
 
 object TrainingData {
 
@@ -10,7 +10,7 @@ object TrainingData {
             ads: DataFrame, ctxAds: DataFrame, nonCtxAds: DataFrame,
             searches: DataFrame,
             ctxAdImpressions: DataFrame, ctxAdImpressionsToFind: DataFrame,
-            visits: DataFrame, phoneRequests: DataFrame,
+            visits: DataFrame, phoneRequests: DataFrame, locations: DataFrame, categories: DataFrame,
             splitFracs: Array[Double] = Array(0.7, 0.3), seed: Long = 101L) = {
 
     import sqlContext.implicits._
@@ -168,28 +168,57 @@ object TrainingData {
         "category", "params", "price", "title", "adImpCount", "adClickCount")
       .cache()
 
-    (ctxAdImpressions_ads_users_eval, ctxAdImpressions_ads_users_train, ctxAdImpressions_ads_users_validate, ctxAdImpressions_ads_users_small)
-  }
 
-    // TrainingData.calcErrors(ctxAdImpressions, trainSet, validateSet, testSet)
-  def calcErrors(ctxAdImpressions: DataFrame, trainSet: DataFrame, validateSet: DataFrame, testSet: DataFrame) = {
+    val locationsMap = locations.flatMap({
+      case Row(id: Int, level: Int, par: Int) => Some((id, (level, par)))
+      case _ => None
+    }).collectAsMap()
+    val bcLocationsMap = sqlContext.sparkContext.broadcast(locationsMap)
+    val udf_getLocLevel = udf[Int, Int]( (id: Int) => bcLocationsMap.value.getOrElse(id, (1, -1))._1 )
+    val udf_getLocPar = udf[Int, Int]( (id: Int) => bcLocationsMap.value.getOrElse(id, (1, -1))._2 )
 
-    println("calculating errors")
+    val categoriesMap = categories.flatMap({
+      case Row(id: Int, level: Int, par: Int) => Some((id, (level, par)))
+      case _ => None
+    }).collectAsMap()
+    val bcCategoriesMap = sqlContext.sparkContext.broadcast(categoriesMap)
+    val udf_getCatLevel = udf[Int, Int]( (id: Int) => bcCategoriesMap.value.getOrElse(id, (1, -1))._1 )
+    val udf_getCatPar = udf[Int, Int]( (id: Int) => bcCategoriesMap.value.getOrElse(id, (1, -1))._2 )
 
-    import com.sparkydots.kaggle.avito.functions.DFFunctions.calcError
 
-    println(calcError(ctxAdImpressions.
-      join(trainSet, trainSet("mid") === ctxAdImpressions("mid")).
-      select(ctxAdImpressions("histctr"), ctxAdImpressions("isClick"))))
+    val dataEval = ctxAdImpressions_ads_users_eval.
+      withColumn("searchLocLevel", udf_getLocLevel(ctxAdImpressions_ads_users_eval("searchLoc"))).
+      withColumn("searchLocPar", udf_getLocPar(ctxAdImpressions_ads_users_eval("searchLoc"))).
+      withColumn("searchCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_eval("searchCat"))).
+      withColumn("searchCatPar", udf_getCatPar(ctxAdImpressions_ads_users_eval("searchCat"))).
+      withColumn("adCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_eval("category"))).
+      withColumn("adCatPar", udf_getCatPar(ctxAdImpressions_ads_users_eval("category")))
 
-      println(calcError(ctxAdImpressions.
-      join(validateSet, validateSet("mid") === ctxAdImpressions("mid")).
-      select(ctxAdImpressions("histctr"), ctxAdImpressions("isClick"))))
+    val dataTrain = ctxAdImpressions_ads_users_train.
+    withColumn("searchLocLevel", udf_getLocLevel(ctxAdImpressions_ads_users_train("searchLoc"))).
+      withColumn("searchLocPar", udf_getLocPar(ctxAdImpressions_ads_users_train("searchLoc"))).
+      withColumn("searchCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_train("searchCat"))).
+      withColumn("searchCatPar", udf_getCatPar(ctxAdImpressions_ads_users_train("searchCat"))).
+      withColumn("adCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_train("category"))).
+      withColumn("adCatPar", udf_getCatPar(ctxAdImpressions_ads_users_train("category")))
 
-        println(calcError(ctxAdImpressions.
-      join(testSet, testSet("mid") === ctxAdImpressions("mid")).
-      select(ctxAdImpressions("histctr"), ctxAdImpressions("isClick"))))
+    val dataValidate = ctxAdImpressions_ads_users_validate.
+    withColumn("searchLocLevel", udf_getLocLevel(ctxAdImpressions_ads_users_validate("searchLoc"))).
+      withColumn("searchLocPar", udf_getLocPar(ctxAdImpressions_ads_users_validate("searchLoc"))).
+      withColumn("searchCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_validate("searchCat"))).
+      withColumn("searchCatPar", udf_getCatPar(ctxAdImpressions_ads_users_validate("searchCat"))).
+      withColumn("adCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_validate("category"))).
+      withColumn("adCatPar", udf_getCatPar(ctxAdImpressions_ads_users_validate("category")))
 
+    val dataSmall = ctxAdImpressions_ads_users_small.
+    withColumn("searchLocLevel", udf_getLocLevel(ctxAdImpressions_ads_users_small("searchLoc"))).
+      withColumn("searchLocPar", udf_getLocPar(ctxAdImpressions_ads_users_small("searchLoc"))).
+      withColumn("searchCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_small("searchCat"))).
+      withColumn("searchCatPar", udf_getCatPar(ctxAdImpressions_ads_users_small("searchCat"))).
+      withColumn("adCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_small("category"))).
+      withColumn("adCatPar", udf_getCatPar(ctxAdImpressions_ads_users_small("category")))
+
+    (dataEval, dataTrain, dataValidate, dataSmall)
   }
 
 }

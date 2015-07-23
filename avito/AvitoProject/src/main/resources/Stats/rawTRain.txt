@@ -1,0 +1,251 @@
+
+scala> rawTrain.count
+res12: Long = 4781480
+
+scala> rawTrain.filter("isClick > 0").count
+res16: Long = 44130
+
+scala> rawTrain.filter("isClick < 1").count
+res17: Long = 4737350
+
+
+scala> rawTrain.describe("position", "impCount", "clickCount", "histctr", "adImpCount", "adClickCount", "visitCount", "phoneCount").show
+
+summary position           impCount           clickCount         histctr              adImpCount         adClickCount       visitCount         phoneCount
+count   4781480            3488000            812685             4781480              4781396            4713378            4306156            2223601
+mean    3.7247392020880565 86.26060206422018  1.9949894485563286 0.014866437975062005 117135.32759721219 873.6879569175228  101.22025328390332 8.690768712552297
+stddev  2.9873452249669574 257.65549667254896 1.9503756998047639 0.019013148011551406 184317.56053815485 1722.1095595220895 217.12503011750886 24.93031267639558
+min     1                  1                  1                  1.0E-5               1                  1                  1                  1
+max     7                  28685              101                1.0                  878718             11369              37953              4510
+
+scala> rawTrain.filter("isClick > 0").describe("position", "impCount", "clickCount", "histctr", "adImpCount", "adClickCount").show
+summary position           impCount           clickCount         histctr              adImpCount         adClickCount
+count   44130              29865              10284              44130                44129              43879
+mean    2.7207341944255607 49.01125062782521  2.0214896927265658 0.020912178314072067 114522.79315189557 1627.0488844321885
+stddev  2.713573105462239  121.15327425224136 2.026042302448187  0.02255254478208341  164958.77052093134 2772.434438740016
+min     1                  1                  1                  1.0E-5               3                  1
+max     7                  5387               37                 0.5                  878718             11369
+
+scala> rawTrain.filter("isClick < 1").describe("position", "impCount", "clickCount", "histctr", "adImpCount", "adClickCount").show
+summary position           impCount           clickCount        histctr              adImpCount         adClickCount
+count   4737350            3458135            802401            4737350              4737267            4669499
+mean    3.7340918445966627 86.58229334597983  1.994649807265943 0.014810119881368166 117159.66410442983 866.6086697951964
+stddev  2.988192238275509  258.49725183804264 1.949384515542008 0.018968017621278685 184488.17004529326 1707.6057896303262
+min     1                  1                  1                 1.0E-5               1                  1
+max     7                  28685              101               1.0                  878718             11369
+
+
+
+
+scala> rawTrain.filter("impCount > 86").count
+res18: Long = 724842
+
+scala> rawTrain.filter("impCount <= 86").count
+res19: Long = 2763158
+
+scala> rawTrain.filter("impCount > 50").count
+res20: Long = 1067586
+
+scala> rawTrain.filter("impCount <= 50").count
+res21: Long = 2420414
+
+
+---    User CTR  ---
+
+scala> rawTrain.filter("impCount > 50").select(rawTrain("clickCount")/rawTrain("impCount")).describe("(clickCount / impCount)").show()
+summary (clickCount / impCount)
+count   533090
+mean    0.0136184185297551
+stddev  0.01239302068119341
+min     1.023227258774173...
+max     0.2743362831858407
+
+scala> rawTrain.filter("impCount > 50").select(rawTrain("clickCount")/rawTrain("impCount") - rawTrain("histctr")).describe("((clickCount / impCount) - histctr)").show()
+summary ((clickCount / impCount) - histctr)
+count   533090
+mean    0.002166589819781145
+stddev  0.0194355239619615
+min     -0.9964028776978417
+max     0.2673842831858407
+
+
+---- Ad CTR ---
+
+scala> rawTrain.filter("adImpCount > 10000").select(rawTrain("adClickCount")/rawTrain("adImpCount")).describe("(adClickCount / adImpCount)").show()
+summary (adClickCount / adImpCount)
+count   3387620
+mean    0.007450876279364931
+stddev  0.006856492225148096
+min     1.792114695340501...
+max     0.04654742923361261
+
+
+scala> rawTrain.filter("adImpCount > 50000").select(rawTrain("adClickCount")/rawTrain("adImpCount")).describe("(adClickCount / adImpCount)").show()
+summary (adClickCount / adImpCount)
+count   1953879
+mean    0.007945852042210613
+stddev  0.007235166183281358
+min     2.155172413793103...
+max     0.04654742923361261
+
+
+
+
+rawTrain.filter("impCount > 500").select(rawTrain("clickCount")/rawTrain("impCount") - rawTrain("histctr")).describe("((clickCount / impCount) - histctr)").show()
+
+rawTrain.filter("impCount is null").select("impCount", "histctr").show()
+
+rawTrain.describe("position", "impCount", "clickCount", "histctr", "adImpCount", "adClickCount", "visitCount", "phoneCount").show
+
+
+
+rawTrain.filter("adImpCount > 50000").select(rawTrain("adClickCount")/rawTrain("adImpCount")).describe("(adClickCount / adImpCount)").show()
+rawTrain.filter("impCount <= 50").count
+
+=========================== Session 1 =============================================
+[maxIter=25} numBits=15}] Train error: 0.04776117382677757, Validate error: 0.04861688023007951
+[maxIter=25} numBits=15}] Train error: 0.04776463200129899, Validate error: 0.04861859027632169
++ remove weekend - just add day of week
+[maxIter=25} numBits=15}] Train error: 0.047760635889466295, Validate error: 0.04861465345788425
+
++ remove time of day - just add hour of day
+[maxIter=25} numBits=15}] Train error: 0.046501362338373195, Validate error: 0.047765960610039654
+
+-   remove searchParams
+    [maxIter=25} numBits=15}] Train error: 0.046528611066963536, Validate error: 0.04778662396042165
+
+-   remove position
+    [maxIter=25} numBits=15}] Train error: 0.04668148069840972, Validate error: 0.047948549157901824
+
+=========================== Session 2 =============================================
+[maxIter=30} numBits=14}] Train error: 0.046432097710646325, Validate error: 0.04739384007891707
+-   added titleLen
+    [maxIter=30} numBits=14}] Train error: 0.0469761128647842, Validate error: 0.047889107648157056
+[maxIter=30} numBits=14}] Train error: 0.04643209771064636, Validate error: 0.04739384007891703
+-   remove QueryLen
+    [maxIter=30} numBits=14}] Train error: 0.04654935433863673, Validate error: 0.04754396438729806
+-   change to QueryHas:  x > 1
+    [maxIter=30} numBits=14}] Train error: 0.04645961330251886, Validate error: 0.047421552086264494
+added searchLocPar
+[maxIter=30} numBits=14}] Train error: 0.04641317974287809, Validate error: 0.047372130301031046
+added searchLocLevel
+[maxIter=30} numBits=14}] Train error: 0.04638158471845632, Validate error: 0.047347314265520496
+added searchCatLevel
+[maxIter=30} numBits=14}] Train error: 0.046346864386369375, Validate error: 0.04731206879806737
+added searchCatPar
+[maxIter=30} numBits=14}] Train error: 0.04631319151505266, Validate error: 0.047286288273085
+added adCatLevel
+[maxIter=30} numBits=14}] Train error: 0.046302299115551615, Validate error: 0.047268505239568076
+added adCatPar
+[maxIter=30} numBits=14}] Train error: 0.04629160642495425, Validate error: 0.04725195847060171
+remove OS
+[maxIter=30} numBits=14}] Train error: 0.04628902615889845, Validate error: 0.047270352729281255
+remove UA
+[maxIter=30} numBits=14}] Train error: 0.04628259295508442, Validate error: 0.04727297845520125
+-   remove LoggedIn
+    [maxIter=30} numBits=14}] Train error: 0.046333240288790996, Validate error: 0.0473029573730653
+-   removed QLoc
+    [maxIter=30} numBits=14}] Train error: 0.04643192205928393, Validate error: 0.04735084060106152
+-   removed userCTR - with: val ctr = if (impCount > 50) clickCount * 1.0 / impCount else histctr
+    [maxIter=30} numBits=14}] Train error: 0.046438874365655115, Validate error: 0.047387841909747944
+-   removed adCTR
+    [maxIter=30} numBits=14}] Train error: 0.04630692380255357, Validate error: 0.04729231776364757
+-   change position=Pos to position= if(Pos < 2) 1 else 0
+    [maxIter=30} numBits=14}] Train error: 0.04635894165672396, Validate error: 0.047312559011182954
+[maxIter=30} numBits=14}] Train error: 0.04628259295508442, Validate error: 0.04727297845520125
+============================  Session 3  =============================================
+[maxIter=30} numBits=14}] Train error: 0.04628259295480926, Validate error: 0.047272978455029785
+>> 13 bits: [maxIter=30} numBits=13}] Train error: 0.04699900067221925, Validate error: 0.04754937578501035
+--  add otherInteractions(singleCatFeatures)
+    [maxIter=30} numBits=14}] Train error: 0.04700568903800839, Validate error: 0.04771913127714665
+-   add crossfeatures:  categorical x continuous
+    [maxIter=30} numBits=14}] Train error: 0.04635116195317812, Validate error: 0.047275396896953356
+-   add createFeatures_Int("DayOfWeek_Hour", searchTime_hour * 7 + day of week  ) ++
+    [maxIter=30} numBits=14}] Train error: 0.046370101218823935, Validate error: 0.04736687209886622
+-   add createFeatures_Int("DayOfWeek_searchCatPar", searchCatPar * 24 +  searchTime_hour
+    [maxIter=30} numBits=14}] Train error: 0.046343201898745794, Validate error: 0.047336498967975975
+-   added frequentVisitor: createFeatures_Int("FrequentVisitor", if (impCount > 2000) 1 else 0) ++
+    [maxIter=30} numBits=14}] Train error: 0.04646435204119543, Validate error: 0.04738538287547078
+-   descreased threshold to 500, frequentVisitor: createFeatures_Int("FrequentVisitor", if (impCount > 500) 1 else 0) ++
+    [maxIter=30} numBits=14}] Train error: 0.04640071787297005, Validate error: 0.047352048512608096
+-   increased threshold to 3000, frequentVisitor: createFeatures_Int("FrequentVisitor", if (impCount > 3000) 1 else 0) ++
+    [maxIter=30} numBits=14}] Train error: 0.046323382962435364, Validate error: 0.04729882691855333
+-   removed NewVisitor: createFeatures_Int("NewVisitor", if (impCount < 15) 1 else 0) ++
+    [maxIter=30} numBits=14}] Train error: 0.04637980664165238, Validate error: 0.04738727566897298
+-   removed CalledBefore: createFeatures_Int("CalledBefore", if (phoneCount > 1) 1 else 0)
+    [maxIter=30} numBits=14}] Train error: 0.046458700652179746, Validate error: 0.04742578450941488
+-   decreased calledbefore threshold to >0
+    [maxIter=30} numBits=14}] Train error: 0.04634813580582366, Validate error: 0.047340952316098237
+-   increased calledbefore threshold to >2
+    [maxIter=30} numBits=14}] Train error: 0.04643257356160631, Validate error: 0.04740901860501959
+-   added VisitedBefore:  visit > 0
+    [maxIter=30} numBits=14}] Train error: 0.04628669201718781, Validate error: 0.04728765774498107
+-   Make query length a continuous feature instead of categorical
+    [maxIter=30} numBits=14}] Train error: 0.04639130226506856, Validate error: 0.04740281332998944
+-   completely remove query length
+    [maxIter=30} numBits=14}] Train error: 0.04652400485003406, Validate error: 0.04753667210296699
+-   replace queryLen with count of words instead of letters
+    [maxIter=30} numBits=14}] Train error: 0.04648619903422752, Validate error: 0.04744211147607542
+[maxIter=30} numBits=14}] Train error: 0.04634813580582887, Validate error: 0.047340952316098805
+============================  Session 4  =============================================
+[maxIter=35} numBits=15}] Train error: 0.04589773461447604, Validate error: 0.04724926533859689
+added VisitedBefore:  visit > 0
+[maxIter=35} numBits=15}] Train error: 0.04580102697185427, Validate error: 0.04717848912347035
+-   try queryLen < 8
+    [maxIter=35} numBits=15}] Train error: 0.045838794201224733, Validate error: 0.047187001936456606
+-   Crazy partitioning scheme of hashed features: into 5 spaces
+    [maxIter=35} numBits=15}] Train error: 0.04622822406510982, Validate error: 0.047105599960502106
+[maxIter=35} numBits=15}] Train error: 0.045981149158345114, Validate error: 0.0471390965175011
++Another partitioning
+[maxIter=35} numBits=15}] Train error: 0.045776054966630425, Validate error: 0.04716252705407482
++remove priceHigh
+[maxIter=35} numBits=15}] Train error: 0.04573334919216632, Validate error: 0.047156084142513606
++remove all price-related categories
+[maxIter=35} numBits=15}] Train error: 0.04571572118478143, Validate error: 0.047136954131653905
+try adding price miss (<=0)
+[maxIter=35} numBits=15}] Train error: 0.04571552002367871, Validate error: 0.04713566427367962
+put price miss into designated part, but overlap with hash part
+[maxIter=35} numBits=15}] Train error: 0.045736009496197334, Validate error: 0.047140607550939025
+[maxIter=35} numBits=15}] Train error: 0.04569370253745555, Validate error: 0.04708731738459088
+
+* problematic:  shows increase, but intuitively should help
+put user ctr and ad ctr into designated part
+[maxIter=35} numBits=15}] Train error: 0.045723809922965195, Validate error: 0.047126082630507674
+
+    use only 4000 for free space
+    [maxIter=35} numBits=15}] Train error: 0.0470092876122062, Validate error: 0.04752409204138373
+    ->8000
+    [maxIter=35} numBits=15}] Train error: 0.0465183221925377, Validate error: 0.04730584260504898
+
+moved newVisitor, calledBefore,VisitedBefore to designated space
+[maxIter=35} numBits=15}] Train error: 0.04569575978126462, Validate error: 0.04711934213959398
+
+made number of common params a cont var and moved it into designated space
+split hash space into 2: query cross ad
+[maxIter=35} numBits=15}] Train error: 0.04557258494726119, Validate error: 0.04706601258167065
+
+again make len(query) < 1 indicator (instead of each length in chars)
+[maxIter=35} numBits=15}] Train error: 0.04558730667583419, Validate error: 0.04709937877292927
+
+
+    Some formula for dependence of CTR on query length
+    [maxIter=35} numBits=15}] Train error: 0.04574508333802944, Validate error: 0.047221998046674825
+
+    make query length a cont var
+    [maxIter=35} numBits=15}] Train error: 0.045645803280054686, Validate error: 0.047127398549153564
+    make length flat after 38
+    [maxIter=35} numBits=15}] Train error: 0.04566665434857671, Validate error: 0.04713560889774593
+
+make only K-1 one-hot-vars for categorical vars
+[maxIter=35} numBits=15}] Train error: 0.05206508629434832, Validate error: 0.053280353647165546
+just add o back
+[maxIter=35} numBits=15}] Train error: 0.04968578946429573, Validate error: 0.0508782526818803
+[maxIter=35} numBits=15}] Train error: 0.04944512270978089, Validate error: 0.05065473020092477
+[maxIter=35} numBits=15}] Train error: 0.04945765153813873, Validate error: 0.0506935362109286
+[maxIter=35} numBits=15}] Train error: 0.04944706771215814, Validate error: 0.0506686675721269
+----------------------------------------------------------------
+[maxIter=35} numBits=15}] Train error: 0.045645803280054624, Validate error: 0.04712739854915352
+[Submit]
+It looks like there is over-fitting, but I am done for today and will submit this version.
+maxIter=40
+----------
