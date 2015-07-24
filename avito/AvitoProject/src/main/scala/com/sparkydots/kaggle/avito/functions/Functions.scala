@@ -50,6 +50,25 @@ object Functions extends Serializable {
 
   val toMid = (searchId: String, adId: String) => 10000000L * searchId.toInt + adId.toInt
 
+  val splitString = (tt: String) => {
+    if (tt == null || tt.isEmpty) {
+      Seq.empty[String]
+    } else {
+      tt.split("-")
+        .mkString(" ").split(" ")
+        .mkString(",").split(",")
+        .mkString("\"").split("\"")
+        .mkString("'").split("'")
+        .mkString(":").split(":")
+        .mkString(";").split(";")
+        .mkString("-").split("-")
+        .filter(_.nonEmpty)
+        .toSeq
+    }
+  }
+
+  val stemString = (x: String) => if (x.length > 4) x.dropRight(2) else if (x.length == 4) x.dropRight(1) else x
+
   val parseParams = (tt: String) => {
     if (tt.isEmpty) {
       Seq.empty

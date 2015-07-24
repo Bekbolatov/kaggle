@@ -1,7 +1,7 @@
-package com.sparkydots.kaggle.avito
+package com.sparkydots.kaggle.avito.load
 
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Row, DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
 object TrainingData {
 

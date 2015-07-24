@@ -26,34 +26,4 @@ class FeatureHashing(bits: Int) extends Serializable {
     dedupeFeatures(setFeaturesValue(items, 1.0))
   }
 
-  /**
-   * We know inputs are sorted asc, and non-repeating
-   * @param first
-   * @param second
-   * @return
-   */
-  def numberOfCommonElements(first: Seq[Int], second: Seq[Int]): Int = {
-    if (first.isEmpty || second.isEmpty || first.sliding(2).filter(_.size > 1).exists(s => s(0) >= s(1)) || first.sliding(2).filter(_.size > 1).exists(s => s(0) >= s(1))) {
-      0
-    } else {
-      val it1 = first.iterator
-      val it2 = second.iterator
-      var c1 = it1.next
-      var c2 = it2.next
-      var count = 0
-      while (it1.hasNext && it2.hasNext) {
-        if (c1 < c2) {
-          c1 = it1.next
-        } else if (c1 > c2) {
-          c2 = it2.next
-        } else {
-          count = count + 1
-          c1 = it1.next
-          c2 = it2.next
-        }
-      }
-      if (c1 == c2) count = count + 1
-      count
-    }
-  }
 }

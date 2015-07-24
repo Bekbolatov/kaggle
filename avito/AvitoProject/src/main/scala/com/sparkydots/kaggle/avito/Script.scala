@@ -1,8 +1,11 @@
 package com.sparkydots.kaggle.avito
 
+import java.io.FileWriter
+
 import com.sparkydots.kaggle.avito.features.{FeatureHashing, FeatureGeneration}
 import com.sparkydots.kaggle.avito.functions.DFFunctions._
-import com.sparkydots.kaggle.avito.optimization.LogisticRegressionLogLoss
+import com.sparkydots.kaggle.avito.load.{LoadSave, TrainingData}
+import com.sparkydots.kaggle.avito.optimization.{LogisticRegressionLogLossModel, LogisticRegressionLogLoss}
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
@@ -19,12 +22,13 @@ import org.apache.spark.ml.classification.LogisticRegression
 object Script {
 
   /*
-
      SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1512m -Xmx=8g" spark-shell --jars AvitoProject-assembly-1.0.jar
 
     import org.apache.log4j.{Level, Logger}
+    import org.apache.spark.ml.param.ParamMap
     import org.apache.spark.sql.{Row, SQLContext}
     import com.sparkydots.kaggle.avito._
+    import com.sparkydots.kaggle.avito.load._
     import com.sparkydots.kaggle.avito.functions.DFFunctions._
     import com.sparkydots.kaggle.avito.functions.Functions._
     import com.sparkydots.kaggle.avito.features.FeatureGeneration
@@ -35,131 +39,105 @@ object Script {
     import org.apache.spark.rdd.RDD
     import org.apache.spark.sql.{SQLContext, DataFrame}
     import scala.util.Try
+    import java.io.FileWriter
+
+    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
+    Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
+    Logger.getLogger("org").setLevel(Level.WARN)
+    Logger.getLogger("akka").setLevel(Level.WARN)
 
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
+    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
+
+    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01)
+
+
+    val paramMap = ParamMap(lr.maxIter -> 50)
+    val model = lr.fit(train, paramMap)
+
+    val errorTrain = df_calcError(model.transform(train)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    val errorValidate = df_calcError(model.transform(validate)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    println(s"Train error: $errorTrain, Validate error: $errorValidate")
+
+
+
+
+
+
+
 
     val maxIter = 35
     val bits = 15
-    val numBits = bits
-    val numFeatures = math.pow(2, numBits).toInt
+    val numFeatures = math.pow(2, bits).toInt
     val regParam = 0.01
 
 
-    val (rawTrain, rawValidate, rawEval, rawSmall) = com.sparkydots.kaggle.avito.Script.run(sc, sqlContext)
 
 
+    val (rawTrain, rawValidate, rawEval, rawSmall) = Script.run(sc, sqlContext)
 
+    val (train, validate) = Script.fit(sqlContext, rawTrain, rawValidate, bits, maxIter, regParam, numFeatures)
 
-
-
-
-
-    val results2 = Script.tryfit(sqlContext, rawTrain, rawValidate,  Seq(15), Seq(40))
 
     results.foreach { case Seq(Seq( (numBits, interactions, maxIter, errorTrain, errorValidate))) =>
           println(s"${numBits}\t${maxIter}\t${errorTrain}\t${errorValidate}")
     }
 
 
-    val (sqlContext, rawTrain, rawValidate, rawEval, rawSmall, train, validate, errors) = com.sparkydots.kaggle.avito.Script.run(sc)
-    val results2 = Script.tryfit(sqlContext, rawTrain, rawValidate,  Seq(15), Seq(40))
-
-
 */
 
+  def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double) = {
+    import sqlContext.implicits._
 
+    val featureGen = new FeatureGeneration(sqlContext)
+    val train = featureGen.featurize(rawTrain, sqlContext).cache()
+    val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
+    val lr = new LogisticRegression()
+    lr.setMaxIter(maxIter).setRegParam(regParam)
 
-  def run(sc: SparkContext, sqlContext: SQLContext) = {
-    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
-    Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
-    Logger.getLogger("org").setLevel(Level.WARN)
-    Logger.getLogger("akka").setLevel(Level.WARN)
+    val model = lr.fit(train)
 
-    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
-    (rawTrain, rawValidate, rawEval, rawSmall)
+    val errorTrain = df_calcError(model.transform(train)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    val errorValidate = df_calcError(model.transform(validate)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    println(s"[maxIter=${maxIter}}] Train error: $errorTrain, Validate error: $errorValidate")
+    (train, validate, lr, featureGen)
   }
 
+  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, bits: Int, maxIter: Int, regParam: Double, numFeatures: Int) = {
 
-  def run0(sc: SparkContext) = {
-    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
-    Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
-    Logger.getLogger("org").setLevel(Level.WARN)
-    Logger.getLogger("akka").setLevel(Level.WARN)
-
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
-
-    val (train, validate, errors) = Script.fit(sqlContext, rawTrain, rawValidate, 15)
-
-  (sqlContext, rawTrain, rawValidate, rawEval, rawSmall, train, validate, errors)
-
-  }
-
-
-  def fit(sqlContext: SQLContext, trainData: DataFrame, validateData: DataFrame, numBits: Int = 15) = {
-
-
-    val maxIter = 30
-    val bits = 15
-    val numBits = bits
-    val numFeatures = math.pow(2, numBits).toInt
-    val regParam = 0.01
-    var hasher = new FeatureHashing(bits)
-
-    val featureGen = new FeatureGeneration(sqlContext, numBits)
-
-
-    val train = featureGen.featurize(trainData, sqlContext).cache()
-    val validate = featureGen.featurize(validateData, sqlContext).cache()
-    val model = LogisticRegressionLogLoss.fit(train, maxIter, regParam, numFeatures)
-    val errorTrain = df_calcError(model.transform(train))
-    val errorValidate = df_calcError(model.transform(validate))
-    println(s"[maxIter=${maxIter}} numBits=${numBits}}] Train error: $errorTrain, Validate error: $errorValidate")
-//
-//
-    val eval = featurize(rawEval, sqlContext).cache()
-    val small = featurize(rawSmall, sqlContext).cache()
+    val eval = featureGen.featurize(rawEval, sqlContext).cache()
+    val small = featureGen.featurize(rawSmall, sqlContext).cache()
     val model = LogisticRegressionLogLoss.fit(eval, maxIter, regParam, numFeatures)
     val errorEval = df_calcError(model.transform(eval))
+
     val predsRaw = model.transform(small)
-    println(s"[maxIter=${maxIter}} numBits=${numBits}}] Train error: $errorTrain, Validate error: $errorValidate")
+    println(s"[maxIter=${maxIter}} numBits=${bits}} regParam=${regParam}} eval] Eval error: $errorEval")
 
-
-    val errors = Seq(30).map { maxIter =>
-      val model = LogisticRegressionLogLoss.fit(train, maxIter, regParam, numFeatures)
-      val errorTrain = df_calcError(model.transform(train))
-      val errorValidate = df_calcError(model.transform(validate))
-      println(s"[maxIter=${maxIter}} numBits=${numBits}}] Train error: $errorTrain, Validate error: $errorValidate")
-      (maxIter, (errorTrain, errorValidate))
+    val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
+    val sub = new FileWriter(s"/home/hadoop/${filename}.csv", true)
+    sub.write("ID,IsClick\n")
+    println("saving file...")
+    preds.foreach { case (id, prob) =>
+      sub.write(id + "," + f"$prob%1.8f" + "\n")
     }
-
-    (train, validate, errors)
+    sub.close()
+    println("done")
   }
 
-  def tryfit(sqlContext: SQLContext, trainData: DataFrame, validateData: DataFrame, numBitsSeq: Seq[Int] = Seq(9, 10, 11), maxIterSeq: Seq[Int] = Seq(20, 40)) = {
-    val regParam = 0.01
-    val results = numBitsSeq.map { numBits =>
-      Seq(false).map { interactions =>
-        val featureGen = new FeatureGeneration(sqlContext, numBits, interactions)
-        val numFeatures = math.pow(2, numBits).toInt
-        val train = featureGen.featurize(trainData, sqlContext).cache()
-        val validate = featureGen.featurize(validateData, sqlContext).cache()
-        val errors = maxIterSeq.map { maxIter =>
-          val model = LogisticRegressionLogLoss.fit(train, maxIter, regParam, numFeatures)
-          val errorTrain = df_calcError(model.transform(train))
-          val errorValidate = df_calcError(model.transform(validate))
-          println(s"[maxIter=${maxIter}} numBits=${numBits}} interactions=${interactions}}] Train error: $errorTrain, Validate error: $errorValidate")
-          (numBits, interactions, maxIter, errorTrain, errorValidate)
-        }
-        train.unpersist()
-        validate.unpersist()
-        errors
-      }
-    }
-    results
-  }
 
   def fitExample(sc: SparkContext, sqlContext: SQLContext) = {
 

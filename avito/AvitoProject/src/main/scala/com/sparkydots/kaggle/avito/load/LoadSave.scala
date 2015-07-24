@@ -1,4 +1,4 @@
-package com.sparkydots.kaggle.avito
+package com.sparkydots.kaggle.avito.load
 
 import com.sparkydots.kaggle.avito.functions.UdfFunctions._
 import org.apache.spark.SparkContext

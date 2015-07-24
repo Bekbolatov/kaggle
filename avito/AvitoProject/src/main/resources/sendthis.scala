@@ -4,6 +4,7 @@ import java.io.FileWriter
 import com.sparkydots.kaggle.avito.features.FeatureGeneration
 import com.sparkydots.kaggle.avito.features.FeatureGeneration._
 import com.sparkydots.kaggle.avito.functions.DFFunctions._
+import com.sparkydots.kaggle.avito.load.LoadSave
 import com.sparkydots.kaggle.avito.optimization.LogisticRegressionLogLoss
 
 import org.apache.log4j.{Level, Logger}
@@ -102,8 +103,8 @@ preds.foreach { case (id, prob) =>
 }
 sub.close()
 
-
-val sub = new FileWriter("/home/hadoop/sub3.csv", true)
+val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
+val sub = new FileWriter("/home/hadoop/subr2.csv", true)
 sub.write("ID,IsClick\n")
 preds.foreach { case (id, prob) =>
   sub.write(id + "," + f"$prob%1.8f" + "\n")
@@ -131,6 +132,43 @@ lr.setMaxIter(10).setRegParam(0.01)
 
 val paramMap = ParamMap(lr.maxIter -> 10)
 
+
+
+scala> counts.describe("cnt").show
+summary cnt
+  count   24371
+mean    3196.972672438554
+stddev  2632.969040531403
+min     1
+max     10097377
+
+scala> counts.describe("cnt").show
+summary cnt
+  count   24786
+mean    3143.4447268619383
+stddev  2782.0324339154226
+min     1
+max     1841593
+
+scala> counts.describe("cnt").show
+summary cnt
+  count   28252
+mean    2757.8019609231205
+stddev  3131.674696169024
+min     1
+max     1735418
+
+
+
+
+
+
+scala> rawEval.filter("title like 'chic-robot%'").show
+isClick os   uafam visitCount phoneCount impCount clickCount searchTime searchQuery searchLoc searchCat searchParams     loggedIn position histctr  category params           price   title                adImpCount adClickCount searchLocLevel searchLocPar searchCatLevel searchCatPar adCatLevel adCatPar
+0       null null  null       null       null     null       null       null        null      null      null             null     7        0.004065 47       ArrayBuffer(127) 39500.0 chic-robot smart ... 15575      104          1              -1           1              10           3          3
+0       30   9     null       null       null     null       2061652                3953      47        ArrayBuffer()    0        7        0.004381 47       ArrayBuffer(127) 39500.0 chic-robot smart ... 15575      104          2              47           3              3            3          3
+0       30   64    48         4          26       1          2321990                900       47        ArrayBuffer(127) 0        7        0.003502 47       ArrayBuffer(127) 39500.0 chic-robot smart ... 15575      104          3              75           3              3            3          3
+0       20   25    28         4          20       null       2231568                3198      47        ArrayBuffer()    0        7        0.00461  47       ArrayBuffer(127) 39500.0 chic-robot smart ... 15575      104          3              56           3              3            3          3
 
 
 trainData.filter("isClick = 1 ").agg(avg("price"), max("price"), min("price"), avg("phoneCount"), max("phoneCount"), min("phoneCount"), avg("impCount"), avg("clickCount")).show(30)
