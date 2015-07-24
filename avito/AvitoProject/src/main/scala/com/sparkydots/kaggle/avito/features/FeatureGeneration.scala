@@ -10,7 +10,7 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import scala.util.Try
 
 
-class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words1000") extends Serializable {
+class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words500") extends Serializable {
   /**
    *
   "isClick",
@@ -85,7 +85,14 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words10
 
       val whichFeatures =
         booleanFeature(loggedIn > 0) ++
+        booleanFeature(phoneCount > 1) ++
+        booleanFeature(visitCount > 10) ++
+        booleanFeature(impCount > 1000) ++
         booleanFeature(position < 3) ++
+        booleanFeature(position > 5) ++
+        booleanFeature(price > 100000.0) ++
+        booleanFeature(price > 100 && price < 10000.0) ++
+        booleanFeature(price <= 0.0) ++
         intFeature(hourOfDay(searchTime), 24) ++
         intFeature(dayOfWeek(searchTime), 7) ++
         intFeature(searchLocLevel - 1, 3) ++

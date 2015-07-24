@@ -52,8 +52,13 @@ object Script {
 
     val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01)
 
+/////
+    val featureGen = new FeatureGeneration(sqlContext, "words100")
+    val train = featureGen.featurize(rawTrain, sqlContext).cache()
+    val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
-    val paramMap = ParamMap(lr.maxIter -> 50)
+/////
+    val paramMap = ParamMap(lr.maxIter -> 30)
     val model = lr.fit(train, paramMap)
 
     val errorTrain = df_calcError(model.transform(train)
@@ -96,7 +101,7 @@ object Script {
   def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double) = {
     import sqlContext.implicits._
 
-    val featureGen = new FeatureGeneration(sqlContext)
+    val featureGen = new FeatureGeneration(sqlContext, "words100")
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
