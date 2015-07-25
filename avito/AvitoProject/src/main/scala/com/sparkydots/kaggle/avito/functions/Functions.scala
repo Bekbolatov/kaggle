@@ -50,7 +50,7 @@ object Functions extends Serializable {
 
   val toMid = (searchId: String, adId: String) => 10000000L * searchId.toInt + adId.toInt
 
-  val ordinary = ('a' to 'z').toSet
+  val digits = ('0' to '9').toSet
   val splitString = (tt: String) => {
     if (tt == null || tt.isEmpty) {
       Seq.empty[String]
@@ -63,7 +63,7 @@ object Functions extends Serializable {
         .mkString(":").split(":")
         .mkString(";").split(";")
         .mkString("-").split("-")
-        .filter(w => w.nonEmpty && w.forall(ordinary.contains(_)))
+        .filter(w => w.nonEmpty && w. forall(!digits.contains(_)))
         .toSeq
     }
   }
