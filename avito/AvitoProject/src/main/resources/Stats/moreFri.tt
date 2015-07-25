@@ -41,4 +41,21 @@ Try words 100 - again
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, "words100")
 [maxIter=30}] Train error: 0.04570577645425245, Validate error: 0.04707242900735184
 
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, "words10000")
+[maxIter=30}] Train error: 0.04705412166118437, Validate error: 0.0474647382751835
+
+[maxIter=30}] Train error: 0.04750066316262507, Validate error: 0.047860725080986266
+[maxIter=30}] Train error: 0.04798000278925318, Validate error: 0.04821528119511972
+[maxIter=30}] Train error: 0.04746386646826305, Validate error: 0.047783089123422225
+
+// add both query and title words in separate spaces
+[maxIter=30}] Train error: 0.04710725249284269, Validate error: 0.047503282079877515
+
 Now add feature: how many words are in both query and ad title
+[maxIter=30}] Train error: 0.04707398731755065, Validate error: 0.04747703855512539
+try words 20K
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, "words20000")
+[maxIter=30}] Train error: 0.04735714656379185, Validate error: 0.04765999323015398
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 60, 0.01, "words20000")
+[maxIter=60}] Train error: 0.04731956911742233, Validate error: 0.04763274023672243
+

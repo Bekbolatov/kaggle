@@ -53,7 +53,10 @@ object Script {
     import sqlContext.implicits._
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
 
-    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, "words10000")
+    val maxIter = 30
+    val regParam = 0.01
+    val words = "words20000"
+    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, words)
 
 
 /////
@@ -100,8 +103,6 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
 
 
 
-    val maxIter = 30
-    val regParam = 0.01
     val bits = 15
     val numFeatures = math.pow(2, bits).toInt
 

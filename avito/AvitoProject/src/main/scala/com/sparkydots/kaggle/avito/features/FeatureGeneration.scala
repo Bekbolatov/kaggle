@@ -122,11 +122,11 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
       }
 
       val features = categoricalFeatures ++
-        Seq((categoricalOffset + 1, numberOfCommonElements(searchParams, params).toDouble)) ++
+        Seq((categoricalOffset + 1, searchParams.toSet.intersect(params.toSet).size.toDouble)) ++
         Seq((categoricalOffset + 2, length(searchQuery).toDouble)) ++
         (if (os < 0) Seq((categoricalOffset + 3, 1.0)) else Seq[(Int, Double)]()) ++
         Seq((categoricalOffset + 4, ctr)) ++
-        Seq((categoricalOffset + 5, adCtr))
+        Seq((categoricalOffset + 5, adCtr)) ++
         // how many words overlap between search query and ad title
         Seq((categoricalOffset + 6, titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble))
 
