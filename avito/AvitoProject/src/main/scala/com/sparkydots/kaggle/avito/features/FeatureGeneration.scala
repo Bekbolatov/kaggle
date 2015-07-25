@@ -92,6 +92,8 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
       val smallFeaturesIndices =
         booleanFeature(loggedIn > 0) ++
         booleanFeature(phoneCount > 1) ++
+        booleanFeature(searchParams.length == 0) ++
+        booleanFeature(params.length == 0) ++
         booleanFeature(length(searchQuery) < 1) ++
         booleanFeature(visitCount > 10) ++
         booleanFeature(impCount > 1000) ++

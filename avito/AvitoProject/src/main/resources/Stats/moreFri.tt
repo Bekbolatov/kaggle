@@ -81,6 +81,10 @@ Eval error: 0.045208944315224174
 LB error: 0.04543
 
 
+[maxIter=40 regParam=5.0E-4 words=onlyWords20000] Train error: 0.0473524753783588, Validate error: 0.04778783520390363
+
+
+
 
 
 
