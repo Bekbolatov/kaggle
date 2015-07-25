@@ -32,17 +32,17 @@ object WordsProcessing extends Serializable {
 
     val counts = counts11.union(counts12).union(counts21).union(counts22).reduceByKey((x, y) => x + y).toDF("word", "cnt").orderBy("cnt").cache
 
-    val words1000 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 1000").select("word").collect().map(x => x.getString(0))
-    val words500 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 500").select("word").collect().map(x => x.getString(0))
-    val words100 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 100").select("word").collect().map(x => x.getString(0))
+    val words20000 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 20000").select("word").collect().map(x => x.getString(0))
+    val words10000 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 10000").select("word").collect().map(x => x.getString(0))
+    val words5000 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 5000").select("word").collect().map(x => x.getString(0))
 
-    val wordsDict1000 = sc.parallelize(words1000.zipWithIndex).toDF("word", "wordId").repartition(1)
-    val wordsDict500 = sc.parallelize(words500.zipWithIndex).toDF("word", "wordId").repartition(1)
-    val wordsDict100 = sc.parallelize(words100.zipWithIndex).toDF("word", "wordId").repartition(1)
+    val wordsDict20000 = sc.parallelize(words20000.zipWithIndex).toDF("word", "wordId").repartition(1)
+    val wordsDict10000 = sc.parallelize(words10000.zipWithIndex).toDF("word", "wordId").repartition(1)
+    val wordsDict5000 = sc.parallelize(words5000.zipWithIndex).toDF("word", "wordId").repartition(1)
 
-    LoadSave.saveDF(sqlContext, wordsDict1000, s"${filename}1000")
-    LoadSave.saveDF(sqlContext, wordsDict500, s"${filename}500")
-    LoadSave.saveDF(sqlContext, wordsDict100, s"${filename}100")
+    LoadSave.saveDF(sqlContext, wordsDict20000, s"${filename}20000")
+    LoadSave.saveDF(sqlContext, wordsDict10000, s"${filename}10000")
+    LoadSave.saveDF(sqlContext, wordsDict5000, s"${filename}5000")
 
   }
 

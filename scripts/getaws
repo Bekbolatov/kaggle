@@ -12,6 +12,8 @@ fi
 echo "ClusterID: $CLUSTERID"
 
 MASTER=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "MasterPu" | awk -F "\"" '{ print $4 }')
+echo $MASTER > master
+
 STATE=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "State\":" | head -n 1 | awk -F "\"" ' { print $4 }')
 COUNTER=20
 while [[ -z $MASTER ]] && [[ $COUNTER -gt 1 ]]; do
@@ -43,10 +45,10 @@ echo -e "Status:\t$STATE"
 echo ""
 
 TYPE=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep "InstanceType" | head -n 1 | awk -F "\"" '{ print $4 }')
-NUM=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep "RequestedInstanceCount" | head -n 1 | awk -F " " '{ print  $2 }' | awk -F "," '{print $1}')
+NUM=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep CORE -B 11 | grep "RequestedInstanceCount" | head -n 1 | awk -F " " '{ print  $2 }' | awk -F "," '{print $1}')
 
 echo "ssh $MASTER"
-scp ../avito/AvitoProject/target/scala-2.10/AvitoProject-assembly-1.0.jar $MASTER:/home/hadoop/.
+#scp ../avito/AvitoProject/target/scala-2.10/AvitoProject-assembly-1.0.jar $MASTER:/home/hadoop/.
 scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/spark/conf/.
 
 ssh  -ND 8157 $MASTER

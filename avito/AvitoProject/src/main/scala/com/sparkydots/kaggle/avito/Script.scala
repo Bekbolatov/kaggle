@@ -33,6 +33,7 @@ object Script {
     import com.sparkydots.kaggle.avito.functions.Functions._
     import com.sparkydots.kaggle.avito.features.FeatureGeneration
     import com.sparkydots.kaggle.avito.features.FeatureHashing
+    import com.sparkydots.kaggle.avito.features.WordsProcessing
     import com.sparkydots.kaggle.avito.optimization.LogisticRegressionLogLoss
     import org.apache.spark.mllib.linalg.Vectors
     import org.apache.spark.mllib.regression.LabeledPoint
@@ -51,14 +52,13 @@ object Script {
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
 
     val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01)
-
 /////
-    val featureGen = new FeatureGeneration(sqlContext, "words100")
+    val featureGen = new FeatureGeneration(sqlContext, "words1000")
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
 /////
-    val paramMap = ParamMap(lr.maxIter -> 30)
+    val paramMap = ParamMap(lr.maxIter -> 40, lr.regParam -> 0.0)
     val model = lr.fit(train, paramMap)
 
     val errorTrain = df_calcError(model.transform(train)
@@ -70,7 +70,25 @@ object Script {
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
     println(s"Train error: $errorTrain, Validate error: $errorValidate")
+    //Train error: 0.0458574650724705, Validate error: 0.0473141878930015
 
+
+// Now run against all data set ('eval') and submit
+
+    val eval = featureGen.featurize(rawEval, sqlContext).cache()
+    val small = featureGen.featurize(rawSmall, sqlContext).cache()
+
+/////
+    val paramMap = ParamMap(lr.maxIter -> 40, lr.regParam -> 0.0)
+    val model = lr.fit(eval, paramMap)
+
+    val errorTrain = df_calcError(model.transform(eval)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+///\\\\\
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall)
+////\\\\
 
 
 
@@ -123,13 +141,16 @@ object Script {
   }
 
   def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, bits: Int, maxIter: Int, regParam: Double, numFeatures: Int) = {
+    import sqlContext.implicits._
 
     val eval = featureGen.featurize(rawEval, sqlContext).cache()
     val small = featureGen.featurize(rawSmall, sqlContext).cache()
     val model = LogisticRegressionLogLoss.fit(eval, maxIter, regParam, numFeatures)
     val errorEval = df_calcError(model.transform(eval))
 
-    val predsRaw = model.transform(small)
+    val predsRaw = model.transform(small).select("label", "probability").
+      map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF("probability", "label")
+
     println(s"[maxIter=${maxIter}} numBits=${bits}} regParam=${regParam}} eval] Eval error: $errorEval")
 
     val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect

@@ -10,7 +10,7 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import scala.util.Try
 
 
-class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words500") extends Serializable {
+class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20000") extends Serializable {
   /**
    *
   "isClick",
@@ -79,6 +79,10 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words50
       val adCatLevel = Try(r.getInt(25)).getOrElse(-1)
       val adCatPar = Try(r.getInt(26)).getOrElse(-1)
 
+      val cleanQueryLoc = trueLoc(searchLoc)
+      val cleanQueryCat = trueCat(searchCat)
+      val cleanAdCat = trueCat(category)
+
       val ctr = if (impCount > 50) clickCount * 1.0 / impCount else histctr
       val adCtr = if (adImpCount > 10000) adClickCount * 1.0 / adImpCount else 0.007450876279364931
 
@@ -95,6 +99,9 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words50
         booleanFeature(price <= 0.0) ++
         intFeature(hourOfDay(searchTime), 24) ++
         intFeature(dayOfWeek(searchTime), 7) ++
+        intFeature(trueLoc(searchLoc), trueLocSize) ++
+        intFeature(trueCat(searchCat), trueCatSize) ++
+        intFeature(trueCat(category), trueCatSize) ++
         intFeature(searchLocLevel - 1, 3) ++
         intFeature(searchLocPar + 1, 86) ++
         intFeature(searchCatLevel - 1, 3) ++

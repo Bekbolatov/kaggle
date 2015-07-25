@@ -1,0 +1,14 @@
+[maxIter=30}] Train error: 0.046130442689820535, Validate error: 0.04724228572723455
+
+scala> train.show
+label features
+0.0   (24661,[5,7,9,38,...
+
+Will try adding trueLoc/trueCat
+
+[maxIter=30}] Train error: 0.045751170676747714, Validate error: 0.04709232635875079
+scala> train.show
+label features
+0.0   (29467,[5,7,9,38,...
+0.0   (29467,[4,20,39,3...
+

@@ -20,6 +20,33 @@ object FeatureEncoding {
 
   def dedupeFeatures(features: Seq[(Int, Double)]): Seq[(Int, Double)] = features.groupBy(_._1).mapValues(x => x.map(_._2).sum).toSeq.sortBy(_._1)
 
+  val trueLocSize = 4668
+  def trueLoc(loc: Int) =
+    if ( loc > 1250000 ) {
+      4666
+    } else if (loc > 1000000) {
+      loc - 1000000 + 4630
+    } else if (loc > 750000) {
+      loc - 75000 + 4592
+    } else if (loc > 250000) {
+      loc - 250000 + 4591
+    } else if (loc < 0) {
+      4667
+    } else {
+      loc
+    }
+
+  val trueCatSize = 69
+  def trueCat(cat: Int) = if (cat > 500000) {
+    67
+  } else if (cat > 250000) {
+    cat - 250000 + 60
+  } else if (cat < 0) {
+    68
+  } else {
+    cat
+  }
+
   /**
    * We know inputs are sorted asc, and non-repeating
    * @param first
@@ -54,31 +81,4 @@ object FeatureEncoding {
 
 }
 
-//          val trueSearchLoc = if (searchLoc > 1250000) {
-//            searchLoc - 1250000 + 4666
-//          } else if (searchLoc > 1000000) {
-//            searchLoc - 1000000 + 4629
-//          } else if (searchLoc > 750000) {
-//            searchLoc - 750000 + 4592
-//          } else if (searchLoc > 250000) {
-//            4592
-//          } else {
-//            searchLoc
-//          }
-//
-//          val trueSearchCat = if (searchCat > 250000) {
-//            searchCat - 250000 + 60
-//          } else if (searchCat  == 500001) {
-//            searchCat - 500000 + 6
-//          } else {
-//            searchCat
-//          }
-//
-//          val trueCategory = if (category > 250000) {
-//            category - 250000 + 60
-//          } else if (category  == 500001) {
-//            category - 500000 + 6
-//          } else {
-//            category
-//          }
 
