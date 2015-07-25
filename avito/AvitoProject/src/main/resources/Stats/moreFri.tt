@@ -82,6 +82,12 @@ LB error: 0.04543
 
 
 [maxIter=40 regParam=5.0E-4 words=onlyWords20000] Train error: 0.0473524753783588, Validate error: 0.04778783520390363
+[maxIter=40 regParam=5.0E-4 words=onlyWords100] Train error: 0.046760276008338146, Validate error: 0.047819942918829544
+[maxIter=80 regParam=5.0E-4 words=onlyWords100] Train error: 0.04666036099663978, Validate error: 0.04775456456146278
+[maxIter=80 regParam=1.0E-4 words=onlyWords100] Train error: 0.04660252406045994, Validate error: 0.04777043833835006
+
+[maxIter=40 regParam=5.0E-4 words=onlyWords100] Train error: 0.04671138752225595, Validate error: 0.047769505954872865
+
 
 
 

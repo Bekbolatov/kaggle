@@ -10,7 +10,7 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import scala.util.Try
 
 
-class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20000") extends Serializable {
+class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWords20000") extends Serializable {
   /**
    *
   "isClick",
