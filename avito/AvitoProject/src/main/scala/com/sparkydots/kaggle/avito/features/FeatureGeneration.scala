@@ -137,15 +137,16 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
         (if (os < 0) Seq((categoricalOffset + 3, 1.0)) else Seq[(Int, Double)]()) ++
         Seq((categoricalOffset + 4, ctr)) ++
         Seq((categoricalOffset + 5, adCtr)) ++
-        Seq((categoricalOffset + 6, titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble))
+        Seq((categoricalOffset + 6, histctr)) ++
+        Seq((categoricalOffset + 7, titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble))
 
       val combinedSmallAndContFeatures = smallFeatures ++ continuousFeatures
-      val numNewCrossFeatures = (numSmallFeatures + 6) * (numSmallFeatures + 5) / 2
+      val numNewCrossFeatures = (numSmallFeatures + 7) * (numSmallFeatures + 6) / 2
 
       val features = categoricalFeatures ++ continuousFeatures ++
-        otherInteractions(combinedSmallAndContFeatures, combinedSmallAndContFeatures, categoricalOffset + 7)
+        otherInteractions(combinedSmallAndContFeatures, combinedSmallAndContFeatures, categoricalOffset + 8)
 
-      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 7 + numNewCrossFeatures, dedupeFeatures(features)))
+      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 8 + numNewCrossFeatures, dedupeFeatures(features)))
     }.toDF()
 
     featurized
