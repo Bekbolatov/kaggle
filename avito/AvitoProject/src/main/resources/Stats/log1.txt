@@ -1,0 +1,9 @@
+
+scala> val dtr1 = sqlContext.load(s"s3n://sparkydotsdata/kaggle/avito/processed/data_train_1.parquet")
+dtr1: org.apache.spark.sql.DataFrame = [isClick: int, os: int, uafam: int, searchTime: int, searchQuery: string, searchLoc: int, searchCat: int, searchParams: array<int>, loggedIn: int, position: int, histctr: double, category: int, params: array<int>, price: double, title: string]
+scala> dtr1.count
+res7: Long = 4432461
+scala> rawTrain.count
+res8: Long = 4781480
+
+

@@ -88,6 +88,11 @@ preds.foreach { case () =>
 
 }
 
+val dtr1 = sqlContext.load(s"s3n://sparkydotsdata/kaggle/avito/processed/data_train_1.parquet")
+
+
+
+
 
 
 val smallPred = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).cache
