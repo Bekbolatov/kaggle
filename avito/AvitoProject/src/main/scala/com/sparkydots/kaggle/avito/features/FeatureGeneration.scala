@@ -86,10 +86,13 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
       val ctr = if (impCount > 50) clickCount * 1.0 / impCount else histctr
       val adCtr = if (adImpCount > 10000) adClickCount * 1.0 / adImpCount else 0.007450876279364931
 
+      val titleWordIds = splitString(title).flatMap(p => wordsDict.value.get(stemString(p)))
+      val queryWordsIds = splitString(searchQuery).flatMap(p => wordsDict.value.get(stemString(p)))
 
       val whichFeatures =
         booleanFeature(loggedIn > 0) ++
         booleanFeature(phoneCount > 1) ++
+        booleanFeature(length(searchQuery) < 1) ++
         booleanFeature(visitCount > 10) ++
         booleanFeature(impCount > 1000) ++
         booleanFeature(position < 3) ++
@@ -108,8 +111,8 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
         intFeature(searchCatPar - 2, 11) ++
         intFeature(adCatLevel - 1, 3) ++
         intFeature(adCatPar + 1, 13) ++
-        indicatorFeatures(splitString(title).flatMap(p => wordsDict.value.get(stemString(p))), wordsDict.value.size) ++
-        indicatorFeatures(splitString(searchQuery).flatMap(p => wordsDict.value.get(stemString(p))), wordsDict.value.size) ++
+        indicatorFeatures(titleWordIds, wordsDict.value.size) ++
+        indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
         indicatorFeatures(params.flatMap(p => paramsDict.value.get(p)), paramsDict.value.size) ++
         indicatorFeatures(searchParams.flatMap(p => paramsDict.value.get(p)), paramsDict.value.size)
 
@@ -124,8 +127,10 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
         (if (os < 0) Seq((categoricalOffset + 3, 1.0)) else Seq[(Int, Double)]()) ++
         Seq((categoricalOffset + 4, ctr)) ++
         Seq((categoricalOffset + 5, adCtr))
+        // how many words overlap between search query and ad title
+        Seq((categoricalOffset + 6, titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble))
 
-      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 6, dedupeFeatures(features)))
+      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 7, dedupeFeatures(features)))
     }.toDF()
 
     featurized

@@ -12,3 +12,33 @@ label features
 0.0   (29467,[5,7,9,38,...
 0.0   (29467,[4,20,39,3...
 
+
+Try words 20000 (fewer words)
+[maxIter=30}] Train error: 0.04734960603159067, Validate error: 0.047670396102780066
+
+kind of better generalization, but slightly worse error.
+try more iters: 50
+[maxIter=50}] Train error: 0.04734960603150871, Validate error: 0.04767039610272843
+try more iters: 100
+[maxIter=100}] Train error: 0.04734960603159027, Validate error: 0.047670396102779816
+
+0.0   (6663,[1,2,4,7,30...
+0.0   (6663,[0,1,2,4,7,...
+
+=========================
+
+added len(query) < 1:
+20  0.04764805515455823 0.04789092859439988
+30  0.04728464440259586 0.047605371773163783
+40  0.0473136334683129  0.04762550236776896
+[maxIter=40}] Train error:
+
+
+
+Try words 10K
+[maxIter=30}] Train error: 0.047054121661170706, Validate error: 0.047464738275170025
+Try words 100 - again
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, "words100")
+[maxIter=30}] Train error: 0.04570577645425245, Validate error: 0.04707242900735184
+
+Now add feature: how many words are in both query and ad title

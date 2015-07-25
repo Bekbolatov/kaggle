@@ -23,12 +23,14 @@ object Script {
 
   /*
      SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1512m -Xmx=8g" spark-shell --jars AvitoProject-assembly-1.0.jar
-
+*/
+  /*
     import org.apache.log4j.{Level, Logger}
     import org.apache.spark.ml.param.ParamMap
     import org.apache.spark.sql.{Row, SQLContext}
     import com.sparkydots.kaggle.avito._
     import com.sparkydots.kaggle.avito.load._
+    import org.apache.spark.ml.classification.LogisticRegression
     import com.sparkydots.kaggle.avito.functions.DFFunctions._
     import com.sparkydots.kaggle.avito.functions.Functions._
     import com.sparkydots.kaggle.avito.features.FeatureGeneration
@@ -51,7 +53,9 @@ object Script {
     import sqlContext.implicits._
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
 
-    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01)
+    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, "words10000")
+
+
 /////
     val featureGen = new FeatureGeneration(sqlContext, "words1000")
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
@@ -96,10 +100,10 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
 
 
 
-    val maxIter = 35
+    val maxIter = 30
+    val regParam = 0.01
     val bits = 15
     val numFeatures = math.pow(2, bits).toInt
-    val regParam = 0.01
 
 
 
@@ -116,10 +120,10 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
 
 */
 
-  def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double) = {
+  def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double, words: String = "words20000") = {
     import sqlContext.implicits._
 
-    val featureGen = new FeatureGeneration(sqlContext, "words100")
+    val featureGen = new FeatureGeneration(sqlContext, words)
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
