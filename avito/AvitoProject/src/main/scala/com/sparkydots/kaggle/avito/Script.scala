@@ -146,7 +146,7 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
     (train, validate, lr, featureGen)
   }
 
-  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, maxIter: Int, regParam: Double, words: String) = {
+  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String, maxIter: Int, regParam: Double, words: String) = {
     import sqlContext.implicits._
 
 

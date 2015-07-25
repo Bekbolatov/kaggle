@@ -120,11 +120,12 @@ LB error: 0.04543
 [maxIter=40 regParam=0.003 words=onlyWords1000]
 Train error: 0.045761866350985
 Validate error: 0.04687106220797519
-Eval error: <>
-LB error: <>
+Eval error: 0.0460048528238287
+LB error: 0.04514
 
-
-
+NEED: Validation Error -> 0.04647
+IF:
+[maxIter=60 regParam=0.003 words=onlyWords1000] errorEval: 0.04597905750103484
 
 
 
