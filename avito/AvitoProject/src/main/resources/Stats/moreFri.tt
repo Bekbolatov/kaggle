@@ -56,6 +56,13 @@ Now add feature: how many words are in both query and ad title
 try words 20K
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, "words20000")
 [maxIter=30}] Train error: 0.04735714656379185, Validate error: 0.04765999323015398
+increase maxIter
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 60, 0.01, "words20000")
 [maxIter=60}] Train error: 0.04731956911742233, Validate error: 0.04763274023672243
+///  add hours of day x day of week
+[maxIter=30}] Train error: 0.047301924694473585, Validate error: 0.04762376186681235
+0.0   (6833,[2,6,8,10,3...
 
+Now will try adding all cross features between smaller indicator features and continuous features
+[maxIter=30}] Train error: 0.047277162994560876, Validate error: 0.04756606893006272
+[maxIter=40}] Train error: 0.047277162994560806, Validate error: 0.04756606893006268

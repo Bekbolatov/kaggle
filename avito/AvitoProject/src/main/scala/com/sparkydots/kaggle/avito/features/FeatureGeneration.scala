@@ -89,7 +89,7 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
       val titleWordIds = splitString(title).flatMap(p => wordsDict.value.get(stemString(p)))
       val queryWordsIds = splitString(searchQuery).flatMap(p => wordsDict.value.get(stemString(p)))
 
-      val whichFeatures =
+      val smallFeaturesIndices =
         booleanFeature(loggedIn > 0) ++
         booleanFeature(phoneCount > 1) ++
         booleanFeature(length(searchQuery) < 1) ++
@@ -102,7 +102,7 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
         booleanFeature(price <= 0.0) ++
         intFeature(hourOfDay(searchTime), 24) ++
         intFeature(dayOfWeek(searchTime), 7) ++
-        intFeature(trueLoc(searchLoc), trueLocSize) ++
+        //intFeature(dayOfWeek(searchTime)*24 + hourOfDay(searchTime), 24*7) ++
         intFeature(trueCat(searchCat), trueCatSize) ++
         intFeature(trueCat(category), trueCatSize) ++
         intFeature(searchLocLevel - 1, 3) ++
@@ -110,30 +110,61 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "words20
         intFeature(searchCatLevel - 1, 3) ++
         intFeature(searchCatPar - 2, 11) ++
         intFeature(adCatLevel - 1, 3) ++
-        intFeature(adCatPar + 1, 13) ++
+        intFeature(adCatPar + 1, 13)
+
+      val (numSmallFeatures, smallFeatures) = smallFeaturesIndices.foldLeft(0, Seq[(Int, Double)]()) {
+        case ((offset, cumFeats), (blocksize, feats)) =>
+          (offset + blocksize, cumFeats ++ feats.map(f => (f + offset, 1.0)))
+      }
+
+      val whichFeaturesIndices = smallFeaturesIndices ++
+        intFeature(trueLoc(searchLoc), trueLocSize) ++
         indicatorFeatures(titleWordIds, wordsDict.value.size) ++
         indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
         indicatorFeatures(params.flatMap(p => paramsDict.value.get(p)), paramsDict.value.size) ++
         indicatorFeatures(searchParams.flatMap(p => paramsDict.value.get(p)), paramsDict.value.size)
 
-      val (categoricalOffset, categoricalFeatures) = whichFeatures.foldLeft(0, Seq[(Int, Double)]()) {
+      val (categoricalOffset, categoricalFeatures) = whichFeaturesIndices.foldLeft(0, Seq[(Int, Double)]()) {
         case ((offset, cumFeats), (blocksize, feats)) =>
           (offset + blocksize, cumFeats ++ feats.map(f => (f + offset, 1.0)))
       }
 
-      val features = categoricalFeatures ++
+      val continuousFeatures =
         Seq((categoricalOffset + 1, searchParams.toSet.intersect(params.toSet).size.toDouble)) ++
         Seq((categoricalOffset + 2, length(searchQuery).toDouble)) ++
         (if (os < 0) Seq((categoricalOffset + 3, 1.0)) else Seq[(Int, Double)]()) ++
         Seq((categoricalOffset + 4, ctr)) ++
         Seq((categoricalOffset + 5, adCtr)) ++
-        // how many words overlap between search query and ad title
         Seq((categoricalOffset + 6, titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble))
 
-      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 7, dedupeFeatures(features)))
+      val combinedSmallAndContFeatures = smallFeatures ++ continuousFeatures
+      val numNewCrossFeatures = (numSmallFeatures + 6) * (numSmallFeatures + 5) / 2
+
+      val features = categoricalFeatures ++ continuousFeatures ++
+        otherInteractions(combinedSmallAndContFeatures, combinedSmallAndContFeatures, categoricalOffset + 7)
+
+      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 7 + numNewCrossFeatures, dedupeFeatures(features)))
     }.toDF()
 
     featurized
   }
+
+    def otherInteractions(singleFeatures: Seq[(Int, Double)],
+                          otherFeatures: Seq[(Int, Double)],
+                          offset: Int): Seq[(Int, Double)] = {
+      var i = -1
+      var j = -1
+      singleFeatures.flatMap { f1 =>
+        j = j + 1
+        otherFeatures.flatMap { f2 =>
+          i = i + 1
+          if ( f1._1 != f2._1 && f1._2 != 0.0 && f2._2 != 0.0) {
+            Some((j * otherFeatures.size + i, f1._2 * f2._2))
+          } else {
+            None
+          }
+        }
+      }
+    }
 
 }
