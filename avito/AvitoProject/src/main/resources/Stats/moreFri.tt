@@ -64,5 +64,27 @@ val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawVal
 0.0   (6833,[2,6,8,10,3...
 
 Now will try adding all cross features between smaller indicator features and continuous features
-[maxIter=30}] Train error: 0.047277162994560876, Validate error: 0.04756606893006272
-[maxIter=40}] Train error: 0.047277162994560806, Validate error: 0.04756606893006268
+[maxIter=15}] Train error: 0.04749794245513394, Validate error: 0.04774078071226005
+[maxIter=25}] Train error: 0.04727885190344063, Validate error: 0.04756864069550383
+[maxIter=30}] Train error: 0.04727716299456087, Validate error: 0.04756606893006272
+[maxIter=40}] Train error: 0.04727716299456080, Validate error: 0.04756606893006268
+[maxIter=25} regParam=0.001}] Train error: 0.0470148888577749, Validate error: 0.04744389478726033
+[maxIter=35} regParam=0.001}] Train error: 0.0467809086697365, Validate error: 0.04724745807203092
+[maxIter=40} regParam=0.001}] Train error: 0.0467039004246584, Validate error: 0.04720730515828695
+[maxIter=40} regParam=5.0E-4} words=words100] Train error: 0.044946470104559946, Validate error: 0.04719469484477511
+
+[Submitting Fri Jul 24 23:23]
+[maxIter=40 regParam=5.0E-4 words=words100]
+Train error: 0.044946470104559946
+Validate error: 0.04719469484477511
+Eval error: 0.045208944315224174
+LB error: 0.04543
+
+
+
+
+
+
+
+
+

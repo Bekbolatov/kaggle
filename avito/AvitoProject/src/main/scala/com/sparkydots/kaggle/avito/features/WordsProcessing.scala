@@ -7,7 +7,10 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
 object WordsProcessing extends Serializable {
 
-  def generateAndSaveWordDictionaries(sc: SparkContext, sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String = "words") = {
+  def generateAndSaveWordDictionaries(sc: SparkContext, sqlContext: SQLContext,
+                                      rawEval: DataFrame, rawSmall: DataFrame,
+                                      filename: String = "words",
+                                      thresholds: Seq[Int] = Seq(100, 500, 1000, 5000, 10000, 20000)) = {
     import sqlContext.implicits._
 
     val counts11 = rawEval.select("title").flatMap({
@@ -32,18 +35,11 @@ object WordsProcessing extends Serializable {
 
     val counts = counts11.union(counts12).union(counts21).union(counts22).reduceByKey((x, y) => x + y).toDF("word", "cnt").orderBy("cnt").cache
 
-    val words20000 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 20000").select("word").collect().map(x => x.getString(0))
-    val words10000 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 10000").select("word").collect().map(x => x.getString(0))
-    val words5000 = counts.filter("word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > 5000").select("word").collect().map(x => x.getString(0))
-
-    val wordsDict20000 = sc.parallelize(words20000.zipWithIndex).toDF("word", "wordId").repartition(1)
-    val wordsDict10000 = sc.parallelize(words10000.zipWithIndex).toDF("word", "wordId").repartition(1)
-    val wordsDict5000 = sc.parallelize(words5000.zipWithIndex).toDF("word", "wordId").repartition(1)
-
-    LoadSave.saveDF(sqlContext, wordsDict20000, s"${filename}20000")
-    LoadSave.saveDF(sqlContext, wordsDict10000, s"${filename}10000")
-    LoadSave.saveDF(sqlContext, wordsDict5000, s"${filename}5000")
-
+    thresholds.foreach { threshold =>
+      val words = counts.filter(s"word != 'и' and word != 'в' and word != 'с' and word != 'для' and cnt > $threshold").select("word").collect().map(x => x.getString(0))
+      val wordsDict = sc.parallelize(words.zipWithIndex).toDF("word", "wordId").repartition(1)
+      LoadSave.saveDF(sqlContext, wordsDict, s"$filename$threshold")
+    }
   }
 
   def generateAndSaveParamDictionaries(sc: SparkContext, sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String = "words") = {

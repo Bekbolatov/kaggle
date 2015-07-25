@@ -53,10 +53,12 @@ object Script {
     import sqlContext.implicits._
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
 
-    val maxIter = 30
-    val regParam = 0.01
-    val words = "words20000"
-    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, 30, 0.01, words)
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "onlyWords", Seq(100, 500, 1000, 5000, 10000, 20000))
+
+    val maxIter = 40
+    val regParam = 0.0005
+    val words = "onlyWords20000"
+    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
 
 
 /////
@@ -94,7 +96,7 @@ object Script {
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
 ///\\\\\
-WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall)
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "onlyWords", Seq(100, 500, 1000, 5000, 10000, 20000))
 ////\\\\
 
 
@@ -141,22 +143,31 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
       .select("label", "probability")
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
-    println(s"[maxIter=${maxIter}}] Train error: $errorTrain, Validate error: $errorValidate")
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] Train error: $errorTrain, Validate error: $errorValidate")
     (train, validate, lr, featureGen)
   }
 
-  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, bits: Int, maxIter: Int, regParam: Double, numFeatures: Int) = {
+  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, maxIter: Int, regParam: Double, words: String) = {
     import sqlContext.implicits._
 
+
+    val featureGen = new FeatureGeneration(sqlContext, words)
     val eval = featureGen.featurize(rawEval, sqlContext).cache()
     val small = featureGen.featurize(rawSmall, sqlContext).cache()
-    val model = LogisticRegressionLogLoss.fit(eval, maxIter, regParam, numFeatures)
-    val errorEval = df_calcError(model.transform(eval))
+
+    val lr = new LogisticRegression()
+    lr.setMaxIter(maxIter).setRegParam(regParam)
+
+    val model = lr.fit(eval)
+
+    val errorEval = df_calcError(model.transform(eval)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] errorEval: $errorEval")
 
     val predsRaw = model.transform(small).select("label", "probability").
       map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF("probability", "label")
-
-    println(s"[maxIter=${maxIter}} numBits=${bits}} regParam=${regParam}} eval] Eval error: $errorEval")
 
     val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
     val sub = new FileWriter(s"/home/hadoop/${filename}.csv", true)
