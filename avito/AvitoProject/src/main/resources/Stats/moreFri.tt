@@ -91,10 +91,37 @@ LB error: 0.04543
 [maxIter=40 regParam=5.0E-4 words=onlyWords100] Train error: 0.0466065563028722, Validate error: 0.047710395479530966
 <Had a bug -  only English chars>
 [maxIter=40 regParam=5.0E-4 words=onlyWords100] Train error: 0.04516764136456862, Validate error: 0.04718738118285894
+<add feature: intFeature(dayOfWeek(searchTime)*8 + ((hourOfDay(searchTime) + 1)/3 % 8), 7*8) >
+[maxIter=40 regParam=5.0E-4 words=onlyWords100] Train error: 0.045093819545698265, Validate error: 0.04714269636703933
+<added search/ad cat/catPar match indicator feat>
+<more granularity for day x hour>
+[maxIter=40 regParam=5.0E-4 words=onlyWords100] Train error: 0.04504655233739133, Validate error: 0.04717084857073289
+<Remove one searchCat>
+[maxIter=40 regParam=5.0E-4 words=onlyWords100]  Train error: 0.0450476483347864, Validate error: 0.04714042827650132
+[maxIter=40 regParam=5.0E-4 words=onlyWords500] Train error: 0.04557441820147222, Validate error: 0.04703374442461179
+[maxIter=40 regParam=5.0E-4 words=onlyWords1000] Train error: 0.0455429180442178, Validate error: 0.04699677127996549
+[maxIter=40 regParam=5.0E-4 words=onlyWords5000] Train error: 0.0462063714125793, Validate error: 0.04705458231723566
+[maxIter=40 regParam=5.0E-4 words=onlyWords10000]Train error: 0.0463522336388745, Validate error: 0.047110226327253785
+<onlyWords1000 OK>
+[maxIter=40 regParam=0.0005 words=onlyWords1000]Train error: 0.0455429180442178, Validate error: 0.04699677127996549
+[maxIter=40 regParam=0.0010 words=onlyWords1000] Train error: 0.045638924009360, Validate error: 0.046970042307637856
+[maxIter=40 regParam=0.002 words=onlyWords1000]  Train error: 0.045728892600962, Validate error: 0.046906486882818926
+[maxIter=40 regParam=0.0030 words=onlyWords1000] Train error: 0.045761866350985, Validate error: 0.04687106220797519 *
+[maxIter=40 regParam=0.004 words=onlyWords1000]  Train error: 0.045868522372142, Validate error: 0.04689198701762599
+[maxIter=40 regParam=0.0050 words=onlyWords1000] Train error: 0.045936543274294, Validate error: 0.04691315075573427
+[maxIter=40 regParam=0.01 words=onlyWords1000]  Train error: 0.046357471944971,  Validate error: 0.04712764776051179
+<regParam=0.003 OK>
+[maxIter=30 regParam=0.003 words=onlyWords1000] Train error: 0.045799169817569, Validate error: 0.046889622434099
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.045761866350985, Validate error: 0.04687106220797519
+[maxIter=60 regParam=0.003 words=onlyWords1000] Train error: 0.045761866350992, Validate error: 0.04687106220796817
 
 
-
-
+[Submitting Sat Jul 25 02:05]
+[maxIter=40 regParam=0.003 words=onlyWords1000]
+Train error: 0.045761866350985
+Validate error: 0.04687106220797519
+Eval error: <>
+LB error: <>
 
 
 

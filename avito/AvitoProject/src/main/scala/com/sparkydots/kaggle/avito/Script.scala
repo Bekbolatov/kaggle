@@ -58,7 +58,8 @@ object Script {
     val words = "onlyWords100"
     val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
 
-
+    Script.saveSubmission(sqlContext, rawEval, rawSmall, featureGen, "tryFri2", maxIter, regParam, words)
+saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, maxIter: Int, regParam: Double, words: String) = {
 /////
     val featureGen = new FeatureGeneration(sqlContext, "words1000")
     val train = featureGen.featurize(rawTrain, sqlContext).cache()

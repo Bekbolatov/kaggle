@@ -102,9 +102,10 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         booleanFeature(price > 100000.0) ++
         booleanFeature(price > 100 && price < 10000.0) ++
         booleanFeature(price <= 0.0) ++
+        booleanFeature(searchCatPar ==  adCatPar) ++
         intFeature(hourOfDay(searchTime), 24) ++
         intFeature(dayOfWeek(searchTime), 7) ++
-        //intFeature(dayOfWeek(searchTime)*24 + hourOfDay(searchTime), 24*7) ++
+        intFeature(dayOfWeek(searchTime)*24 + hourOfDay(searchTime), 24*7) ++
         intFeature(trueCat(searchCat), trueCatSize) ++
         intFeature(trueCat(category), trueCatSize) ++
         intFeature(searchLocLevel - 1, 3) ++
