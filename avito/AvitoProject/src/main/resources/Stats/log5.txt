@@ -1,0 +1,15 @@
+Need to try more iterations:
+
+(SUBM)[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04428832142763328, Validate error: 0.0457183061361404
+[maxIter=60 regParam=0.003 words=onlyWords1000] Train error: 0.04421299005670146, Validate error: 0.04561652260719077
+[maxIter=80 regParam=0.003 words=onlyWords1000] Train error: 0.04418981493314272, Validate error: 0.0455932872146622
+
+
+
+val maxIter = 80
+val regParam = 0.003
+val words = "onlyWords1000"
+val words2 = None //Some("onlyWords20000")
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words, words2)
+
+

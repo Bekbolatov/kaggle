@@ -1,6 +1,3 @@
-
-
-
 smallData.groupBy("isClick").agg(first("isClick"), first("os")).show
 +--------+--------------+---------+
 | isClick|FIRST(isClick)|FIRST(os)|
@@ -15,3 +12,88 @@ smallData.groupBy("isClick").agg(first("isClick"), first("os")).show
 | 9150431|       9150431|       20|
 
 
+==============================================================================================================
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04534174622001332, Validate error: 0.04673982251903227
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04415911369234104, Validate error: 0.04579756811458538
+
+======================================================
+Script.saveSubmission(sqlContext, rawEval, rawSmall, "trySun1", maxIter, regParam, words)
+[[[  Submission Sun Jul 26, 02:30 ]]]
+Added some feats related to immediate neighbor ads (non-ctx impressions on same search)
+[maxIter=40 regParam=0.003 words=onlyWords500]
+Train error: 0.04415911369234104,
+Validate error: 0.04579756811458538
+Eval error: 0.04433542420874441
+LB error:  0.04404
+======================================================
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04415911369234104, Validate error: 0.04579756811458538
+<try also adding other ad's title>
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04345680502033781, Validate error: 0.045815742624552985
+[maxIter=40 regParam=0.010 words=onlyWords1000] Train error: 0.04461040077351348, Validate error: 0.046055393188168585
+[maxIter=40 regParam=0.005 words=onlyWords1000] Train error: 0.04403649729023459, Validate error: 0.045802316891088685
+[maxIter=40 regParam=0.004 words=onlyWords1000] Train error: 0.04387378858870012, Validate error: 0.045743438216483655
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04370943472983272, Validate error: 0.04568956243685453 *
+[maxIter=40 regParam=0.001 words=onlyWords1000] Train error: 0.04364737293226652, Validate error: 0.04593645328248755
+[maxIter=40 regParam=0.0005 words=onlyWords1000]Train error: 0.04353270533461430, Validate error: 0.045960793293763375
+===================================
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04345680502033781, Validate error: 0.045815742624552985
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04370943472983272, Validate error: 0.04568956243685453 *
+[maxIter=40 regParam=0.003 words=onlyWords5000] Train error: 0.04456978632496775, Validate error: 0.04579959366181037
+
+
+======================================================
+Script.saveSubmission(sqlContext, rawEval, rawSmall, "trySun2", maxIter, regParam, words)
+[[[  Submission Sun Jul 26, ... ]]]
+<added neibor's ad title words, but will remove next>
+[maxIter=40 regParam=0.003 words=onlyWords1000]
+Train error: 0.04370943472983272,
+Validate error: 0.04568956243685453
+Eval error: 0.04411693746059999
+LB error:   0.04411
+======================================================
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04415911369234104, Validate error: 0.04579756811458538
+<now removing back the neibor ad words>
+[maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428832142762512, Validate error: 0.045718306136124785
+
+[maxIter=40 regParam=0.003 words=onlyWords20000 words2=None] Train error: 0.04536553664913645, Validate error: 0.04607433859056947
+[maxIter=40 regParam=0.003 words=onlyWords1000 words2=Some("onlyWords20000")] Train error: 0.04370943472984488, Validate error: 0.04568956243683966
+[maxIter=40 regParam=0.005 words=onlyWords1000 words2=Some("onlyWords20000")] Train error: 0.044036497288317135, Validate error: 0.04580231689101562
+
+======================================================
+Script.saveSubmission(sqlContext, rawEval, rawSmall, "trySun3", maxIter, regParam, words, words2)
+[[[  Submission Sun Jul 26, 03:35 ]]]
+<no neibor's ad title word>
+[maxIter=40 regParam=0.003 words=onlyWords1000]
+Train error: 0.04428832142763328,
+Validate error: 0.0457183061361404
+Eval error: 0.04453482534158485
+LB error: 0.04405
+======================================================
+if maxIter=60
+[maxIter=60 regParam=0.003 words=onlyWords1000] Train error: 0.04421299005670146, Validate error: 0.04561652260719077
+if maxIter=80
+[maxIter=80 regParam=0.003 words=onlyWords1000] Train error: 0.04418981493314272, Validate error: 0.0455932872146622
+
+
+val maxIter = 80
+val regParam = 0.003
+val words = "onlyWords1000"
+val words2 = None //Some("onlyWords20000")
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words, words2)
+
+
+val regParam = 0.004
+    val lr = new LogisticRegression()
+    lr.setMaxIter(maxIter).setRegParam(regParam)
+
+    val model = lr.fit(train)
+
+    val errorTrain = df_calcError(model.transform(train)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    val errorValidate = df_calcError(model.transform(validate)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] Train error: $errorTrain, Validate error: $errorValidate")

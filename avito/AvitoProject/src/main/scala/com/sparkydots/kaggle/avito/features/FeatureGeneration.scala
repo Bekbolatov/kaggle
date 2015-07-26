@@ -10,7 +10,7 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import scala.util.Try
 
 
-class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWords20000") extends Serializable {
+class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWords20000", wordDictFileNei: Option[String]) extends Serializable {
   /**
    *
   "isClick",
@@ -68,6 +68,12 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
     val wordsDict = sqlContext.sparkContext.broadcast(LoadSave.loadDF(sqlContext, wordsDictFile).map({
       case Row(word: String, wordId: Int) => word -> wordId
     }).collect.toMap)
+
+    val wordsDict2 = wordDictFileNei.map { loc =>
+      sqlContext.sparkContext.broadcast(LoadSave.loadDF(sqlContext, wordsDictFile).map({
+        case Row(word: String, wordId: Int) => word -> wordId
+      }).collect.toMap)
+    }
 
     val paramsDict = sqlContext.sparkContext.broadcast(LoadSave.loadDF(sqlContext, "params1000").map({
       case Row(param: Int, paramId: Int) => param -> paramId
@@ -153,6 +159,12 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
       val queryTitleMatch = titleWordIds.toSet.intersect(queryWordsIds.toSet).toSeq
       val queryNeiTitleMatch = neiTitleWordIds.toSet.intersect(queryWordsIds.toSet).toSeq
 
+      val neiTitleWordIds2 = if (wordDictFileNei.nonEmpty)
+        splitString(neiTitle).flatMap(p => wordsDict2.get.value.get(stemString(p)))
+      else
+        Seq()
+
+
       val smallFeaturesIndices =
         booleanFeature(loggedIn > 0) ++
         booleanFeature(clickCount < 1) ++
@@ -195,7 +207,7 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         indicatorFeatures(titleWordIds, wordsDict.value.size) ++
         indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
         indicatorFeatures(queryTitleMatch, wordsDict.value.size) ++
-//        indicatorFeatures(queryNeiTitleMatch, wordsDict.value.size) ++
+        (if (wordDictFileNei.nonEmpty) indicatorFeatures(neiTitleWordIds2, wordsDict2.get.value.size) else Seq()) ++
         indicatorFeatures(paramIds.toSet.intersect(searchParamIds.toSet).toSeq, paramsDict.value.size) ++
         indicatorFeatures(paramIds, paramsDict.value.size) ++
         indicatorFeatures(searchParamIds, paramsDict.value.size)

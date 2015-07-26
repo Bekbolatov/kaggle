@@ -55,31 +55,14 @@ object Script {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
 
-
-
-    val (users, ads, ctxAds, nonCtxAds, searches,
-    ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind,
-    visits, phoneRequests, locations, categories,
-    evalData, trainData, validateData, smallData) = LoadSave.reprocessData(sc, sqlContext, "CARBON_", false)
-
-reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false)
-
-
-    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CANOPY_")
-
-
-val rawTrain = trainData
-val rawValidate = validateData
+    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
 
 
     val maxIter = 40
     val regParam = 0.003
-    val words = "onlyWords500"
-val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
-train.show(2)
-
-
-    val featureGen = new FeatureGeneration(sqlContext, words)
+    val words = "onlyWords1000"
+    val words2 = None
+    val featureGen = new FeatureGeneration(sqlContext, words, words2)
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
@@ -96,7 +79,20 @@ train.show(2)
       .select("label", "probability")
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
-    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] Train error: $errorTrain, Validate error: $errorValidate")
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words} words2=$words2] Train error: $errorTrain, Validate error: $errorValidate")
+
+
+
+
+
+
+    val maxIter = 40
+    val regParam = 0.003
+    val words = "onlyWords500"
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+train.show(2)
+
+
 
 
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, reducedRawTain, rawValidate, maxIter, regParam, words)
@@ -156,6 +152,12 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
 ////\\\\
 val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = Script.reprocessData(sc, "CANOPY_")
 \\\\\\\///
+    val (users, ads, ctxAds, nonCtxAds, searches,
+    ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind,
+    visits, phoneRequests, locations, categories,
+    evalData, trainData, validateData, smallData) = LoadSave.reprocessData(sc, sqlContext, "CARBON_", false)
+
+reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false)
 
 
 
@@ -181,10 +183,10 @@ val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxA
 
 */
 
-  def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double, words: String = "words20000") = {
+  def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double, words: String = "words20000", wordDictFileNei: Option[String]) = {
     import sqlContext.implicits._
 
-    val featureGen = new FeatureGeneration(sqlContext, words)
+    val featureGen = new FeatureGeneration(sqlContext, words, wordDictFileNei)
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
@@ -201,16 +203,16 @@ val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxA
       .select("label", "probability")
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
-    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] Train error: $errorTrain, Validate error: $errorValidate")
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words} words2=$wordDictFileNei] Train error: $errorTrain, Validate error: $errorValidate")
     (train, validate, lr, featureGen)
   }
 
-  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String, maxIter: Int, regParam: Double, words: String) = {
+  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String, maxIter: Int, regParam: Double, words: String, wordDictFileNei: Option[String]) = {
     import sqlContext.implicits._
     import org.apache.spark.sql.functions._
 
 
-    val featureGen = new FeatureGeneration(sqlContext, words)
+    val featureGen = new FeatureGeneration(sqlContext, words, wordDictFileNei)
     val eval = featureGen.featurize(rawEval, sqlContext).cache()
     val small = featureGen.featurize(rawSmall, sqlContext).cache()
 
@@ -223,10 +225,10 @@ val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxA
       .select("label", "probability")
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
-    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] errorEval: $errorEval")
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words} words2=$wordDictFileNei] errorEval: $errorEval")
 
     val predsRaw = model.transform(small).select("label", "probability").
-      groupBy("label").agg(first("label"), first("probability")).
+      groupBy("label").agg(first("probability")).
       map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF("probability", "label")
 
     val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
