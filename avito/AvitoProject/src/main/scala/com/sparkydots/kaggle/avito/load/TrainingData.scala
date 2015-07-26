@@ -7,28 +7,6 @@ import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
 object TrainingData {
 
-  def reprocessData(sc: SparkContext, prefix: String) = {
-    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
-    Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
-    Logger.getLogger("org").setLevel(Level.WARN)
-    Logger.getLogger("akka").setLevel(Level.WARN)
-
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-
-    val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories) = LoadSave.loadOrigCached(sqlContext)
-
-    val (evalData, trainData, validateData, smallData) =
-      TrainingData.split(sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories)
-
-    LoadSave.saveDF(sqlContext, trainData, s"${prefix}TRAIN")
-    LoadSave.saveDF(sqlContext, validateData, s"${prefix}VALIDATE")
-    LoadSave.saveDF(sqlContext, evalData, s"${prefix}EVAL")
-    LoadSave.saveDF(sqlContext, smallData, s"${prefix}SMALL")
-
-    (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData)
-  }
-
-
   def split(sqlContext: SQLContext,
             users: DataFrame,
             ads: DataFrame, ctxAds: DataFrame, nonCtxAds: DataFrame,
@@ -67,64 +45,79 @@ object TrainingData {
         select(searches("userId"), searches("searchTime"), ctxAdImpressions("mid"), ctxAdImpressions("isClick"), ctxAdImpressions("adId")).
         filter("searchTime <= 1900800").
         select(searches("userId"), ctxAdImpressions("mid"), ctxAdImpressions("isClick"), ctxAdImpressions("adId")).
-        repartition(20).
         cache()
 
+    // about Ads
     val ad_imp = histCtxAdImpressions.groupBy("adId").count().
       withColumnRenamed("count", "adImpCount").
-      withColumnRenamed("adId", "adImpAdId").
-      repartition(20)
+      withColumnRenamed("adId", "adImpAdId")
 
     val ad_click = histCtxAdImpressions.filter("isClick > 0").groupBy("adId").count().
       withColumnRenamed("count", "adClickCount").
-      withColumnRenamed("adId", "adClickAdId").
-      repartition(20)
+      withColumnRenamed("adId", "adClickAdId")
 
     val ad_imp_click = ad_imp.join(ad_click, ad_imp("adImpAdId") === ad_click("adClickAdId"), "left_outer").
-      select("adImpAdId", "adImpCount", "adClickCount").
-      repartition(20)
+      select("adImpAdId", "adImpCount", "adClickCount")
 
+
+//    For some reason this is not working if you repartition some source DataFrames (to make fewer partitions) in 1.4.1  (complains about different number of partitions in ZippedRDD
     val ads_imp_click = ads.join(ad_imp_click, ad_imp_click("adImpAdId") === ads("id"), "left_outer").
-    select("id", "category", "params", "price", "title", "adImpCount", "adClickCount")
+      select("id", "category", "params", "price", "title", "adImpCount", "adClickCount")
+//   Below is a huge hack workaround just in case
+//    val ads_imp_click = ads.flatMap {
+//      case Row(id: Int, category: Int, params: Seq[Int], price: Double, title: String, isContext: Int) =>
+//        Some((id, (category, params, price, title, isContext)))
+//      case _ => None
+//    }.leftOuterJoin(ad_imp_click.map {
+//      case Row(adImpAdId: Int, adImpCount: Long, adClickCount: Long) => (adImpAdId, (adImpCount, adClickCount))
+//      case Row(adImpAdId: Int, adImpCount: Long, _) => (adImpAdId, (adImpCount, 0L))
+//      case Row(adImpAdId: Int, _, _) => (adImpAdId, (0L, 0L))
+//    }).
+//    flatMap {
+//      case (adId, ((category, params, price, title, isContext), Some((adImpCount:Long , adClickCount: Long)))) =>
+//        Some(adId, category, params, price,title, isContext, adImpCount, adClickCount)
+//      case (adId, ((category, params, price, title, isContext), Some((adImpCount: Long, _)))) =>
+//        Some(adId, category, params, price,title, isContext, adImpCount, 0L)
+//      case (adId, ((category, params, price, title, isContext), Some((_, _)))) =>
+//        Some(adId, category, params, price,title, isContext, 0L, 0L)
+//      case (adId, ((category, params, price, title, isContext), None)) =>
+//        Some(adId, category, params, price,title, isContext, 0L, 0L)
+//      case _ => None
+//    }.toDF("id", "category", "params", "price", "title", "isContext", "adImpCount", "adClickCount")
 
-
-    //  Prepate data sets
-
+    //  about Users
     val visitCounts = visits.groupBy("userId").count().
       withColumnRenamed("count", "visitCount").
       withColumnRenamed("userId", "visitUserId").
-      repartition(24)
+      select("visitUserId", "visitCount")
 
     val phoneRequestCounts = phoneRequests.groupBy("userId").count().
       withColumnRenamed("count", "phoneCount").
       withColumnRenamed("userId", "phoneUserId").
-      repartition(24)
+      select("phoneUserId", "phoneCount")
 
     val histImpressions = histCtxAdImpressions.groupBy("userId").count().
       withColumnRenamed("count", "impCount").
       withColumnRenamed("userId", "impUserId").
-      repartition(20)
+      select("impUserId", "impCount")
 
     val histClicks = histCtxAdImpressions.filter("isClick > 0").groupBy("userId").count().
       withColumnRenamed("count", "clickCount").
       withColumnRenamed("userId", "clickUserId").
-      repartition(20)
+      select("clickUserId", "clickCount")
 
     val users_visit = users.join(visitCounts, visitCounts("visitUserId") === users("id"), "left_outer").
-      select("id", "os", "uafam", "visitCount").
-      repartition(24)
+      select("id", "os", "uafam", "visitCount")
 
+    ///
     val users_visit_phone = users_visit.join(phoneRequestCounts, phoneRequestCounts("phoneUserId") === users_visit("id"), "left_outer").
-      select("id", "os", "uafam", "visitCount", "phoneCount").
-      repartition(24)
+      select("id", "os", "uafam", "visitCount", "phoneCount")
 
     val users_visit_phone_imp = users_visit_phone.join(histImpressions, histImpressions("impUserId") === users_visit_phone("id"), "left_outer").
-      select("id", "os", "uafam", "visitCount", "phoneCount", "impCount").
-      repartition(24)
+      select("id", "os", "uafam", "visitCount", "phoneCount", "impCount")
 
     val users_visit_phone_imp_click = users_visit_phone_imp.join(histClicks, histClicks("clickUserId") === users_visit_phone_imp("id"), "left_outer").
-      select("id", "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount").
-      repartition(24)
+      select("id", "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount")
 
 
 
@@ -134,27 +127,27 @@ object TrainingData {
         searches("loggedIn"), users_visit_phone_imp_click("os"), users_visit_phone_imp_click("uafam"),
         users_visit_phone_imp_click("visitCount"), users_visit_phone_imp_click("phoneCount"),
         users_visit_phone_imp_click("impCount"), users_visit_phone_imp_click("clickCount")
-      ).repartition(24)
+      ).cache()
 
     // Eval set
-    val ctxAdImpressions_ads_eval = ctxAdImpressions.join(evalSet, evalSet("mid") === ctxAdImpressions("mid"))
-      .join(ads_imp_click, ads_imp_click("id") === ctxAdImpressions("adId"), "left_outer")
-      .select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount")
-      .repartition(24)
+    val ctxAdImpressions_ads_eval = ctxAdImpressions.join(evalSet, evalSet("mid") === ctxAdImpressions("mid")).
+      join(ads_imp_click, ads_imp_click("id") === ctxAdImpressions("adId"), "left_outer").
+      select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount").
+      cache()
 
-    val ctxAdImpressions_ads_users_eval = ctxAdImpressions_ads_eval.join(searches_users, searches_users("id") === ctxAdImpressions_ads_eval("searchId"), "left_outer")
-      .select("isClick",
+    val ctxAdImpressions_ads_users_eval = ctxAdImpressions_ads_eval.join(searches_users, searches_users("id") === ctxAdImpressions_ads_eval("searchId"), "left_outer").
+      select("isClick",
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
-      .cache()
+        "category", "params", "price", "title", "adImpCount", "adClickCount"). //, "searchId", "adId")
+      cache()
 
     // Small Set
     val ctxAdImpressions_ads_small = ctxAdImpressionsToFind.withColumnRenamed("id", "submid").
       join(ads_imp_click, ads_imp_click("id") === ctxAdImpressionsToFind("adId"), "left_outer").
       select("submid", "searchId", "adId","position", "histctr", "category", "params", "price", "title", "adImpCount", "adClickCount").
-      repartition(24)
+      cache()
 
     val ctxAdImpressions_ads_users_small = ctxAdImpressions_ads_small.join(searches_users, searches_users("id") === ctxAdImpressions_ads_small("searchId"), "left_outer").
       withColumn("isClick", ctxAdImpressions_ads_small("submid")).
@@ -162,34 +155,35 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
+        "category", "params", "price", "title", "adImpCount", "adClickCount") //, "searchId", "adId")
+    .cache()
 
     //  Train Set
-    val ctxAdImpressions_ads_train = ctxAdImpressions.join(trainSet, trainSet("mid") === ctxAdImpressions("mid"))
-      .join(ads_imp_click, ads_imp_click("id") === ctxAdImpressions("adId"), "left_outer")
-      .select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount")
-      .repartition(24)
+    val ctxAdImpressions_ads_train = ctxAdImpressions.join(trainSet, trainSet("mid") === ctxAdImpressions("mid")).
+      join(ads_imp_click, ads_imp_click("id") === ctxAdImpressions("adId"), "left_outer").
+      select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount").
+      cache()
 
     val ctxAdImpressions_ads_users_train = ctxAdImpressions_ads_train.join(searches_users, searches_users("id") === ctxAdImpressions_ads_train("searchId"), "left_outer")
       .select("isClick",
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
+        "category", "params", "price", "title", "adImpCount", "adClickCount") //, "searchId", "adId"
     .cache()
 
     // Validate Set
-    val ctxAdImpressions_ads_validate = ctxAdImpressions.join(validateSet, validateSet("mid") === ctxAdImpressions("mid"))
-      .join(ads_imp_click, ads_imp_click("id") === ctxAdImpressions("adId"), "left_outer")
-      .select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount")
-      .repartition(24).cache()
+    val ctxAdImpressions_ads_validate = ctxAdImpressions.join(validateSet, validateSet("mid") === ctxAdImpressions("mid")).
+      join(ads_imp_click, ads_imp_click("id") === ctxAdImpressions("adId"), "left_outer").
+      select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount").
+      cache()
 
     val ctxAdImpressions_ads_users_validate = ctxAdImpressions_ads_validate.join(searches_users, searches_users("id") === ctxAdImpressions_ads_validate("searchId"), "left_outer")
       .select("isClick",
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
+        "category", "params", "price", "title", "adImpCount", "adClickCount") //, "searchId", "adId")
       .cache()
 
 

@@ -55,8 +55,12 @@ object Script {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
 
-    val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = TrainingData.reprocessData(sc, "DUMB_")
+    val (users, ads, ctxAds, nonCtxAds, searches,
+    ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind,
+    visits, phoneRequests, locations, categories,
+    evalData, trainData, validateData, smallData) = LoadSave.reprocessData(sc, sqlContext, "CARBON_", true)
 
+reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false)
 
 
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CANOPY_")

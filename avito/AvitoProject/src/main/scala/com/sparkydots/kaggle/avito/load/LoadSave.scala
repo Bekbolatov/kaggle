@@ -1,12 +1,13 @@
 package com.sparkydots.kaggle.avito.load
 
 import com.sparkydots.kaggle.avito.functions.UdfFunctions._
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
 object LoadSave {
 
-  val processedDir = "banana"
+  val processedDir = "carbon"
 
   def loadOrigDF(sqlContext: SQLContext, filename: String) = sqlContext.load("com.databricks.spark.csv", Map("header" -> "true", "delimiter" -> "\t", "path" -> s"s3n://sparkydotsdata/kaggle/avito/${filename}.tsv"))
   def loadDF(sqlContext: SQLContext, filename: String) = sqlContext.load(s"s3n://sparkydotsdata/kaggle/avito/${processedDir}/${filename}.parquet")
@@ -39,7 +40,6 @@ object LoadSave {
       withColumn("title", udf_toLower(_ads("Title"))).
       withColumn("isContext", udf_toInt(_ads("IsContext"))).
       select("id", "category", "params", "price", "title", "isContext").
-      filter("isContext = 1").
       repartition(8).
       cache()
     saveDF(sqlContext, ads, "ads")
@@ -173,10 +173,10 @@ object LoadSave {
     val nonCtxAdImpressions = loadDF(sqlContext, "nonCtxAdImpressions").cache()
     val ctxAdImpressionsToFind = loadDF(sqlContext, "ctxAdImpressionsToFind").cache()
     val nonCtxAdImpressionsToFind = loadDF(sqlContext, "nonCtxAdImpressionsToFind").cache()
-    val visits = loadDF(sqlContext, "visits")
-    val phoneRequests = loadDF(sqlContext, "phoneRequests")
-    val locations = loadDF(sqlContext, "locations")
-    val categories = loadDF(sqlContext, "categories")
+    val visits = loadDF(sqlContext, "visits").cache()
+    val phoneRequests = loadDF(sqlContext, "phoneRequests").cache()
+    val locations = loadDF(sqlContext, "locations").cache()
+    val categories = loadDF(sqlContext, "categories").cache()
 
     (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories)
   }
@@ -193,7 +193,13 @@ object LoadSave {
    * @param orig whether to load from original Kaggle source data files
    * @return
    */
-  def splitData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false) = {
+  def reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false) = {
+    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
+    Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
+    Logger.getLogger("com.amazonaws").setLevel(Level.WARN)
+    Logger.getLogger("org").setLevel(Level.WARN)
+    Logger.getLogger("akka").setLevel(Level.WARN)
+
     val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories) =
       if (orig)
         LoadSave.loadOrig(sqlContext)

@@ -103,7 +103,7 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         booleanFeature(impCount > 1000) ++
         booleanFeature(position < 3) ++
         booleanFeature(position > 5) ++
-        booleanFeature(price > 100000.0) ++
+        booleanFeature(price > 200000.0) ++
         booleanFeature(price > 100 && price < 10000.0) ++
         booleanFeature(price <= 0.0) ++
         booleanFeature(searchCatPar ==  adCatPar) ++
