@@ -61,7 +61,7 @@ object Script {
 
     val maxIter = 40
     val regParam = 0.003
-    val words = "onlyWords1000"
+    val words = "onlyWords500"
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
 
 train.show
@@ -87,6 +87,7 @@ train.show
     println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] Train error: $errorTrain, Validate error: $errorValidate")
 
 
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, reducedRawTain, rawValidate, maxIter, regParam, words)
 
 
 //s (2.1 GB) is bigger than spark.driver.maxResultSize (1024.0 MB)
@@ -98,6 +99,7 @@ train.show
 
 
     Script.saveSubmission(sqlContext, rawEval, rawSmall, featureGen, "tryFri2", maxIter, regParam, words)
+
 saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, maxIter: Int, regParam: Double, words: String) = {
 /////
     val featureGen = new FeatureGeneration(sqlContext, "words1000")

@@ -72,7 +72,8 @@ val validate_pca = validate.map(p => p.copy(features = pca1000.transform(p.featu
 
 ]]] A LOT OF GARBAGE HERE [[[
 [maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04580563349658314, Validate error: 0.04684950327429996
-<added clickCount < 1
+<added clickCount < 1 and removed words>
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.047044622109440395, Validate error: 0.04777846197959576
 
 
 

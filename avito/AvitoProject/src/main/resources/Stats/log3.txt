@@ -1,0 +1,20 @@
+[maxIter=40 regParam=0.003 words=onlyWords500] Train error: 0.04545400926502201, Validate error: 0.046823594613579655
+
+val maxIter = 40
+val regParam = 0.003
+val words = "onlyWords500"
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+
+<add OS and UAFAM>
+[maxIter=40 regParam=0.003 words=onlyWords500] Train error: 0.04534174622001332, Validate error: 0.04673982251903227
+
+======================================================
+Script.saveSubmission(sqlContext, rawEval, rawSmall, "trySat2", maxIter, regParam, words)
+[[[  Submission Sat Jul 25, 18:59 ]]]
+[maxIter=40 regParam=0.003 words=onlyWords500]
+Train error: 0.04534174622001332,
+Validate error: 0.04673982251903227
+Eval error: <>
+LB error:  <>
+======================================================
+

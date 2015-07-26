@@ -1,0 +1,56 @@
+CV: 46 87 -> LB error: 0.04514
+
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04704462210944039, Validate error: 0.04777846197959576
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04564153655041087, Validate error: 0.046845714530727174
+
+
+< smaller dict >
+[val words = "onlyWords5000"]  increase threshold from 1000  (11K feats)
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+[maxIter=40 regParam=0.003 words=onlyWords5000] Train error: 0.04622211555220797, Validate error: 0.047010814800415336
+
+<  more words (500 thresh) >  22K feats
+val words = "onlyWords500"
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+train.show
+[maxIter=40 regParam=0.003 words=onlyWords500] Train error: 0.04545400926502201, Validate error: 0.046823594613579655
+
+
+<  even more words (100 thresh) > 32K
+val words = "onlyWords100"
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+train.show
+[maxIter=40 regParam=0.003 words=onlyWords100] Train error: 0.04507593982238207, Validate error: 0.046865986808107156
+
+
+========================
+Keep onlyWords500
+[maxIter=40 regParam=0.003 words=onlyWords500] Train error: 0.04545400926502201, Validate error: 0.046823594613579655
+===========================
+[maxIter=40 regParam=0.001 words=onlyWords500] Train error: 0.04516107371342567, Validate error: 0.04687591032961319
+[maxIter=40 regParam=0.003 words=onlyWords500] Train error: 0.04545400926502201, Validate error: 0.046823594613579655  *
+[maxIter=40 regParam=0.006 words=onlyWords500] Train error: 0.04569112973837576, Validate error: 0.04684978454499437
+[maxIter=40 regParam=0.010 words=onlyWords500] Train error: 0.04600526720659181, Validate error: 0.04700330610694371
+
+
+    Script.saveSubmission(sqlContext, rawEval, rawSmall, "trySat1", maxIter, regParam, words)
+======================================================
+[[[  Submission Sat Jul 25, 18:29 ]]]
+[maxIter=40 regParam=0.003 words=onlyWords500]
+Train error: 0.04545400926502201,
+Validate error: 0.046823594613579655
+Eval error: 0.04591591035513445
+LB error:  0.04514
+======================================================
+
+<try removing where os is null in train set>
+[maxIter=40 regParam=0.006 words=onlyWords500] Train error: 0.04566699148502387, Validate error: 0.04685332427380119
+
+
+
+--------::
+
+
+val words = "onlyWords500"
+val regParam = 0.003
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)

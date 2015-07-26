@@ -110,6 +110,8 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         intFeature(hourOfDay(searchTime), 24) ++
         intFeature(dayOfWeek(searchTime), 7) ++
         intFeature(dayOfWeek(searchTime)*24 + hourOfDay(searchTime), 24*7) ++
+        intFeature( math.max(math.min(os - 1, 50), 0), 51) ++
+        intFeature( math.max(math.min(uafam - 1, 88), 0), 89) ++
         intFeature(trueCat(searchCat), trueCatSize) ++
         intFeature(trueCat(category), trueCatSize) ++
         intFeature(searchLocLevel - 1, 3) ++
@@ -126,12 +128,12 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
 
       val whichFeaturesIndices = smallFeaturesIndices ++
         intFeature(trueLoc(searchLoc), trueLocSize) ++
-        //indicatorFeatures(titleWordIds, wordsDict.value.size) ++
-        //indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
+        indicatorFeatures(titleWordIds, wordsDict.value.size) ++
+        indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
         indicatorFeatures(titleWordIds.toSet.intersect(queryWordsIds.toSet).toSeq, wordsDict.value.size) ++
-        indicatorFeatures(paramIds.toSet.intersect(searchParamIds.toSet).toSeq, paramsDict.value.size)
-        //indicatorFeatures(paramIds, paramsDict.value.size) ++
-        //indicatorFeatures(searchParamIds, paramsDict.value.size)
+        indicatorFeatures(paramIds.toSet.intersect(searchParamIds.toSet).toSeq, paramsDict.value.size) ++
+        indicatorFeatures(paramIds, paramsDict.value.size) ++
+        indicatorFeatures(searchParamIds, paramsDict.value.size)
 
       val (categoricalOffset, categoricalFeatures) = whichFeaturesIndices.foldLeft(0, Seq[(Int, Double)]()) {
         case ((offset, cumFeats), (blocksize, feats)) =>

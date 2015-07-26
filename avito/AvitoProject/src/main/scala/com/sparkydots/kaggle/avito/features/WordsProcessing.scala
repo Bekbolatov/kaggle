@@ -73,4 +73,25 @@ object WordsProcessing extends Serializable {
 
   }
 
+  def generateAndSaveOSUADictionaries(sc: SparkContext, sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String = "osua") = {
+    import sqlContext.implicits._
+
+    val countsOs1 = rawEval.select("os").flatMap({
+      case Row(os: Int) => Some(os, 1)
+      case _ => None
+    }).reduceByKey((x, y) => x + y)
+
+    val countsOs2 = rawSmall.select("os").flatMap({
+      case Row(os: Int) => Some(os, 1)
+      case _ => None
+    }).reduceByKey((x, y) => x + y)
+
+    val counts = countsOs1.union(countsOs2).reduceByKey((x, y) => x + y).toDF("os", "cnt").orderBy("cnt").cache
+    val countsAll = counts.select("os").collect().map(x => x.getInt(0))
+
+    val countsAllDict = sc.parallelize(countsAll.zipWithIndex).toDF("os", "osId").repartition(1)
+    LoadSave.saveDF(sqlContext, countsAllDict, s"${filename}1000")
+
+  }
+
 }
