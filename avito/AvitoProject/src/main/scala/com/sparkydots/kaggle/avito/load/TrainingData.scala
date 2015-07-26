@@ -27,9 +27,9 @@ object TrainingData {
         map(r => (r.getInt(0), (r.getInt(1), r.getLong(2)))).
         groupByKey().
         map({ case (userId, impressions) =>
-        val els = impressions.groupBy(imp => imp._1 / 60).toSeq.map(_._2)
-        val el = els(41 * userId % els.size)
-        (userId, el.map(_._1).min, el.map(_._2).toSeq)
+          val els = impressions.groupBy(imp => imp._1 / 60).toSeq.map(_._2)
+          val el = els(41 * userId % els.size)
+          (userId, el.map(_._1).min, el.map(_._2).toSeq)
       })
 
     val Array(_trainSet, _validateSet) = evaluateSet.randomSplit(splitFracs, seed)
@@ -59,57 +59,29 @@ object TrainingData {
     val ad_imp_click = ad_imp.join(ad_click, ad_imp("adImpAdId") === ad_click("adClickAdId"), "left_outer").
       select("adImpAdId", "adImpCount", "adClickCount")
 
-
-//    For some reason this is not working if you repartition some source DataFrames (to make fewer partitions) in 1.4.1  (complains about different number of partitions in ZippedRDD
     val ads_imp_click = ads.join(ad_imp_click, ad_imp_click("adImpAdId") === ads("id"), "left_outer").
       select("id", "category", "params", "price", "title", "adImpCount", "adClickCount")
-//   Below is a huge hack workaround just in case
-//    val ads_imp_click = ads.flatMap {
-//      case Row(id: Int, category: Int, params: Seq[Int], price: Double, title: String, isContext: Int) =>
-//        Some((id, (category, params, price, title, isContext)))
-//      case _ => None
-//    }.leftOuterJoin(ad_imp_click.map {
-//      case Row(adImpAdId: Int, adImpCount: Long, adClickCount: Long) => (adImpAdId, (adImpCount, adClickCount))
-//      case Row(adImpAdId: Int, adImpCount: Long, _) => (adImpAdId, (adImpCount, 0L))
-//      case Row(adImpAdId: Int, _, _) => (adImpAdId, (0L, 0L))
-//    }).
-//    flatMap {
-//      case (adId, ((category, params, price, title, isContext), Some((adImpCount:Long , adClickCount: Long)))) =>
-//        Some(adId, category, params, price,title, isContext, adImpCount, adClickCount)
-//      case (adId, ((category, params, price, title, isContext), Some((adImpCount: Long, _)))) =>
-//        Some(adId, category, params, price,title, isContext, adImpCount, 0L)
-//      case (adId, ((category, params, price, title, isContext), Some((_, _)))) =>
-//        Some(adId, category, params, price,title, isContext, 0L, 0L)
-//      case (adId, ((category, params, price, title, isContext), None)) =>
-//        Some(adId, category, params, price,title, isContext, 0L, 0L)
-//      case _ => None
-//    }.toDF("id", "category", "params", "price", "title", "isContext", "adImpCount", "adClickCount")
 
     //  about Users
     val visitCounts = visits.groupBy("userId").count().
       withColumnRenamed("count", "visitCount").
-      withColumnRenamed("userId", "visitUserId").
-      select("visitUserId", "visitCount")
+      withColumnRenamed("userId", "visitUserId")
 
     val phoneRequestCounts = phoneRequests.groupBy("userId").count().
       withColumnRenamed("count", "phoneCount").
-      withColumnRenamed("userId", "phoneUserId").
-      select("phoneUserId", "phoneCount")
+      withColumnRenamed("userId", "phoneUserId")
 
     val histImpressions = histCtxAdImpressions.groupBy("userId").count().
       withColumnRenamed("count", "impCount").
-      withColumnRenamed("userId", "impUserId").
-      select("impUserId", "impCount")
+      withColumnRenamed("userId", "impUserId")
 
     val histClicks = histCtxAdImpressions.filter("isClick > 0").groupBy("userId").count().
       withColumnRenamed("count", "clickCount").
-      withColumnRenamed("userId", "clickUserId").
-      select("clickUserId", "clickCount")
+      withColumnRenamed("userId", "clickUserId")
 
     val users_visit = users.join(visitCounts, visitCounts("visitUserId") === users("id"), "left_outer").
       select("id", "os", "uafam", "visitCount")
 
-    ///
     val users_visit_phone = users_visit.join(phoneRequestCounts, phoneRequestCounts("phoneUserId") === users_visit("id"), "left_outer").
       select("id", "os", "uafam", "visitCount", "phoneCount")
 
@@ -120,11 +92,10 @@ object TrainingData {
       select("id", "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount")
 
 
-
-
+    // Search events expanded to include user information
     val searches_users = searches.join(users_visit_phone_imp_click, users_visit_phone_imp_click("id") === searches("userId")).
     select(searches("id"), searches("searchTime"), searches("searchQuery"), searches("searchLoc"), searches("searchCat"), searches("searchParams"),
-        searches("loggedIn"), users_visit_phone_imp_click("os"), users_visit_phone_imp_click("uafam"),
+        searches("loggedIn"), searches("userId"), users_visit_phone_imp_click("os"), users_visit_phone_imp_click("uafam"),
         users_visit_phone_imp_click("visitCount"), users_visit_phone_imp_click("phoneCount"),
         users_visit_phone_imp_click("impCount"), users_visit_phone_imp_click("clickCount")
       ).cache()
@@ -140,7 +111,7 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount"). //, "searchId", "adId")
+        "category", "params", "price", "title", "adImpCount", "adClickCount" , "searchId", "adId", "userId").
       cache()
 
     // Small Set
@@ -155,8 +126,8 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount") //, "searchId", "adId")
-    .cache()
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId").
+    cache()
 
     //  Train Set
     val ctxAdImpressions_ads_train = ctxAdImpressions.join(trainSet, trainSet("mid") === ctxAdImpressions("mid")).
@@ -169,7 +140,7 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount") //, "searchId", "adId"
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId")
     .cache()
 
     // Validate Set
@@ -183,7 +154,7 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount") //, "searchId", "adId")
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId")
       .cache()
 
 

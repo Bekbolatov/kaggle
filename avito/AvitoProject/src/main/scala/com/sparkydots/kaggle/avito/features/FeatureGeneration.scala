@@ -17,9 +17,15 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
     "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
     "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
     "position", "histctr",
-    "category", "params", "price", "title", "adImpCount", "adClickCount"
+    "category", "params", "price", "title", "adImpCount", "adClickCount",
+   "searchId", "adId", "userId",  <<<>> NEW
     "searchLocLevel", "searchLocPar", "searchCatLevel", "searchCatPar", "adCatLevel", "adCatPar"
    */
+
+
+
+
+  ORDER CHANGES sticks inside "searchId", "adId", "userId"
   def featurize(data: DataFrame, sqlContext: SQLContext): DataFrame = {
     import sqlContext.implicits._
 
