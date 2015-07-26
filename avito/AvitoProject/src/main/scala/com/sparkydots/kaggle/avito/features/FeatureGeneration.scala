@@ -88,9 +88,13 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
 
       val titleWordIds = splitString(title).flatMap(p => wordsDict.value.get(stemString(p)))
       val queryWordsIds = splitString(searchQuery).flatMap(p => wordsDict.value.get(stemString(p)))
+      val paramIds = params.flatMap(p => paramsDict.value.get(p))
+      val searchParamIds = searchParams.flatMap(p => paramsDict.value.get(p))
+
 
       val smallFeaturesIndices =
         booleanFeature(loggedIn > 0) ++
+        booleanFeature(clickCount < 1) ++
         booleanFeature(phoneCount > 1) ++
         booleanFeature(searchParams.isEmpty) ++
         booleanFeature(params.isEmpty) ++
@@ -122,10 +126,12 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
 
       val whichFeaturesIndices = smallFeaturesIndices ++
         intFeature(trueLoc(searchLoc), trueLocSize) ++
-        indicatorFeatures(titleWordIds, wordsDict.value.size) ++
-        indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
-        indicatorFeatures(params.flatMap(p => paramsDict.value.get(p)), paramsDict.value.size) ++
-        indicatorFeatures(searchParams.flatMap(p => paramsDict.value.get(p)), paramsDict.value.size)
+        //indicatorFeatures(titleWordIds, wordsDict.value.size) ++
+        //indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
+        indicatorFeatures(titleWordIds.toSet.intersect(queryWordsIds.toSet).toSeq, wordsDict.value.size) ++
+        indicatorFeatures(paramIds.toSet.intersect(searchParamIds.toSet).toSeq, paramsDict.value.size)
+        //indicatorFeatures(paramIds, paramsDict.value.size) ++
+        //indicatorFeatures(searchParamIds, paramsDict.value.size)
 
       val (categoricalOffset, categoricalFeatures) = whichFeaturesIndices.foldLeft(0, Seq[(Int, Double)]()) {
         case ((offset, cumFeats), (blocksize, feats)) =>
@@ -133,17 +139,16 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
       }
 
       val continuousFeatures =
-        Seq((categoricalOffset + 1, searchParams.toSet.intersect(params.toSet).size.toDouble)) ++
-        Seq((categoricalOffset + 2, length(searchQuery).toDouble)) ++
-        (if (os < 0) Seq((categoricalOffset + 3, 1.0)) else Seq[(Int, Double)]()) ++
-        Seq((categoricalOffset + 4, ctr)) ++
-        Seq((categoricalOffset + 5, adCtr)) ++
-        Seq((categoricalOffset + 6, histctr)) ++
-        Seq((categoricalOffset + 7, titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble))
+        Seq((categoricalOffset + 1, math.min(searchParams.toSet.intersect(params.toSet).size.toDouble / 3, 1.0))) ++
+        Seq((categoricalOffset + 2, math.min(length(searchQuery).toDouble / 38, 1.0))) ++
+        Seq((categoricalOffset + 3, ctr)) ++
+        Seq((categoricalOffset + 4, adCtr)) ++
+        Seq((categoricalOffset + 5, histctr)) ++
+        Seq((categoricalOffset + 6, math.min(titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble / 4, 1.0)))
 
       val features = categoricalFeatures ++ continuousFeatures
 
-      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 8, dedupeFeatures(features)))
+      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 7, dedupeFeatures(features)))
     }.toDF()
 
     featurized

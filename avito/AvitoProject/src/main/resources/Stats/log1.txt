@@ -7,3 +7,73 @@ scala> rawTrain.count
 res8: Long = 4781480
 
 
+
+
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.045761866350985, Validate error: 0.04687106220797519
+<cut-off time for historical data is now same for everybody>
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.045808849195053, Validate error: 0.04684916943180781
+
+
+
+
+
+
+
+>>
+              import org.apache.spark.mllib.feature.ChiSqSelector
+              val selector = new ChiSqSelector(100)
+
+              val discretizedData = data.map { lp =>
+                LabeledPoint(lp.label, Vectors.dense(lp.features.toArray.map {  x => ((160*x).toInt / 16).toDouble } ) )
+              }
+              val transformer = selector.fit(discretizedData)
+
+              val filteredData = discretizedData.map { lp =>
+                LabeledPoint(lp.label, transformer.transform(lp.features))
+              }.toDF("label", "features").cache
+
+
+              val validateData = validate.map{ case Row(label: Double, features: Vector) => LabeledPoint(label, features) }
+              val discretizedValidateData = validateData.map { lp =>
+                LabeledPoint(lp.label, Vectors.dense(lp.features.toArray.map {  x => ((160*x).toInt / 16).toDouble } ) )
+              }
+              val filteredValidateData = discretizedValidateData.map { lp =>
+                LabeledPoint(lp.label, transformer.transform(lp.features))
+              }.toDF("label", "features").cache
+
+>>>>>>>>
+
+import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.feature.PCA
+
+val trainData = train.map{ case Row(label: Double, features: Vector) => LabeledPoint(label, features) }
+val validateData = validate.map{ case Row(label: Double, features: Vector) => LabeledPoint(label, features) }
+
+val pca = new PCA(trainData.first().features.size/2).fit(trainData.map(_.features))
+
+val training_pca = train.map(p => p.copy(features = pca.transform(p.features)))
+val validate_pca = validate.map(p => p.copy(features = pca.transform(p.features)))
+
+
+
+\\\\\\\\\\ Moved to Spark 1.4.1 /////
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.045805633496581705, Validate error: 0.04684950327429934
+
+val trainData = train.map{ case Row(label: Double, features: Vector) => LabeledPoint(label, features) }
+val validateData = validate.map{ case Row(label: Double, features: Vector) => LabeledPoint(label, features) }
+
+val reducedNumFeatures = 1000 // trainData.map(_.features.size).first()/2
+val pca1000 = new PCA(reducedNumFeatures).fit(trainData.map(_.features))
+
+val training_pca = train.map(p => p.copy(features = pca1000.transform(p.features)))
+val validate_pca = validate.map(p => p.copy(features = pca1000.transform(p.features)))
+
+    val model1000 = lr.fit(training_pca)
+
+]]] A LOT OF GARBAGE HERE [[[
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04580563349658314, Validate error: 0.04684950327429996
+<added clickCount < 1
+
+
+
+

@@ -12,7 +12,6 @@ fi
 echo "ClusterID: $CLUSTERID"
 
 MASTER=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "MasterPu" | awk -F "\"" '{ print $4 }')
-echo $MASTER > master
 
 STATE=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "State\":" | head -n 1 | awk -F "\"" ' { print $4 }')
 COUNTER=20
@@ -26,7 +25,19 @@ if [[ $COUNTER -lt 2 ]]; then
     exit
 fi
 
+
+echo $MASTER > master
+
+echo '<!DOCTYPE html>' > awsloc.html
+echo '<html><frameset rows="75%,25%">' >> awsloc.html
+echo "<frame src=\"http://$MASTER/ganglia\">" >> awsloc.html
+echo "<frame src=\"http://$MASTER:8088\">" >> awsloc.html
+echo '</frameset></html>' >> awsloc.html
+
+#echo "<html><a href=\"http://$MASTER/ganglia\">Ganglia</a> <br> <a href=\"http://$MASTER:9026\">Yarn</a>" > awsloc.html
 echo -e "Master:\t$MASTER"
+
+
 STATE=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "State\":" | head -n 1 | awk -F "\"" ' { print $4 }')
 echo "$STATE"
 
@@ -49,6 +60,7 @@ NUM=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep CORE -B 11 | grep 
 
 echo "ssh $MASTER"
 #scp ../avito/AvitoProject/target/scala-2.10/AvitoProject-assembly-1.0.jar $MASTER:/home/hadoop/.
-scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/spark/conf/.
+#scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/spark/conf/.
+scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/.
 
 ssh  -ND 8157 $MASTER

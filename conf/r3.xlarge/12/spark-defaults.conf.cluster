@@ -1,0 +1,10 @@
+spark.master yarn
+spark.eventLog.enabled true
+spark.eventLog.dir hdfs:///var/log/spark/apps
+spark.history.fs.logDirectory hdfs:///var/log/spark/apps
+spark.yarn.historyServer.address ip-10-0-0-64.us-west-2.compute.internal:18080
+spark.history.ui.port 18080
+spark.shuffle.service.enabled true
+spark.driver.extraJavaOptions    -Dspark.driver.log.level=INFO -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:MaxHeapFreeRatio=70 -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=512M
+spark.executor.extraJavaOptions  -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:MaxHeapFreeRatio=70 -XX:+CMSClassUnloadingEnabled
+

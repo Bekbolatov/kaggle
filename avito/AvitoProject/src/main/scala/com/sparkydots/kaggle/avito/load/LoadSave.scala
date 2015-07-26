@@ -7,7 +7,6 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 object LoadSave {
 
   val processedDir = "banana"
-  val prefix: String = "BANANA_"
 
   def loadOrigDF(sqlContext: SQLContext, filename: String) = sqlContext.load("com.databricks.spark.csv", Map("header" -> "true", "delimiter" -> "\t", "path" -> s"s3n://sparkydotsdata/kaggle/avito/${filename}.tsv"))
   def loadDF(sqlContext: SQLContext, filename: String) = sqlContext.load(s"s3n://sparkydotsdata/kaggle/avito/${processedDir}/${filename}.parquet")
@@ -176,7 +175,7 @@ object LoadSave {
    * @param orig whether to load from original Kaggle source data files
    * @return
    */
-  def splitData(sc: SparkContext, sqlContext: SQLContext, orig: Boolean = false) = {
+  def splitData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false) = {
     val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories) =
       if (orig)
         LoadSave.loadOrig(sqlContext)
@@ -199,7 +198,7 @@ object LoadSave {
    * @param sqlContext
    * @return
    */
-  def loadDatasets(sc: SparkContext, sqlContext: SQLContext) = {
+  def loadDatasets(sc: SparkContext, sqlContext: SQLContext, prefix: String) = {
 
     val rawTrain = LoadSave.loadDF(sqlContext, s"${prefix}TRAIN").cache()
     val rawValidate = LoadSave.loadDF(sqlContext, s"${prefix}VALIDATE").cache()

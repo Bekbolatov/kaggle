@@ -5,7 +5,6 @@ import java.io.FileWriter
 import com.sparkydots.kaggle.avito.features.{FeatureHashing, FeatureGeneration}
 import com.sparkydots.kaggle.avito.functions.DFFunctions._
 import com.sparkydots.kaggle.avito.load.{LoadSave, TrainingData}
-import com.sparkydots.kaggle.avito.optimization.{LogisticRegressionLogLossModel, LogisticRegressionLogLoss}
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
@@ -30,15 +29,18 @@ object Script {
     import org.apache.spark.sql.{Row, SQLContext}
     import com.sparkydots.kaggle.avito._
     import com.sparkydots.kaggle.avito.load._
-    import org.apache.spark.ml.classification.LogisticRegression
     import com.sparkydots.kaggle.avito.functions.DFFunctions._
     import com.sparkydots.kaggle.avito.functions.Functions._
     import com.sparkydots.kaggle.avito.features.FeatureGeneration
     import com.sparkydots.kaggle.avito.features.FeatureHashing
     import com.sparkydots.kaggle.avito.features.WordsProcessing
-    import com.sparkydots.kaggle.avito.optimization.LogisticRegressionLogLoss
+
     import org.apache.spark.mllib.linalg.Vectors
+    import org.apache.spark.mllib.linalg.Vector
+    import org.apache.spark.mllib.feature.PCA
+    import org.apache.spark.ml.classification.LogisticRegression
     import org.apache.spark.mllib.regression.LabeledPoint
+
     import org.apache.spark.rdd.RDD
     import org.apache.spark.sql.{SQLContext, DataFrame}
     import scala.util.Try
@@ -46,17 +48,54 @@ object Script {
 
     Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
     Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
+    Logger.getLogger("com.amazonaws").setLevel(Level.WARN)
     Logger.getLogger("org").setLevel(Level.WARN)
     Logger.getLogger("akka").setLevel(Level.WARN)
 
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
-    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext)
+    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CANOPY_")
+
+
+
 
     val maxIter = 40
-    val regParam = 0.0005
-    val words = "onlyWords100"
-    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+    val regParam = 0.003
+    val words = "onlyWords1000"
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+
+train.show
+
+
+    val featureGen = new FeatureGeneration(sqlContext, words)
+    val train = featureGen.featurize(rawTrain, sqlContext).cache()
+    val validate = featureGen.featurize(rawValidate, sqlContext).cache()
+
+    val lr = new LogisticRegression()
+    lr.setMaxIter(maxIter).setRegParam(regParam)
+
+    val model = lr.fit(train)
+
+    val errorTrain = df_calcError(model.transform(train)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    val errorValidate = df_calcError(model.transform(validate)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] Train error: $errorTrain, Validate error: $errorValidate")
+
+
+
+
+//s (2.1 GB) is bigger than spark.driver.maxResultSize (1024.0 MB)
+
+
+//    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+
+
+
 
     Script.saveSubmission(sqlContext, rawEval, rawSmall, featureGen, "tryFri2", maxIter, regParam, words)
 saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, maxIter: Int, regParam: Double, words: String) = {
@@ -97,6 +136,8 @@ saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, 
 ///\\\\\
 WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "onlyWords", Seq(100, 500, 1000, 5000, 10000, 20000))
 ////\\\\
+val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = Script.reprocessData(sc, "CANOPY_")
+\\\\\\\///
 
 
 
@@ -196,8 +237,6 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
 
     val model1 = lr.fit(training.toDF) // Learn a LogisticRegression model, with parameters stored in lr.
     // Since model1 is a Model (i.e., a Transformer produced by an Estimator), we can view the parameters it used during fit().
-    // This prints the parameter (name: value) pairs, where names are unique IDs for this LogisticRegression instance.
-    println("Model 1 was fit using parameters: " + model1.fittingParamMap)
 
     val paramMap = ParamMap(lr.maxIter -> 20)
     paramMap.put(lr.maxIter, 30) // Specify 1 Param.  This overwrites the original maxIter.
@@ -207,7 +246,6 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
 
 
     val model2 = lr.fit(training.toDF, paramMapCombined) //learn a new model using the paramMapCombined parameters
-    println("Model 2 was fit using parameters: " + model2.fittingParamMap)
 
     val test = sc.parallelize(Seq(
       LabeledPoint(1.0, Vectors.dense(-1.0, 1.5, 1.3)),
@@ -228,7 +266,7 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
   }
 
 
-  def reprocessData(sc: SparkContext) = {
+  def reprocessData(sc: SparkContext, prefix: String) = {
     Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
     Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
     Logger.getLogger("org").setLevel(Level.WARN)
@@ -241,7 +279,6 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
     val (evalData, trainData, validateData, smallData) =
       TrainingData.split(sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories)
 
-    val prefix = "BANANA_"
     LoadSave.saveDF(sqlContext, trainData, s"${prefix}TRAIN")
     LoadSave.saveDF(sqlContext, validateData, s"${prefix}VALIDATE")
     LoadSave.saveDF(sqlContext, evalData, s"${prefix}EVAL")

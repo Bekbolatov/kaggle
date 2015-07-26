@@ -33,15 +33,12 @@ object TrainingData {
     val trainSet = _trainSet.flatMap(_._3).repartition(1).toDF("mid").cache()
     val validateSet = _validateSet.flatMap(_._3).repartition(1).toDF("mid").cache()
 
-    // trim historical data
-    val cutoffTimes = evaluateSet.map(r => (r._1, r._2)).toDF("userId", "cutoffTime")
-
+    // trim historical data about impressions and clicks - as if we ran a batch job on May 12th
     val histCtxAdImpressions =
       ctxAdImpressions.
         join(searches, ctxAdImpressions("searchId") === searches("id")).
         select(searches("userId"), searches("searchTime"), ctxAdImpressions("mid"), ctxAdImpressions("isClick"), ctxAdImpressions("adId")).
-        join(cutoffTimes, cutoffTimes("userId") === searches("userId")).
-        filter(searches("searchTime") < cutoffTimes("cutoffTime")).
+        filter("searchTime <= 1900800").
         select(searches("userId"), ctxAdImpressions("mid"), ctxAdImpressions("isClick"), ctxAdImpressions("adId")).
         repartition(20).
         cache()
