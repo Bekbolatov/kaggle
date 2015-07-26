@@ -66,7 +66,7 @@ object LoadSave {
     saveDF(sqlContext, searches, "searches")
 
     val _adImpressions = loadOrigDF(sqlContext, "trainSearchStream")
-    val ctxAdImpressions = _adImpressions. // (mid, (searchId, adId, position, histCTR, isClick))
+    val adImpressions = _adImpressions. // (mid, (searchId, adId, position, histCTR, isClick))
       withColumn("mid", udf_toMid(_adImpressions("SearchID"), _adImpressions("AdID"))).
       withColumn("searchId", udf_toInt(_adImpressions("SearchID"))).
       withColumn("adId", udf_toInt(_adImpressions("AdID"))).
@@ -75,26 +75,42 @@ object LoadSave {
       withColumn("histctr", udf_toDoubleOrMinus(_adImpressions("HistCTR"))). // only for ObjectType 3
       withColumn("isClick", udf_toIntOrMinus(_adImpressions("IsClick"))). // now: -1, 0, 1
       select("mid", "searchId", "adId", "position", "type", "histctr", "isClick").
-      filter("type = 3").
-      select("mid", "searchId", "adId", "position", "histctr", "isClick").
       repartition(24).
       cache()
+
+    val nonCtxAdImpressions =  adImpressions.
+      filter("type != 3").
+      select("mid", "searchId", "adId", "position", "histctr", "isClick")
+    saveDF(sqlContext, nonCtxAdImpressions, "nonCtxAdImpressions")
+
+    val ctxAdImpressions =  adImpressions.
+      filter("type = 3").
+      select("mid", "searchId", "adId", "position", "histctr", "isClick")
     saveDF(sqlContext, ctxAdImpressions, "ctxAdImpressions")
 
     val _adImpressionsToFind = loadOrigDF(sqlContext, "testSearchStream")
-    val ctxAdImpressionsToFind = _adImpressionsToFind
-      .withColumn("id", udf_toInt(_adImpressionsToFind("ID")))
-      .withColumn("searchId", udf_toInt(_adImpressionsToFind("SearchID")))
-      .withColumn("adId", udf_toInt(_adImpressionsToFind("AdID")))
-      .withColumn("position", udf_toInt(_adImpressionsToFind("Position")))
-      .withColumn("type", udf_toInt(_adImpressionsToFind("ObjectType"))) //1, 2, 3
-      .withColumn("histctr", udf_toDoubleOrMinus(_adImpressionsToFind("HistCTR"))) // only for ObjectType 3
-      .select("id", "searchId", "adId", "position", "type", "histctr")
+    val adImpressionsToFind = _adImpressionsToFind.
+      withColumn("id", udf_toInt(_adImpressionsToFind("ID"))).
+      withColumn("searchId", udf_toInt(_adImpressionsToFind("SearchID"))).
+      withColumn("adId", udf_toInt(_adImpressionsToFind("AdID"))).
+      withColumn("position", udf_toInt(_adImpressionsToFind("Position"))).
+      withColumn("type", udf_toInt(_adImpressionsToFind("ObjectType"))). //1, 2, 3
+      withColumn("histctr", udf_toDoubleOrMinus(_adImpressionsToFind("HistCTR"))). // only for ObjectType 3
+      select("id", "searchId", "adId", "position", "type", "histctr").
+      repartition(24).
+      cache()
+
+    val ctxAdImpressionsToFind = adImpressionsToFind
       .filter("type = 3")
       .select("id", "searchId", "adId", "position", "histctr")
-      .repartition(24)
-      .cache()
+
     saveDF(sqlContext, ctxAdImpressionsToFind, "ctxAdImpressionsToFind")
+
+    val nonCtxAdImpressionsToFind = adImpressionsToFind.
+      filter("type != 3").
+      select("id", "searchId", "adId", "position", "histctr")
+
+    saveDF(sqlContext, nonCtxAdImpressionsToFind, "nonCtxAdImpressionsToFind")
 
     val _visits = loadOrigDF(sqlContext, "VisitsStream")
     val visits = _visits.
@@ -138,7 +154,7 @@ object LoadSave {
       cache()
     saveDF(sqlContext, categories, "categories")
 
-    (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories)
+    (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories)
   }
 
   /**
@@ -154,13 +170,15 @@ object LoadSave {
     val nonCtxAds = loadDF(sqlContext, "nonCtxAds").cache()
     val searches = loadDF(sqlContext, "searches").cache()
     val ctxAdImpressions = loadDF(sqlContext, "ctxAdImpressions").cache()
+    val nonCtxAdImpressions = loadDF(sqlContext, "nonCtxAdImpressions").cache()
     val ctxAdImpressionsToFind = loadDF(sqlContext, "ctxAdImpressionsToFind").cache()
+    val nonCtxAdImpressionsToFind = loadDF(sqlContext, "nonCtxAdImpressionsToFind").cache()
     val visits = loadDF(sqlContext, "visits")
     val phoneRequests = loadDF(sqlContext, "phoneRequests")
     val locations = loadDF(sqlContext, "locations")
     val categories = loadDF(sqlContext, "categories")
 
-    (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories)
+    (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories)
   }
 
   /**
@@ -176,20 +194,20 @@ object LoadSave {
    * @return
    */
   def splitData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false) = {
-    val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories) =
+    val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories) =
       if (orig)
         LoadSave.loadOrig(sqlContext)
       else
         LoadSave.loadOrigCached(sqlContext)
 
     val (evalData, trainData, validateData, smallData) =
-      TrainingData.split(sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories)
+      TrainingData.split(sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories)
     LoadSave.saveDF(sqlContext, trainData, s"${prefix}TRAIN")
     LoadSave.saveDF(sqlContext, validateData, s"${prefix}VALIDATE")
     LoadSave.saveDF(sqlContext, evalData, s"${prefix}EVAL")
     LoadSave.saveDF(sqlContext, smallData, s"${prefix}SMALL")
 
-    (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData)
+    (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData)
   }
 
   /**

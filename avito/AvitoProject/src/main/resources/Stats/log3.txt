@@ -5,16 +5,37 @@ val regParam = 0.003
 val words = "onlyWords500"
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
 
-<add OS and UAFAM>
+<add OS and UAFAM> *
 [maxIter=40 regParam=0.003 words=onlyWords500] Train error: 0.04534174622001332, Validate error: 0.04673982251903227
 
 ======================================================
 Script.saveSubmission(sqlContext, rawEval, rawSmall, "trySat2", maxIter, regParam, words)
 [[[  Submission Sat Jul 25, 18:59 ]]]
+Added UA/OS
 [maxIter=40 regParam=0.003 words=onlyWords500]
 Train error: 0.04534174622001332,
 Validate error: 0.04673982251903227
-Eval error: <>
-LB error:  <>
+Eval error: 0.045592331360378886
+LB error:  0.04503
 ======================================================
 
+
+[maxIter=40 regParam=0.001 words=onlyWords500]  Train error: 0.0451825035326913 , Validate error: 0.04688940371036782
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04534174622001332, Validate error: 0.04673982251903227
+[maxIter=40 regParam=0.003 words=onlyWords1000] Train error: 0.04559099020662665, Validate error: 0.04679066723506897
+
+==============================================================================================================
+[maxIter=40 regParam=0.003 words=onlyWords500]  Train error: 0.04534174622001332, Validate error: 0.04673982251903227
+
+
+
+
+
+
+
+----:
+
+val maxIter = 40
+val regParam = 0.001
+val words = "onlyWords500"
+val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)

@@ -1,15 +1,42 @@
 package com.sparkydots.kaggle.avito.load
 
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.SparkContext
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 
 object TrainingData {
 
+  def reprocessData(sc: SparkContext, prefix: String) = {
+    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
+    Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
+    Logger.getLogger("org").setLevel(Level.WARN)
+    Logger.getLogger("akka").setLevel(Level.WARN)
+
+    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+
+    val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories) = LoadSave.loadOrigCached(sqlContext)
+
+    val (evalData, trainData, validateData, smallData) =
+      TrainingData.split(sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories)
+
+    LoadSave.saveDF(sqlContext, trainData, s"${prefix}TRAIN")
+    LoadSave.saveDF(sqlContext, validateData, s"${prefix}VALIDATE")
+    LoadSave.saveDF(sqlContext, evalData, s"${prefix}EVAL")
+    LoadSave.saveDF(sqlContext, smallData, s"${prefix}SMALL")
+
+    (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData)
+  }
+
+
   def split(sqlContext: SQLContext,
             users: DataFrame,
             ads: DataFrame, ctxAds: DataFrame, nonCtxAds: DataFrame,
             searches: DataFrame,
-            ctxAdImpressions: DataFrame, ctxAdImpressionsToFind: DataFrame,
+            ctxAdImpressions: DataFrame,
+            nonCtxAdImpressions: DataFrame,
+            ctxAdImpressionsToFind: DataFrame,
+            nonCtxAdImpressionsToFind: DataFrame,
             visits: DataFrame, phoneRequests: DataFrame, locations: DataFrame, categories: DataFrame,
             splitFracs: Array[Double] = Array(0.7, 0.3), seed: Long = 101L) = {
 
@@ -120,7 +147,7 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount")
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
       .cache()
 
     // Small Set
@@ -135,7 +162,7 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount").cache()
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
 
     //  Train Set
     val ctxAdImpressions_ads_train = ctxAdImpressions.join(trainSet, trainSet("mid") === ctxAdImpressions("mid"))
@@ -148,7 +175,7 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount")
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
     .cache()
 
     // Validate Set
@@ -162,7 +189,7 @@ object TrainingData {
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount")
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId")
       .cache()
 
 

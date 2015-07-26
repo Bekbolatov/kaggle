@@ -54,6 +54,11 @@ object Script {
 
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
+
+    val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = TrainingData.reprocessData(sc, "DUMB_")
+
+
+
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CANOPY_")
 
 
@@ -136,6 +141,10 @@ saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, 
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
 ///\\\\\
+
+
+val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = TrainingData.reprocessData(sc, "DUMB_")
+
 WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "onlyWords", Seq(100, 500, 1000, 5000, 10000, 20000))
 ////\\\\
 val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = Script.reprocessData(sc, "CANOPY_")
@@ -265,28 +274,6 @@ val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxA
       println(s"($features, $label) -> prob=$prob, prediction=$prediction")
     }
 
-  }
-
-
-  def reprocessData(sc: SparkContext, prefix: String) = {
-    Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
-    Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
-    Logger.getLogger("org").setLevel(Level.WARN)
-    Logger.getLogger("akka").setLevel(Level.WARN)
-
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-
-    val (users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories) = LoadSave.loadOrigCached(sqlContext)
-
-    val (evalData, trainData, validateData, smallData) =
-      TrainingData.split(sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories)
-
-    LoadSave.saveDF(sqlContext, trainData, s"${prefix}TRAIN")
-    LoadSave.saveDF(sqlContext, validateData, s"${prefix}VALIDATE")
-    LoadSave.saveDF(sqlContext, evalData, s"${prefix}EVAL")
-    LoadSave.saveDF(sqlContext, smallData, s"${prefix}SMALL")
-
-    (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData)
   }
 
 
