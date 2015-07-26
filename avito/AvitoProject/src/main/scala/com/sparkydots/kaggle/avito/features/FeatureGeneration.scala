@@ -18,15 +18,50 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
     "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
     "position", "histctr",
     "category", "params", "price", "title", "adImpCount", "adClickCount",
+
    "searchId", "adId", "userId",  <<<>> NEW
    "neiPrice", "neiTitle", "neiParams", "neiCat", <<<>> NEW
+
     "searchLocLevel", "searchLocPar", "searchCatLevel", "searchCatPar", "adCatLevel", "adCatPar"
    */
 
+/*
+0	isClick
+1	os
+2	uafam
+3	visitCount
+4	phoneCount
+5	impCount
+6	clickCount
+7	searchTime
+8	searchQuery
+9	searchLoc
+10	searchCat
+11	searchParams
+12	loggedIn
+13	position
+14	histctr
+15	category
+16	params
+17	price
+18	title
+19	adImpCount
+20	adClickCount
+21	searchId
+22	adId
+23	userId
+24	neiPrice
+25	neiTitle
+26	neiParams
+27	neiCat
+28	searchLocLevel
+29	searchLocPar
+30	searchCatLevel
+31	searchCatPar
+32	adCatLevel
+33	adCatPar
+ */
 
-
-
-  ORDER CHANGES sticks inside "searchId", "adId", "userId"
   def featurize(data: DataFrame, sqlContext: SQLContext): DataFrame = {
     import sqlContext.implicits._
 
@@ -78,13 +113,28 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
 
       val adImpCount = Try(r.getLong(19).toInt).getOrElse(0)
       val adClickCount = Try(r.getLong(20).toInt).getOrElse(0)
+      //searchId, adId, userId --skip
 
-      val searchLocLevel = Try(r.getInt(21)).getOrElse(-1)
-      val searchLocPar = Try(r.getInt(22)).getOrElse(-1)
-      val searchCatLevel = Try(r.getInt(23)).getOrElse(-1)
-      val searchCatPar = Try(r.getInt(24)).getOrElse(-1)
-      val adCatLevel = Try(r.getInt(25)).getOrElse(-1)
-      val adCatPar = Try(r.getInt(26)).getOrElse(-1)
+      // nei
+      val neiPrice = Try(r.getDouble(24)).getOrElse(-1.0)
+      val neiTitle = Try(r.getString(25).toLowerCase).getOrElse("")
+      val neiCategory = Try(r.getInt(26)).getOrElse(-1)
+      val neiParams = Try({
+        val l = r.getSeq[Int](27)
+        if (l == null) {
+          Seq.empty
+        } else {
+          l
+        }
+      }).getOrElse(Seq.empty)
+
+
+      val searchLocLevel = Try(r.getInt(28)).getOrElse(-1)
+      val searchLocPar = Try(r.getInt(29)).getOrElse(-1)
+      val searchCatLevel = Try(r.getInt(30)).getOrElse(-1)
+      val searchCatPar = Try(r.getInt(31)).getOrElse(-1)
+      val adCatLevel = Try(r.getInt(32)).getOrElse(-1)
+      val adCatPar = Try(r.getInt(33)).getOrElse(-1)
 
       val cleanQueryLoc = trueLoc(searchLoc)
       val cleanQueryCat = trueCat(searchCat)
@@ -98,6 +148,10 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
       val paramIds = params.flatMap(p => paramsDict.value.get(p))
       val searchParamIds = searchParams.flatMap(p => paramsDict.value.get(p))
 
+      val neiTitleWordIds = splitString(neiTitle).flatMap(p => wordsDict.value.get(stemString(p)))
+
+      val queryTitleMatch = titleWordIds.toSet.intersect(queryWordsIds.toSet).toSeq
+      val queryNeiTitleMatch = neiTitleWordIds.toSet.intersect(queryWordsIds.toSet).toSeq
 
       val smallFeaturesIndices =
         booleanFeature(loggedIn > 0) ++
@@ -113,6 +167,9 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         booleanFeature(price > 200000.0) ++
         booleanFeature(price > 100 && price < 10000.0) ++
         booleanFeature(price <= 0.0) ++
+        booleanFeature(price < neiPrice && neiPrice > 0 && price > 0) ++
+        booleanFeature(neiPrice <= 0) ++
+        booleanFeature(queryNeiTitleMatch.size >= queryTitleMatch.size && queryNeiTitleMatch.nonEmpty) ++
         booleanFeature(searchCatPar ==  adCatPar) ++
         intFeature(hourOfDay(searchTime), 24) ++
         intFeature(dayOfWeek(searchTime), 7) ++
@@ -137,7 +194,8 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         intFeature(trueLoc(searchLoc), trueLocSize) ++
         indicatorFeatures(titleWordIds, wordsDict.value.size) ++
         indicatorFeatures(queryWordsIds, wordsDict.value.size) ++
-        indicatorFeatures(titleWordIds.toSet.intersect(queryWordsIds.toSet).toSeq, wordsDict.value.size) ++
+        indicatorFeatures(queryTitleMatch, wordsDict.value.size) ++
+//        indicatorFeatures(queryNeiTitleMatch, wordsDict.value.size) ++
         indicatorFeatures(paramIds.toSet.intersect(searchParamIds.toSet).toSeq, paramsDict.value.size) ++
         indicatorFeatures(paramIds, paramsDict.value.size) ++
         indicatorFeatures(searchParamIds, paramsDict.value.size)
@@ -153,11 +211,12 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         Seq((categoricalOffset + 3, ctr)) ++
         Seq((categoricalOffset + 4, adCtr)) ++
         Seq((categoricalOffset + 5, histctr)) ++
-        Seq((categoricalOffset + 6, math.min(titleWordIds.toSet.intersect(queryWordsIds.toSet).size.toDouble / 4, 1.0)))
+        Seq((categoricalOffset + 6, math.min(queryTitleMatch.size.toDouble / 4, 1.0))) ++
+        Seq((categoricalOffset + 7, math.min(queryNeiTitleMatch.size.toDouble / 4, 1.0)))
 
       val features = categoricalFeatures ++ continuousFeatures
 
-      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 7, dedupeFeatures(features)))
+      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 8, dedupeFeatures(features)))
     }.toDF()
 
     featurized

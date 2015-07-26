@@ -39,3 +39,6 @@ val maxIter = 40
 val regParam = 0.001
 val words = "onlyWords500"
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
+
+
+  "isClick", "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount", "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn", "position", "histctr", "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId", "neiPrice", "neiTitle", "neiParams", "neiCat", "searchLocLevel", "searchLocPar", "searchCatLevel", "searchCatPar", "adCatLevel", "adCatPar"

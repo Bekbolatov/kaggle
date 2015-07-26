@@ -55,10 +55,12 @@ object Script {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
 
+
+
     val (users, ads, ctxAds, nonCtxAds, searches,
     ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind,
     visits, phoneRequests, locations, categories,
-    evalData, trainData, validateData, smallData) = LoadSave.reprocessData(sc, sqlContext, "CARBON_", true)
+    evalData, trainData, validateData, smallData) = LoadSave.reprocessData(sc, sqlContext, "CARBON_", false)
 
 reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Boolean = false)
 
@@ -66,14 +68,15 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CANOPY_")
 
 
+val rawTrain = trainData
+val rawValidate = validateData
 
 
     val maxIter = 40
     val regParam = 0.003
     val words = "onlyWords500"
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
-
-train.show
+train.show(2)
 
 
     val featureGen = new FeatureGeneration(sqlContext, words)
@@ -204,6 +207,7 @@ val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxA
 
   def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String, maxIter: Int, regParam: Double, words: String) = {
     import sqlContext.implicits._
+    import org.apache.spark.sql.functions._
 
 
     val featureGen = new FeatureGeneration(sqlContext, words)
@@ -222,6 +226,7 @@ val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxA
     println(s"[maxIter=${maxIter} regParam=${regParam} words=${words}] errorEval: $errorEval")
 
     val predsRaw = model.transform(small).select("label", "probability").
+      groupBy("label").agg(first("label"), first("probability")).
       map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF("probability", "label")
 
     val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
