@@ -180,20 +180,21 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         booleanFeature(price > 100 && price < 10000.0) ++
         booleanFeature(price <= 0.0) ++
         booleanFeature(price < neiPrice && neiPrice > 0 && price > 0) ++
+        booleanFeature(price*5 < neiPrice && price > 0) ++
         booleanFeature(neiPrice <= 0) ++
         booleanFeature(queryNeiTitleMatch.size >= queryTitleMatch.size && queryNeiTitleMatch.nonEmpty) ++
         booleanFeature(searchCatPar ==  adCatPar) ++
         intFeature(hourOfDay(searchTime), 24) ++
         intFeature(dayOfWeek(searchTime), 7) ++
         intFeature(dayOfWeek(searchTime)*24 + hourOfDay(searchTime), 24*7) ++
+        intFeature(searchLocLevel - 1, 3) ++
+        intFeature(searchCatLevel - 1, 3) ++
+        intFeature(searchLocPar + 1, 86) ++
+        intFeature(searchCatPar - 2, 11) ++
         intFeature( math.max(math.min(os - 1, 50), 0), 51) ++
         intFeature( math.max(math.min(uafam - 1, 88), 0), 89) ++
         intFeature(trueCat(searchCat), trueCatSize) ++
         intFeature(trueCat(category), trueCatSize) ++
-        intFeature(searchLocLevel - 1, 3) ++
-        intFeature(searchLocPar + 1, 86) ++
-        intFeature(searchCatLevel - 1, 3) ++
-        intFeature(searchCatPar - 2, 11) ++
         intFeature(adCatLevel - 1, 3) ++
         intFeature(adCatPar + 1, 13)
 

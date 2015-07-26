@@ -1,5 +1,6 @@
 package com.sparkydots.kaggle.avito.features
 
+import org.apache.spark.mllib.linalg.Vectors
 import org.scalatest.{Matchers, FlatSpec}
 
 class TestFeatures extends FlatSpec with Matchers {
@@ -11,6 +12,18 @@ class TestFeatures extends FlatSpec with Matchers {
 //    hasher.sentenceFeatures("query", "лыжи") shouldBe Seq((2467,1.0))
 //    hasher.sentenceFeatures("query", "термометр детский") shouldBe Seq((16209,1.0), (31819,1.0))
 //    hasher.sentenceFeatures("query", "") shouldBe Seq()
+  }
+
+  it should "generate featurure subset" in {
+    val sf = new SelectFeatures(100, 5, 80, 5)
+    println(sf.rejiggle())
+
+    val sf2 = new SelectFeatures(100, 10, 5, 5)
+    println(sf2.rejiggle())
+
+    val v = Vectors.sparse(100, Seq( (0,1.0), (30, 2.0)))
+    println(sf2.transform(v))
+
   }
 
 //  it should "work with lists of Ints" in {

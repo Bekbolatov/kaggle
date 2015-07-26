@@ -2,12 +2,13 @@ package com.sparkydots.kaggle.avito
 
 import java.io.FileWriter
 
-import com.sparkydots.kaggle.avito.features.{FeatureHashing, FeatureGeneration}
+import com.sparkydots.kaggle.avito.features.{SelectFeatures, FeatureHashing, FeatureGeneration}
 import com.sparkydots.kaggle.avito.functions.DFFunctions._
 import com.sparkydots.kaggle.avito.load.{LoadSave, TrainingData}
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.param.ParamMap
@@ -24,27 +25,21 @@ object Script {
      SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1512m -Xmx=8g" spark-shell --jars AvitoProject-assembly-1.0.jar
 */
   /*
+    import scala.util.Try
+    import java.io.FileWriter
     import org.apache.log4j.{Level, Logger}
+    import org.apache.spark.rdd.RDD
     import org.apache.spark.ml.param.ParamMap
-    import org.apache.spark.sql.{Row, SQLContext}
-    import com.sparkydots.kaggle.avito._
-    import com.sparkydots.kaggle.avito.load._
-    import com.sparkydots.kaggle.avito.functions.DFFunctions._
-    import com.sparkydots.kaggle.avito.functions.Functions._
-    import com.sparkydots.kaggle.avito.features.FeatureGeneration
-    import com.sparkydots.kaggle.avito.features.FeatureHashing
-    import com.sparkydots.kaggle.avito.features.WordsProcessing
-
-    import org.apache.spark.mllib.linalg.Vectors
-    import org.apache.spark.mllib.linalg.Vector
+    import org.apache.spark.sql.{Row, SQLContext, DataFrame}
+    import org.apache.spark.mllib.linalg.{Vectors, Vector}
     import org.apache.spark.mllib.feature.PCA
     import org.apache.spark.ml.classification.LogisticRegression
     import org.apache.spark.mllib.regression.LabeledPoint
-
-    import org.apache.spark.rdd.RDD
-    import org.apache.spark.sql.{SQLContext, DataFrame}
-    import scala.util.Try
-    import java.io.FileWriter
+    import com.sparkydots.kaggle.avito._
+    import com.sparkydots.kaggle.avito.load._
+    import com.sparkydots.kaggle.avito.features._
+    import com.sparkydots.kaggle.avito.functions.DFFunctions._
+    import com.sparkydots.kaggle.avito.functions.Functions._
 
     Logger.getLogger("amazon.emr.metrics").setLevel(Level.OFF)
     Logger.getLogger("com.amazon.ws.emr").setLevel(Level.WARN)
@@ -55,13 +50,20 @@ object Script {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
 
-    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
 
+    Script.run(sc, sqlContext, runs = 30, "zoo", 600, 10000, 6000)
+
+
+    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
 
     val maxIter = 40
     val regParam = 0.003
     val words = "onlyWords1000"
     val words2 = None
+
+
+
+
     val featureGen = new FeatureGeneration(sqlContext, words, words2)
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
@@ -182,6 +184,95 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
 
 
 */
+
+  def run(sc: SparkContext, sqlContext: SQLContext, runs: Int = 3, filename: String = "trySun4", kept: Int = 300, remove: Int = 6000, add: Int = 2500) = {
+
+    import sqlContext.implicits._
+
+    //
+    val (kept, remove, add)= (600, 10000, 6000)
+    val filename = "temp"
+    val runs = 10
+    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
+
+    val maxIter = 40
+    val regParam = 0.003
+    val words = "onlyWords1000"
+    val words2 = None
+
+    val featureGen = new FeatureGeneration(sqlContext, words, words2)
+
+    val trainBefore = featureGen.featurize(rawTrain, sqlContext).cache()
+    val validateBefore = featureGen.featurize(rawValidate, sqlContext).cache()
+    val evalBefore = featureGen.featurize(rawEval, sqlContext).cache()
+    val smallBefore = featureGen.featurize(rawSmall, sqlContext).cache()
+
+    val numFeatures = trainBefore.map(_.getAs[Vector](1).size).first()
+
+    val sf = new SelectFeatures(numFeatures, kept, remove, add, Some(s"featureSel_$filename"))
+
+    val lr = new LogisticRegression()
+    lr.setMaxIter(maxIter).setRegParam(regParam)
+
+    var summary = ""
+    (1 to runs).foreach { i =>
+
+      sf.rejiggle()
+      val train = sf.transform(sqlContext, trainBefore).cache()
+
+      val model = lr.fit(train)
+
+      val errorTrain = df_calcError(model.transform(train)
+        .select("label", "probability")
+        .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+      if (errorTrain < sf.bestValidateError) {
+        val validate = sf.transform(sqlContext, validateBefore)
+        validate.cache()
+        val errorValidate = df_calcError(model.transform(validate)
+          .select("label", "probability")
+          .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+        validate.unpersist()
+
+        val betterFound = sf.report(errorTrain, errorValidate)
+        println(s"[${sf.transformId}}]*** Train error: $errorTrain, Validate error: $errorValidate ***")
+        summary = summary + s"*** Train error: $errorTrain, Validate error: $errorValidate ***\n"
+        if (betterFound) {
+          sf.setBestTransform()
+          val eval = sf.transform(sqlContext, evalBefore)
+          val small = sf.transform(sqlContext, smallBefore)
+          eval.cache()
+          val model = lr.fit(eval)
+          val errorEval = df_calcError(model.transform(eval)
+            .select("label", "probability")
+            .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+          println(s"[${sf.bestTransformId}}]*** errorEval: $errorEval ***")
+          summary = summary + s"\n*** errorEval: $errorEval ***\n\n"
+          eval.unpersist()
+          val predsRaw = model.transform(small).select("label", "probability").
+            groupBy("label").agg(first("probability")).
+            map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF("probability", "label")
+
+          val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
+          val sub = new FileWriter(s"/home/hadoop/${filename}_fs${sf.bestTransformId}.csv", true)
+          sub.write("ID,IsClick\n")
+          println("saving file...")
+          preds.foreach { case (id, prob) =>
+            sub.write(id + "," + f"$prob%1.8f" + "\n")
+          }
+          sub.close()
+        }
+      } else {
+        sf.report(errorTrain, 100.0)
+        println(s"[${sf.bestTransformId}}]*** Train error: $errorTrain [skipped] ***")
+        summary = summary + s"[${sf.transformId}}]*** Train error: $errorTrain, [skipped] ***\n"
+      }
+      train.unpersist()
+    }
+
+    println(summary)
+
+  }
 
   def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double, words: String = "words20000", wordDictFileNei: Option[String]) = {
     import sqlContext.implicits._
