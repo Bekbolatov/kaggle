@@ -47,6 +47,25 @@ object TrainingData {
         select(searches("userId"), ctxAdImpressions("mid"), ctxAdImpressions("isClick"), ctxAdImpressions("adId")).
         cache()
 
+    // about neighbor impressions
+    val nonCtx = nonCtxAdImpressions.join(ads, ads("id") === nonCtxAdImpressions("adId")).
+      select(
+        nonCtxAdImpressions("searchId").as("neiSearchId"),
+        nonCtxAdImpressions("position").as("neiPosition"),
+        ads("price").as("neiPrice"),
+        ads("title").as("neiTitle"),
+        ads("params").as("neiParams"),
+        ads("category").as("neiCat"))
+
+    val nonCtxToFind = nonCtxAdImpressionsToFind.join(ads, ads("id") === nonCtxAdImpressionsToFind("adId")).
+      select(
+        nonCtxAdImpressionsToFind("searchId").as("neiSearchId"),
+        nonCtxAdImpressionsToFind("position").as("neiPosition"),
+        ads("price").as("neiPrice"),
+        ads("title").as("neiTitle"),
+        ads("params").as("neiParams"),
+        ads("category").as("neiCat"))
+
     // about Ads
     val ad_imp = histCtxAdImpressions.groupBy("adId").count().
       withColumnRenamed("count", "adImpCount").
@@ -91,7 +110,6 @@ object TrainingData {
     val users_visit_phone_imp_click = users_visit_phone_imp.join(histClicks, histClicks("clickUserId") === users_visit_phone_imp("id"), "left_outer").
       select("id", "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount")
 
-
     // Search events expanded to include user information
     val searches_users = searches.join(users_visit_phone_imp_click, users_visit_phone_imp_click("id") === searches("userId")).
     select(searches("id"), searches("searchTime"), searches("searchQuery"), searches("searchLoc"), searches("searchCat"), searches("searchParams"),
@@ -107,11 +125,17 @@ object TrainingData {
       cache()
 
     val ctxAdImpressions_ads_users_eval = ctxAdImpressions_ads_eval.join(searches_users, searches_users("id") === ctxAdImpressions_ads_eval("searchId"), "left_outer").
+      join(nonCtx,
+        (nonCtx("neiSearchId") === ctxAdImpressions_ads_eval("searchId")) &&
+          ((ctxAdImpressions_ads_eval("position") === 1 && nonCtx("neiPosition") === 2) ||
+            (ctxAdImpressions_ads_eval("position") === 7 && nonCtx("neiPosition") === 6)), "left_outer" ).
       select("isClick",
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount" , "searchId", "adId", "userId").
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId",
+        "neiPrice", "neiTitle", "neiParams", "neiCat"
+      ).
       cache()
 
     // Small Set
@@ -122,11 +146,17 @@ object TrainingData {
 
     val ctxAdImpressions_ads_users_small = ctxAdImpressions_ads_small.join(searches_users, searches_users("id") === ctxAdImpressions_ads_small("searchId"), "left_outer").
       withColumn("isClick", ctxAdImpressions_ads_small("submid")).
+      join(nonCtxToFind,
+        (nonCtxToFind("neiSearchId") === ctxAdImpressions_ads_small("searchId")) &&
+          ((ctxAdImpressions_ads_small("position") === 1 && nonCtxToFind("neiPosition") === 2) ||
+            (ctxAdImpressions_ads_small("position") === 7 && nonCtxToFind("neiPosition") === 6)), "left_outer" ).
       select("isClick",
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId").
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId",
+        "neiPrice", "neiTitle", "neiParams", "neiCat"
+      ).
     cache()
 
     //  Train Set
@@ -135,13 +165,19 @@ object TrainingData {
       select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount").
       cache()
 
-    val ctxAdImpressions_ads_users_train = ctxAdImpressions_ads_train.join(searches_users, searches_users("id") === ctxAdImpressions_ads_train("searchId"), "left_outer")
-      .select("isClick",
+    val ctxAdImpressions_ads_users_train = ctxAdImpressions_ads_train.join(searches_users, searches_users("id") === ctxAdImpressions_ads_train("searchId"), "left_outer").
+      join(nonCtx,
+      (nonCtx("neiSearchId") === ctxAdImpressions_ads_train("searchId")) &&
+        ((ctxAdImpressions_ads_train("position") === 1 && nonCtx("neiPosition") === 2) ||
+          (ctxAdImpressions_ads_train("position") === 7 && nonCtx("neiPosition") === 6)), "left_outer" ).
+      select("isClick",
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId")
-    .cache()
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId",
+        "neiPrice", "neiTitle", "neiParams", "neiCat"
+      ).
+    cache()
 
     // Validate Set
     val ctxAdImpressions_ads_validate = ctxAdImpressions.join(validateSet, validateSet("mid") === ctxAdImpressions("mid")).
@@ -149,13 +185,20 @@ object TrainingData {
       select("searchId", "adId","position", "histctr", "isClick", "category", "params", "price", "title", "adImpCount", "adClickCount").
       cache()
 
-    val ctxAdImpressions_ads_users_validate = ctxAdImpressions_ads_validate.join(searches_users, searches_users("id") === ctxAdImpressions_ads_validate("searchId"), "left_outer")
-      .select("isClick",
+    val ctxAdImpressions_ads_users_validate = ctxAdImpressions_ads_validate.join(searches_users, searches_users("id") === ctxAdImpressions_ads_validate("searchId"), "left_outer").
+      join(nonCtx,
+        (nonCtx("neiSearchId") === ctxAdImpressions_ads_validate("searchId")) &&
+          ((ctxAdImpressions_ads_validate("position") === 1 && nonCtx("neiPosition") === 2) ||
+            (ctxAdImpressions_ads_validate("position") === 7 && nonCtx("neiPosition") === 6)), "left_outer" ).
+    select("isClick",
         "os", "uafam", "visitCount", "phoneCount", "impCount", "clickCount",
         "searchTime", "searchQuery", "searchLoc", "searchCat", "searchParams", "loggedIn",
         "position", "histctr",
-        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId")
-      .cache()
+        "category", "params", "price", "title", "adImpCount", "adClickCount", "searchId", "adId", "userId",
+        "neiPrice", "neiTitle", "neiParams", "neiCat"
+      ).
+      cache()
+
 
 
     val locationsMap = locations.flatMap({

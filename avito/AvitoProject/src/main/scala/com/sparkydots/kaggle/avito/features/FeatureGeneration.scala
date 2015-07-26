@@ -19,6 +19,7 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
     "position", "histctr",
     "category", "params", "price", "title", "adImpCount", "adClickCount",
    "searchId", "adId", "userId",  <<<>> NEW
+   "neiPrice", "neiTitle", "neiParams", "neiCat", <<<>> NEW
     "searchLocLevel", "searchLocPar", "searchCatLevel", "searchCatPar", "adCatLevel", "adCatPar"
    */
 
