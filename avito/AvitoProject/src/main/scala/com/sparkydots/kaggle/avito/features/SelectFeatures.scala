@@ -32,7 +32,7 @@ class SelectFeatures(before: Int, startWith: Int, remove:Int, numAddInteractions
   var bestInteractions: Seq[(Int, (Int, Int))] = Seq.empty
   var bestOffset = 0
   var bestNumFeatures = 0
-  var bestValidateError = 0.04571
+  var bestValidateError = 0.04565
 
   rejiggle()
 
@@ -40,7 +40,7 @@ class SelectFeatures(before: Int, startWith: Int, remove:Int, numAddInteractions
     transformId = transformId + 1
 
     val newIndices = (keptIndices ++ shuffle(softIndices).take(before - startWith - remove)).sorted
-    val left = shuffle(newIndices).take(add1)
+    val left = newIndices.take(add1)
     val right = shuffle(newIndices.toSet.diff(left.toSet).toSeq).take(add2)
 
     val addedInteractions = (for (a <- left; b <- right) yield (a, b)).toSeq
@@ -113,7 +113,7 @@ class SelectFeatures(before: Int, startWith: Int, remove:Int, numAddInteractions
   def checkpoint(trainError: Double, validateError: Double) = {
     filename.map { f =>
       val reportFile = new FileWriter(s"/home/hadoop/${f}.csv", true)
-      reportFile.write(f"${currentTransform._1}}:$trainError%1.8f:$trainError%1.8f:${currentTransform._2.mkString(",")}:${currentTransform._3.mkString(",")}\n\n")
+      reportFile.write(f"${currentTransform._1}:$trainError%1.8f:$validateError%1.8f:${currentTransform._2.mkString(",")}:${currentTransform._3.mkString(",")}\n\n")
       reportFile.close
     }
   }

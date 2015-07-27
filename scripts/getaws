@@ -29,7 +29,7 @@ fi
 echo $MASTER > master
 
 echo '<!DOCTYPE html>' > awsloc.html
-echo '<html><frameset rows="75%,25%">' >> awsloc.html
+echo '<html><frameset rows="1%,99%">' >> awsloc.html
 echo "<frame src=\"http://$MASTER/ganglia\">" >> awsloc.html
 echo "<frame src=\"http://$MASTER:8088\">" >> awsloc.html
 echo '</frameset></html>' >> awsloc.html
@@ -59,8 +59,8 @@ TYPE=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep "InstanceType" | 
 NUM=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep CORE -B 11 | grep "RequestedInstanceCount" | head -n 1 | awk -F " " '{ print  $2 }' | awk -F "," '{print $1}')
 
 echo "ssh $MASTER"
-scp ../avito/AvitoProject/target/scala-2.10/AvitoProject-assembly-1.0.jar $MASTER:/home/hadoop/.
-#scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/spark/conf/.
-scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/.
+#scp ../avito/AvitoProject/target/scala-2.10/AvitoProject-assembly-1.0.jar $MASTER:/home/hadoop/.
+##scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/spark/conf/.
+#scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/.
 
 ssh  -ND 8157 $MASTER

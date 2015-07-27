@@ -50,8 +50,10 @@ object Script {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
 
-
-    Script.run(sc, sqlContext, runs = 30, "zoo", 600, 10000, 6000)
+    Script.run(sc, sqlContext, runs = 100, "stom", 500, 20, 10000)
+//    Script.run(sc, sqlContext, runs = 100, "panang", 500, 20, 10000)
+//    Script.run(sc, sqlContext, runs = 100, "rain", 600, 50, 5000)
+//    Script.run(sc, sqlContext, runs = 100, "zoo", 600, 10000, 6000)
 
 
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
@@ -190,9 +192,9 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
     import sqlContext.implicits._
 
     //
-    val (kept, remove, add)= (600, 10000, 6000)
-    val filename = "temp"
-    val runs = 10
+    //val (kept, remove, add)= (600, 10000, 6000)
+    //val filename = "temp"
+    //val runs = 10
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
 
     val maxIter = 40
@@ -235,8 +237,10 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
         validate.unpersist()
 
         val betterFound = sf.report(errorTrain, errorValidate)
-        println(s"[${sf.transformId}}]*** Train error: $errorTrain, Validate error: $errorValidate ***")
-        summary = summary + s"*** Train error: $errorTrain, Validate error: $errorValidate ***\n"
+        val logLine = s"[${sf.transformId}}]*** Train error: $errorTrain%1.8f, Validate error: $errorValidate%1.8f ***"
+        println(logLine)
+        summary = summary + logLine + "\n"
+        writeToFile("run.log", logLine + "\n" )
         if (betterFound) {
           sf.setBestTransform()
           val eval = sf.transform(sqlContext, evalBefore)
@@ -246,8 +250,9 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
           val errorEval = df_calcError(model.transform(eval)
             .select("label", "probability")
             .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
-          println(s"[${sf.bestTransformId}}]*** errorEval: $errorEval ***")
+          println(s"[${sf.bestTransformId}]*** errorEval: $errorEval%1.8f ***")
           summary = summary + s"\n*** errorEval: $errorEval ***\n\n"
+          writeToFile("run.log", summary )
           eval.unpersist()
           val predsRaw = model.transform(small).select("label", "probability").
             groupBy("label").agg(first("probability")).
@@ -264,14 +269,22 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
         }
       } else {
         sf.report(errorTrain, 100.0)
-        println(s"[${sf.bestTransformId}}]*** Train error: $errorTrain [skipped] ***")
-        summary = summary + s"[${sf.transformId}}]*** Train error: $errorTrain, [skipped] ***\n"
+        val logLine = s"[${sf.bestTransformId}]*** Train error: $errorTrain%1.8f [skipped] ***"
+        println(logLine)
+        summary = summary + logLine + "\n"
+        writeToFile("run.log", logLine + "\n" )
       }
       train.unpersist()
     }
 
     println(summary)
 
+  }
+
+  def writeToFile(filename: String, string: String) = {
+    val sub = new FileWriter(s"/home/hadoop/${filename}", true)
+    sub.write(string)
+    sub.close()
   }
 
   def fit(sqlContext: SQLContext, rawTrain: DataFrame, rawValidate: DataFrame, maxIter: Int, regParam: Double, words: String = "words20000", wordDictFileNei: Option[String]) = {

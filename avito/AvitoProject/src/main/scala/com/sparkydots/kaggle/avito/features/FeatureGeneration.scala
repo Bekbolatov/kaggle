@@ -203,6 +203,8 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
           (offset + blocksize, cumFeats ++ feats.map(f => (f + offset, 1.0)))
       }
 
+      println(s" numSmallFeatures = $numSmallFeatures")
+
       val whichFeaturesIndices = smallFeaturesIndices ++
         intFeature(trueLoc(searchLoc), trueLocSize) ++
         indicatorFeatures(titleWordIds, wordsDict.value.size) ++
