@@ -51,30 +51,24 @@ object Script {
     import sqlContext.implicits._
 
 
-    val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
+    val (rawTrain1, rawValidate1, rawEval1, rawSmall1) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
 
-    val maxIter = 40
-    val regParam = 0.003
-//    val words = "onlyWords1000"
-    val words = "words1000"
-    val words2 = None
+    val (rawTrain, rawValidate, rawEval, rawSmall) = QueryAd.addQueryTitleAffinity(sqlContext, rawTrain1, rawValidate1, rawEval1, rawSmall1)
 
-WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(900, 1000, 1500, 2000, 3000))
+    rawTrain.cache()
+    rawValidate.cache()
+    rawEval.cache()
+    rawSmall.cache()
 
-
-
-WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(1400, 1450))
-
-    val words = "words1300"
-    val words2 = None
-
-
-
-
+    LoadSave.saveDF(sqlContext, rawTrain, "DUMBO_TRAIN")
+    LoadSave.saveDF(sqlContext, rawValidate, "DUMBO_VALIDATE")
+    LoadSave.saveDF(sqlContext, rawEval, "DUMBO_EVAL")
+    LoadSave.saveDF(sqlContext, rawSmall, "DUMBO_SMALL")
 
 
     val maxIter = 100
     val regParam = 0.001
+    //val elasticNetParam = 0.5
     val words = "words1350"  //900,...,1500  1250, 1350, 1450
     val words2 = None
 
@@ -83,7 +77,11 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
 
     val lr = new LogisticRegression()
-    lr.setMaxIter(maxIter).setRegParam(regParam)
+    lr.setMaxIter(maxIter).setRegParam(regParam) //.setElasticNetParam(1)
+
+
+    val train = featurize(rawTrain, sqlContext).cache()
+    val validate = featurize(rawValidate, sqlContext).cache()
 
     val model = lr.fit(train)
 
@@ -98,8 +96,48 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
     println(f"[${maxIter} ${regParam} ${words} $words2] Train error: $errorTrain%1.7f, Validate error: $errorValidate%1.7f")
 
 
+    Script.saveSubmission(sqlContext, rawEval, rawSmall, "tryTue1", maxIter, regParam, words, words2)
+
+
+
+    val train = featurize(rawTrain, sqlContext).cache()
+    val validate = featurize(rawValidate, sqlContext).cache()
+
+
+
+
+// For alpha = 0, the penalty is an L2 penalty. For alpha = 1, it is an L1 penalty.
+ //  * For 0 < alpha < 1, the penalty is a combination of L1 and L2.
+
+
 
   Script.saveSubmission(sqlContext, rawEval, rawSmall, "tryMon1", maxIter, regParam, words, words2)
+
+
+
+
+
+
+    val maxIter = 40
+    val regParam = 0.003
+//    val words = "onlyWords1000"
+    val words = "words1000"
+    val words2 = None
+
+
+
+
+
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(900, 1000, 1500, 2000, 3000))
+
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(1400, 1450))
+
+    val words = "words1300"
+    val words2 = None
+
+
+
+
 
 
 
@@ -126,6 +164,8 @@ val (train, validate, lr, featureGen) =  Script.fit(sqlContext, reducedRawTain, 
 //    val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
 
 
+  //WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(50))
+    val words = "words50"
 
 
     Script.saveSubmission(sqlContext, rawEval, rawSmall, featureGen, "tryMon1", maxIter, regParam, words)

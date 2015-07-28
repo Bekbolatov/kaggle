@@ -1,5 +1,6 @@
 package com.sparkydots.kaggle.avito.load
 
+import com.sparkydots.kaggle.avito.QueryAd
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.functions._
@@ -250,7 +251,10 @@ object TrainingData {
       withColumn("adCatLevel", udf_getCatLevel(ctxAdImpressions_ads_users_small("category"))).
       withColumn("adCatPar", udf_getCatPar(ctxAdImpressions_ads_users_small("category")))
 
-    (dataEval, dataTrain, dataValidate, dataSmall)
+
+    val (newRawTrain, newRawValidate, newRawEval, newRawSmall) = QueryAd.addQueryTitleAffinity(sqlContext, dataTrain, dataValidate, dataEval, dataSmall)
+
+    (newRawTrain, newRawValidate, newRawEval, newRawSmall)
   }
 
 }

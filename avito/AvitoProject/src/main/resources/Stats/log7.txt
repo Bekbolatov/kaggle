@@ -1,0 +1,56 @@
+To Beat [100 0.001 words1350 None] Train error: 0.0439823, Validate error: 0.0454893  *
+============================================================================================================
+<adding log(price)  :    if ( price <= 1.0) 0 else math.log(price))) >
+[100 0.001 words1350 None] Train error: 0.0440051, Validate error: 0.0455048
+
+with L1 reg elastic net
+[100 0.001 words1350 None] Train error: 0.0472518, Validate error: 0.0474858
+[100 0.001 words50 None]   Train error: 0.0471651, Validate error: 0.0473968
+
+
+<trying K-means clustering to separate into two groups and then applying LR>
+
+import org.apache.spark.mllib.clustering.{KMeans, KMeansModel}
+import org.apache.spark.mllib.linalg.Vectors
+
+
+
+
+>> train
+
+// probably want to normalize before running this
+
+
+val parsedData = train.map(r => r.getAs[Vector](1)).cache()
+
+val numClusters = 2
+val numIterations = 20
+val clusters = KMeans.train(parsedData, numClusters, numIterations)
+
+
+val train_class = train.map(r => (r.getDouble(0), r.getAs[Vector](1),  clusters.predict(r.getAs[Vector](1)))).toDF("label", "features","class").cache
+
+val train0 = train_class.filter("class = 0").select("label", "features").cache
+val train1 = train_class.filter("class = 1").select("label", "features").cache
+
+val model0 = lr.fit(train0)
+val model1 = lr.fit(train1)
+
+
+    df_calcError(model0.transform(train0)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+
+val validate_class = validate.map(r => (r.getDouble(0), r.getAs[Vector](1),  clusters.predict(r.getAs[Vector](1)))).toDF("label", "features","class").cache
+
+val validate0 = validate_class.filter("class = 0").select("label", "features").cache
+val validate1 = validate_class.filter("class = 1").select("label", "features").cache
+
+
+    df_calcError(model0.transform(validate0)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+
+
+

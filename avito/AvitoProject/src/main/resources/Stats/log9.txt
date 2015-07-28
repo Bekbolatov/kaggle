@@ -1,0 +1,11 @@
+To Beat [100 0.001 words1350 None] Train error: 0.0439823, Validate error: 0.0454893
+<added query/title "affinity"  Pos and Neg>
+[100 0.001 words1350 None] Train error: 0.0439995, Validate error: 0.0455072
+
+<dropping Neg>
+<normalizing Pos by total number of added elements (#words query x title)>
+[100 0.001 words1350 None] Train error: 0.0439901, Validate error: 0.0454997
+
+
+<replacing it with (7*Pos - Neg)/normalized>
+[100 0.001 words1350 None] Train error: 0.0439895, Validate error: 0.0454896

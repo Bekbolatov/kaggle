@@ -134,13 +134,17 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         }
       }).getOrElse(Seq.empty)
 
-
       val searchLocLevel = Try(r.getInt(28)).getOrElse(-1)
       val searchLocPar = Try(r.getInt(29)).getOrElse(-1)
       val searchCatLevel = Try(r.getInt(30)).getOrElse(-1)
       val searchCatPar = Try(r.getInt(31)).getOrElse(-1)
       val adCatLevel = Try(r.getInt(32)).getOrElse(-1)
       val adCatPar = Try(r.getInt(33)).getOrElse(-1)
+
+      val queryTitlePos1 = Try(r.getDouble(34)).getOrElse(0.0) //48.11245
+      val queryTitlePos = if (queryTitlePos1 != 0.0) queryTitlePos1 else 48.11245
+      val queryTitleNeg1 = Try(r.getDouble(35)).getOrElse(0.0) //2210.1516
+      val queryTitleNeg = if (queryTitleNeg1 != 0.0) queryTitleNeg1 else 2210.1516
 
       val cleanQueryLoc = trueLoc(searchLoc)
       val cleanQueryCat = trueCat(searchCat)
@@ -164,7 +168,15 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
       else
         Seq()
 
+      val totalCrossQueryTitle = titleWordIds.size * queryWordsIds.size
 
+      // val asd = udf[Int, String, String] (  (x, y) => {val a = splitStringWithCutoff( x, 2 ).size ; val b = splitStringWithCutoff(y, 2).size; val c = a*b; if (c > 0) c else 1  } )
+      //rawTrain.filter("queryTitlePos != 0.0").select( (col( "queryTitlePos")/ asd(col("searchQuery"), col("title"))).as("huya")   ).agg(avg("huya")).show
+      // rawTrain.filter("queryTitleNeg != 0.0").select( (col( "queryTitleNeg")/ asd(col("searchQuery"), col("title"))).as("huya")   ).agg(avg("huya")).show
+      //rawTrain.filter("isClick = 0").select(col("searchQuery"), col("title"),col( "queryTitlePos"), col("queryTitleNeg"), (col( "queryTitlePos")/ asd(col("searchQuery"), col("title"))).as("huya")   ).agg(avg("huya")).show
+      //rawTrain.filter("isClick = 1").select(col("searchQuery"), col("title"),col( "queryTitlePos"), col("queryTitleNeg"), (col( "queryTitlePos")/ asd(col("searchQuery"), col("title"))).as("huya")   ).agg(avg("huya")).show
+      //rawTrain.filter("isClick = 0").select(col("searchQuery"), col("title"),col( "queryTitlePos"), col("queryTitleNeg"), (col( "queryTitleNeg")/ asd(col("searchQuery"), col("title"))).as("huya")   ).agg(avg("huya")).show
+      //rawTrain.filter("isClick = 1").select(col("searchQuery"), col("title"),col( "queryTitlePos"), col("queryTitleNeg"), (col( "queryTitleNeg")/ asd(col("searchQuery"), col("title"))).as("huya")   ).agg(avg("huya")).show
       val smallFeaturesIndices =
         booleanFeature(loggedIn > 0) ++
         booleanFeature(clickCount < 1) ++
@@ -226,12 +238,15 @@ class FeatureGeneration(sqlContext: SQLContext, wordsDictFile: String = "onlyWor
         Seq((categoricalOffset + 3, ctr)) ++
         Seq((categoricalOffset + 4, adCtr)) ++
         Seq((categoricalOffset + 5, histctr)) ++
-        Seq((categoricalOffset + 6, math.min(queryTitleMatch.size.toDouble / 4, 1.0))) ++
-        Seq((categoricalOffset + 7, math.min(queryNeiTitleMatch.size.toDouble / 4, 1.0)))
+//        Seq((categoricalOffset + 6, queryTitlePos/ (if (totalCrossQueryTitle > 0) 1.0*totalCrossQueryTitle else 1.0) )) ++
+//        Seq((categoricalOffset + 6, (7*queryTitlePos - queryTitleNeg)/ (if (totalCrossQueryTitle > 0) 1.0*totalCrossQueryTitle else 1.0) )) ++
+        Seq((categoricalOffset + 6, if (queryTitlePos1 != 0) (queryTitlePos1 / (if (totalCrossQueryTitle > 0) 1.0*totalCrossQueryTitle else 1.0)) else 48.11245)) ++
+        Seq((categoricalOffset + 7, math.min(queryTitleMatch.size.toDouble / 4, 1.0))) ++
+        Seq((categoricalOffset + 8, math.min(queryNeiTitleMatch.size.toDouble / 4, 1.0)))
 
       val features = categoricalFeatures ++ continuousFeatures
 
-      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 8, dedupeFeatures(features)))
+      LabeledPoint(isClick, Vectors.sparse(categoricalOffset + 9, dedupeFeatures(features)))
     }.toDF()
 
     featurized
