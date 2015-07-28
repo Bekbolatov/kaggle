@@ -1,0 +1,15 @@
+Last Subm:
+Script.saveSubmission(sqlContext, rawEval, rawSmall, "trySun3", maxIter, regParam, words, words2)
+[[[  Submission Sun Jul 26, 03:35 ]]]
+<no neibor's ad title word>
+[maxIter=40 regParam=0.003 words=onlyWords1000]
+Train error: 0.04428832142763328,
+Validate error: 0.0457183061361404
+Eval error: 0.04453482534158485
+LB error: 0.04405
+======================================================
+
+To beat:
+[maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428832142763328, Validate error: 0.0457183061361404
+[maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428978298011723, Validate error: 0.0457137528539932
+[maxIter=40 regParam=0.003 words=sloboWords1000 words2=None] Train error: 0.04620176060210647, Validate error: 0.04678559650813995

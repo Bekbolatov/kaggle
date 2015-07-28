@@ -50,18 +50,17 @@ object Script {
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
     import sqlContext.implicits._
 
-    Script.run(sc, sqlContext, runs = 100, "stom", 500, 20, 10000)
-//    Script.run(sc, sqlContext, runs = 100, "panang", 500, 20, 10000)
-//    Script.run(sc, sqlContext, runs = 100, "rain", 600, 50, 5000)
-//    Script.run(sc, sqlContext, runs = 100, "zoo", 600, 10000, 6000)
-
 
     val (rawTrain, rawValidate, rawEval, rawSmall) = LoadSave.loadDatasets(sc, sqlContext, "CARBON_")
 
     val maxIter = 40
     val regParam = 0.003
-    val words = "onlyWords1000"
+//    val words = "onlyWords1000"
+    val words = "bojaWords900"
     val words2 = None
+
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "bojaWords", Seq(900, 1000, 1500, 2000, 3000))
+
 
 
 
@@ -92,9 +91,14 @@ object Script {
 
     val maxIter = 40
     val regParam = 0.003
-    val words = "onlyWords500"
+    val words = "sloboWords1000"
 val (train, validate, lr, featureGen) =  Script.fit(sqlContext, rawTrain, rawValidate, maxIter, regParam, words)
 train.show(2)
+
+    Script.run(sc, sqlContext, runs = 100, "stom", 500, 20, 10000)
+//    Script.run(sc, sqlContext, runs = 100, "panang", 500, 20, 10000)
+//    Script.run(sc, sqlContext, runs = 100, "rain", 600, 50, 5000)
+//    Script.run(sc, sqlContext, runs = 100, "zoo", 600, 10000, 6000)
 
 
 
@@ -152,7 +156,8 @@ saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, 
 
 val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, nonCtxAdImpressions, ctxAdImpressionsToFind, nonCtxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = TrainingData.reprocessData(sc, "DUMB_")
 
-WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "onlyWords", Seq(100, 500, 1000, 5000, 10000, 20000))
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "sloboWords", Seq(900, 1000, 1500, 2000, 3000))
+
 ////\\\\
 val (sqlContext, users, ads, ctxAds, nonCtxAds, searches, ctxAdImpressions, ctxAdImpressionsToFind, visits, phoneRequests, locations, categories, evalData, trainData, validateData, smallData) = Script.reprocessData(sc, "CANOPY_")
 \\\\\\\///

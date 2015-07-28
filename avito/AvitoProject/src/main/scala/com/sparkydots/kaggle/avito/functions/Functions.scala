@@ -51,22 +51,40 @@ object Functions extends Serializable {
   val toMid = (searchId: String, adId: String) => 10000000L * searchId.toInt + adId.toInt
 
   val digits = ('0' to '9').toSet
+  /**
+   * If cutoffLength=2, don't include 2-letter or smaller, but include 3-letter or bigger
+   */
+  val splitStringWithCutoff = (tt: String, cutoffLength: Int) => {
+    if (tt == null || tt.isEmpty) {
+      Seq.empty[String]
+    } else {
+      splitString(tt).filter(w => w.size > cutoffLength)
+    }
+  }
+  //splitString("Продам ходули складные")
   val splitString = (tt: String) => {
     if (tt == null || tt.isEmpty) {
       Seq.empty[String]
     } else {
       tt.split("-")
-        .mkString(" ").split(" ")
+        .mkString(".").split("\\.")
         .mkString(",").split(",")
         .mkString("\"").split("\"")
         .mkString("'").split("'")
         .mkString(":").split(":")
         .mkString(";").split(";")
-        .mkString("-").split("-")
-        .filter(w => w.nonEmpty && w. forall(!digits.contains(_)))
+        .mkString("{").split("\\{")
+        .mkString("}").split("\\}")
+        .mkString("/").split("/")
+        .mkString("\\").split("\\\\")
+        .mkString(" ").split("\\s")
+        .filter(w => w.nonEmpty && w.forall(!digits.contains(_)))
         .toSeq
+        .map(_.toLowerCase)
     }
   }
+  splitString("Продам ходули\\складные// hllo {132:'Видео, DVD и Blu-ray плееры'}30Видео ")
+  splitString("Продам ходули складные")
 
   val stemString = (x: String) => if (x.length > 4) x.dropRight(2) else if (x.length == 4) x.dropRight(1) else x
 

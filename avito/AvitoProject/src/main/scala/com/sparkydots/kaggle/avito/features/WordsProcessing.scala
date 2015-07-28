@@ -1,6 +1,6 @@
 package com.sparkydots.kaggle.avito.features
 
-import com.sparkydots.kaggle.avito.functions.Functions.{splitString, stemString}
+import com.sparkydots.kaggle.avito.functions.Functions.{splitStringWithCutoff, stemString}
 import com.sparkydots.kaggle.avito.load.LoadSave
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
@@ -10,26 +10,27 @@ object WordsProcessing extends Serializable {
   def generateAndSaveWordDictionaries(sc: SparkContext, sqlContext: SQLContext,
                                       rawEval: DataFrame, rawSmall: DataFrame,
                                       filename: String = "words",
-                                      thresholds: Seq[Int] = Seq(100, 500, 1000, 5000, 10000, 20000)) = {
+                                      thresholds: Seq[Int] = Seq(100, 500, 1000, 5000, 10000, 20000),
+                                      cutoffLength: Int = 3) = {
     import sqlContext.implicits._
 
     val counts11 = rawEval.select("title").flatMap({
-      case Row(title: String) => splitString(title).map(x => (stemString(x), 1))
+      case Row(title: String) => splitStringWithCutoff(title, cutoffLength).map(x => (stemString(x), 1))
       case _ => Seq()
     }).reduceByKey((x, y) => x + y)
 
     val counts12 = rawEval.select("searchQuery").flatMap({
-      case Row(title: String) => splitString(title).map(x => (stemString(x), 1))
+      case Row(title: String) => splitStringWithCutoff(title, cutoffLength).map(x => (stemString(x), 1))
       case _ => Seq()
     }).reduceByKey((x, y) => x + y)
 
     val counts21 = rawSmall.select("title").flatMap({
-      case Row(title: String) => splitString(title).map(x => (stemString(x), 1))
+      case Row(title: String) => splitStringWithCutoff(title, cutoffLength).map(x => (stemString(x), 1))
       case _ => Seq()
     }).reduceByKey((x, y) => x + y)
 
     val counts22 = rawSmall.select("searchQuery").flatMap({
-      case Row(title: String) => splitString(title).map(x => (stemString(x), 1))
+      case Row(title: String) => splitStringWithCutoff(title, cutoffLength).map(x => (stemString(x), 1))
       case _ => Seq()
     }).reduceByKey((x, y) => x + y)
 
