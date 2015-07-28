@@ -13,3 +13,12 @@ To beat:
 [maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428832142763328, Validate error: 0.0457183061361404
 [maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428978298011723, Validate error: 0.0457137528539932
 [maxIter=40 regParam=0.003 words=sloboWords1000 words2=None] Train error: 0.04620176060210647, Validate error: 0.04678559650813995
+
+
+[maxIter=40 regParam=0.003 words=bojaWords900 words2=None]   Train error: 0.0443582629011892, Validate error: 0.0457266782857351
+[maxIter=40 regParam=0.003 words=bojaWords1500 words2=None] Train error: 0.04448638786142192, Validate error: 0.045690997478804465
+<add more delimiters>
+[maxIter=40 regParam=0.003 words=words1500 words2=None] Train error: 0.044539581759327415, Validate error: 0.04574742121392238
+
+[maxIter=40 regParam=0.003 words=words1000 words2=None] Train error: 0.0443864019658354,   Validate error: 0.045709534592740915
+[maxIter=40 regParam=0.003 words=words900 words2=None]  Train error: 0.044344197489057546, Validate error: 0.04571423220556182

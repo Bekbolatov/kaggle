@@ -56,15 +56,14 @@ object Script {
     val maxIter = 40
     val regParam = 0.003
 //    val words = "onlyWords1000"
-    val words = "bojaWords900"
+    val words = "words1000"
     val words2 = None
 
-WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "bojaWords", Seq(900, 1000, 1500, 2000, 3000))
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(900, 1000, 1500, 2000, 3000))
 
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(1100, 1200))
 
-
-
-
+    val words = "words1100"
     val featureGen = new FeatureGeneration(sqlContext, words, words2)
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()

@@ -61,7 +61,7 @@ object Functions extends Serializable {
       splitString(tt).filter(w => w.size > cutoffLength)
     }
   }
-  //splitString("Продам ходули складные")
+
   val splitString = (tt: String) => {
     if (tt == null || tt.isEmpty) {
       Seq.empty[String]
@@ -75,6 +75,11 @@ object Functions extends Serializable {
         .mkString(";").split(";")
         .mkString("{").split("\\{")
         .mkString("}").split("\\}")
+        .mkString(")").split("\\)")
+        .mkString("]").split("\\]")
+        .mkString("(").split("\\(")
+        .mkString("[").split("\\[")
+        .mkString("+").split("\\+")
         .mkString("/").split("/")
         .mkString("\\").split("\\\\")
         .mkString(" ").split("\\s")
@@ -83,8 +88,8 @@ object Functions extends Serializable {
         .map(_.toLowerCase)
     }
   }
-  splitString("Продам ходули\\складные// hllo {132:'Видео, DVD и Blu-ray плееры'}30Видео ")
-  splitString("Продам ходули складные")
+  //splitString("Продам ходули\\складные// hllo {132:'(Видео), DVD и Blu-ray пле[book]е{book}ры+dfdf'}30Видео ")
+  //splitString("Продам ходули складные")
 
   val stemString = (x: String) => if (x.length > 4) x.dropRight(2) else if (x.length == 4) x.dropRight(1) else x
 
