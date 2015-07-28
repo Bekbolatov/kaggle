@@ -9,3 +9,19 @@ To Beat [100 0.001 words1350 None] Train error: 0.0439823, Validate error: 0.045
 
 <replacing it with (7*Pos - Neg)/normalized>
 [100 0.001 words1350 None] Train error: 0.0439895, Validate error: 0.0454896
+
+<fill in avg of Pos when not available>
+[100 0.001 words1350 None] Train error: 0.0440026, Validate error: 0.0455169
+[100 0.001 words1350 None] Train error: 0.0440263, Validate error: 0.0455320
+
+
+=== subm ==  -3
+[100 0.001 words1350 None] Train error: 0.0439933, Validate error: 0.0454907
+Eval: 0.04424056482395042
+LB:
+============
+
+
+=== subm ==  -2
+[100 0.001 words1350 None] Train error: 0.0439883, Validate error: 0.0454865
+0.04423363681985053

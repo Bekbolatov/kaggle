@@ -96,6 +96,9 @@ object Script {
     println(f"[${maxIter} ${regParam} ${words} $words2] Train error: $errorTrain%1.7f, Validate error: $errorValidate%1.7f")
 
 
+
+
+
     Script.saveSubmission(sqlContext, rawEval, rawSmall, "tryTue1", maxIter, regParam, words, words2)
 
 
