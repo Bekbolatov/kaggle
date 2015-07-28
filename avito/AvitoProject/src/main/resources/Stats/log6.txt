@@ -10,7 +10,7 @@ LB error: 0.04405
 ======================================================
 
 To beat:
-[maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428832142763328, Validate error: 0.0457183061361404
+[maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428832142763328, Validate error: [0.0457183061361404]
 [maxIter=40 regParam=0.003 words=onlyWords1000 words2=None] Train error: 0.04428978298011723, Validate error: 0.0457137528539932
 [maxIter=40 regParam=0.003 words=sloboWords1000 words2=None] Train error: 0.04620176060210647, Validate error: 0.04678559650813995
 
@@ -19,6 +19,87 @@ To beat:
 [maxIter=40 regParam=0.003 words=bojaWords1500 words2=None] Train error: 0.04448638786142192, Validate error: 0.045690997478804465
 <add more delimiters>
 [maxIter=40 regParam=0.003 words=words1500 words2=None] Train error: 0.044539581759327415, Validate error: 0.04574742121392238
-
+[maxIter=40 regParam=0.003 words=words1400 words2=None] Train error: 0.04452282650868647,  Validate error: 0.045744218019229954
+[maxIter=40 regParam=0.003 words=words1350 words2=None] Train error: 0.04448408282180243,  Validate error: 0.045737348247604094
+[maxIter=40 regParam=0.003 words=words1300 words2=None] Train error: 0.044449685708858704, Validate error: 0.0456921359453284   *
+[maxIter=40 regParam=0.003 words=words1200 words2=None] Train error: 0.044426276895686824, Validate error: 0.04569713369814124
+[maxIter=40 regParam=0.003 words=words1100 words2=None] Train error: 0.04440573864362187,  Validate error: 0.04570579162115115
 [maxIter=40 regParam=0.003 words=words1000 words2=None] Train error: 0.0443864019658354,   Validate error: 0.045709534592740915
 [maxIter=40 regParam=0.003 words=words900 words2=None]  Train error: 0.044344197489057546, Validate error: 0.04571423220556182
+============================================================================================================
+OK, words1300
+============================================================================================================
+[maxIter=40 regParam=0.01 words=words1350 words2=None]  Train error: 0.045367973669057884,Validate error: 0.04629337690191061
+[maxIter=40 regParam=0.003 words=words1300 words2=None] Train error: 0.044449685708858704,Validate error: 0.0456921359453284  [to beat]
+[maxIter=40 regParam=0.002 words=words1350 words2=None] Train error: 0.04426612762993542, Validate error: 0.04561382416111183
+[maxIter=40 regParam=0.001 words=words1350 words2=None] Train error: 0.04406677011105323, Validate error: 0.045608586681238905   *
+[maxIter=40 regParam=8.0E-4 words=words1350 words2=None]Train error: 0.04404776828587764, Validate error: 0.04564858054243928
+[maxIter=40 regParam=5.0E-4 words=words1350 words2=None]Train error: 0.04407733858783164, Validate error: 0.045706017419224546
+============================================================================================================
+OK, regParam=0.001
+============================================================================================================
+[maxIter=40 regParam=0.001 words=words1350 words2=None] Train error: 0.04406677011105323, Validate error: 0.045608586681238905   [to beat]
+[maxIter=50 regParam=0.001 words=words1350 words2=None] Train error: 0.04403016704831979, Validate error: 0.0455641013349521  *
+[60 0.001 words1350 None] Train error: 0.0440195, Validate error: 0.0455386
+>> made mistake, need to base on words1300
+>>>  little deviation if words1250 here  [60 0.001 words1250 None] Train error: 0.0440214, Validate error: 0.0455402
+[60 0.001 words1300 None] Train error: 0.0440211, Validate error: 0.0455399
+[80 0.001 words1300 None]  Train error: 0.0439899, Validate error: 0.0455120
+[90 0.001 words1300 None]  Train error: 0.0439875, Validate error: 0.0454989
+[100 0.001 words1300 None] Train error: 0.0439856, Validate error: 0.0454911
+[120 0.001 words1300 None] Train error: 0.0439851, Validate error: 0.0454874
+[150 0.001 words1300 None] Train error: 0.0439854, Validate error: 0.0454874
+============================================================================================================
+OK, 100x
+============================================================================================================
+[100 5.0E-4 words1300 None] Train error: 0.0438778, Validate error: 0.0455811
+[100 0.001 words1300 None] Train error: 0.0439856, Validate error: 0.0454911
+[100 0.002 words1300 None] Train error: 0.0442240, Validate error: 0.0455529
+============================================================================================================
+>[100 0.001 words1300 None] Train error: 0.0439856, Validate error: 0.0454911  [to beat]
+>[100 0.001 words1250 None] Train error: 0.0439821, Validate error: 0.0454897
+>[100 0.001 words1200 None] Train error: 0.0439816, Validate error: 0.0454875
+>[100 0.001 words1100 None] Train error: 0.0439818, Validate error: 0.0454869   *
+>[100 0.001 words1000 None] Train error: 0.0439872, Validate error: 0.0454931
+>[100 0.001 words900 None]  Train error: 0.0439837, Validate error: 0.0454929
+
+[100 0.001 words900 None]  Train error: 0.0438718, Validate error: 0.0455129
+[100 0.001 words1200 None] Train error: 0.0439648, Validate error: 0.0455218
+[100 0.001 words1250 None] Train error: 0.0439707, Validate error: 0.0455053
+[100 0.001 words1300 None] Train error: 0.0439865, Validate error: 0.0455102
+[100 0.001 words1350 None] Train error: 0.0439823, Validate error: 0.0454893  *
+[100 0.001 words1400 None] Train error: 0.0440172, Validate error: 0.0454951
+============================================================================================================
+[[[  Submission Mon Jul 27, 21:33 ]]]
+Discovered bug in dictionary
+[100 0.001 words1350 None]
+Train error: 0.0439823,
+Validate error: 0.0454893
+Eval error: 0.044232402772198524
+LB error:   0.04387
+============================================================================================================
+def f(a: Double) = 1.0 / (1.0 + math.exp(-a))
+def fi(a: Double) = -math.log(1.0 / a - 1.0)
+def G(t: Double) = (p: Double) => f( fi(p) + t)
+val g = udf[Double, Double](  G(0.05) )
+============================================================================================================
+[[[  Submission Mon Jul 27, 22:24 ]]]
+Trying increasing the prob with the above with +0.05 shift:
+Eval error: 0.04424406482552785
+LB error:
+============================================================================================================
+
+
+
+val sub = new FileWriter(s"/home/hadoop/${filename}.csv", true)
+sub.write("ID,IsClick\n")
+println("saving file...")
+preds.foreach { case (id, prob) =>
+  sub.write(id + "," + f"$prob%1.8f" + "\n")
+}
+sub.close()
+
+
+
+
+

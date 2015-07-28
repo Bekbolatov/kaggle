@@ -61,9 +61,23 @@ object Script {
 
 WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(900, 1000, 1500, 2000, 3000))
 
-WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(1100, 1200))
 
-    val words = "words1100"
+
+WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmall, "words", Seq(1400, 1450))
+
+    val words = "words1300"
+    val words2 = None
+
+
+
+
+
+
+    val maxIter = 100
+    val regParam = 0.001
+    val words = "words1350"  //900,...,1500  1250, 1350, 1450
+    val words2 = None
+
     val featureGen = new FeatureGeneration(sqlContext, words, words2)
     val train = featureGen.featurize(rawTrain, sqlContext).cache()
     val validate = featureGen.featurize(rawValidate, sqlContext).cache()
@@ -81,10 +95,11 @@ WordsProcessing.generateAndSaveWordDictionaries(sc, sqlContext, rawEval, rawSmal
       .select("label", "probability")
       .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
 
-    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words} words2=$words2] Train error: $errorTrain, Validate error: $errorValidate")
+    println(f"[${maxIter} ${regParam} ${words} $words2] Train error: $errorTrain%1.7f, Validate error: $errorValidate%1.7f")
 
 
 
+  Script.saveSubmission(sqlContext, rawEval, rawSmall, "tryMon1", maxIter, regParam, words, words2)
 
 
 
@@ -113,7 +128,9 @@ val (train, validate, lr, featureGen) =  Script.fit(sqlContext, reducedRawTain, 
 
 
 
-    Script.saveSubmission(sqlContext, rawEval, rawSmall, featureGen, "tryFri2", maxIter, regParam, words)
+    Script.saveSubmission(sqlContext, rawEval, rawSmall, featureGen, "tryMon1", maxIter, regParam, words)
+
+
 
 saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, featureGen: FeatureGeneration, filename: String, maxIter: Int, regParam: Double, words: String) = {
 /////
@@ -315,12 +332,12 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
     (train, validate, lr, featureGen)
   }
 
-  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String, maxIter: Int, regParam: Double, words: String, wordDictFileNei: Option[String]) = {
+  def saveSubmission(sqlContext: SQLContext, rawEval: DataFrame, rawSmall: DataFrame, filename: String, maxIter: Int, regParam: Double, words: String, words2: Option[String]) = {
     import sqlContext.implicits._
     import org.apache.spark.sql.functions._
 
 
-    val featureGen = new FeatureGeneration(sqlContext, words, wordDictFileNei)
+    val featureGen = new FeatureGeneration(sqlContext, words, words2)
     val eval = featureGen.featurize(rawEval, sqlContext).cache()
     val small = featureGen.featurize(rawSmall, sqlContext).cache()
 
@@ -331,15 +348,21 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
 
     val errorEval = df_calcError(model.transform(eval)
       .select("label", "probability")
-      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF)
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).
+      toDF("probability", "label")
+    )
 
-    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words} words2=$wordDictFileNei] errorEval: $errorEval")
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words} words2=$words2] errorEval: $errorEval")
 
-    val predsRaw = model.transform(small).select("label", "probability").
+    val predsRaw1 = model.transform(small).select("label", "probability").
       groupBy("label").agg(first("probability")).
-      map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).toDF("probability", "label")
+      map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).
+      toDF("probability", "label")
+
+    val predsRaw = predsRaw1.withColumn("adjprob", predsRaw1("probability")).select("probability", "label")
 
     val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
+
     val sub = new FileWriter(s"/home/hadoop/${filename}.csv", true)
     sub.write("ID,IsClick\n")
     println("saving file...")
@@ -350,6 +373,55 @@ reprocessData(sc: SparkContext, sqlContext: SQLContext, prefix: String, orig: Bo
     println("done")
   }
 
+  def saveSubmissionWithAdj(sqlContext: SQLContext, adj: Double, rawEval: DataFrame, rawSmall: DataFrame, filename: String, maxIter: Int, regParam: Double, words: String, words2: Option[String]) = {
+    import sqlContext.implicits._
+    import org.apache.spark.sql.functions._
+
+
+    val featureGen = new FeatureGeneration(sqlContext, words, words2)
+    val eval = featureGen.featurize(rawEval, sqlContext).cache()
+    val small = featureGen.featurize(rawSmall, sqlContext).cache()
+
+    val lr = new LogisticRegression()
+    lr.setMaxIter(maxIter).setRegParam(regParam)
+
+    val model = lr.fit(eval)
+
+    def f(a: Double) = 1.0 / (1.0 + math.exp(-a))
+    def fi(a: Double) = -math.log(1.0 / a - 1.0)
+    def G(t: Double) = (p: Double) => f( fi(p) + t)
+
+
+    val g = udf[Double, Double](  G(adj) )
+
+    val errorEval = df_calcError(model.transform(eval)
+      .select("label", "probability")
+      .map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).
+      toDF("probability", "label").
+      withColumn("adjprob", g(col("probability"))).
+      select("adjprob", "label")
+    )
+
+    println(s"[maxIter=${maxIter} regParam=${regParam} words=${words} words2=$words2] errorEval: $errorEval")
+
+    val predsRaw1 = model.transform(small).select("label", "probability").
+      groupBy("label").agg(first("probability")).
+      map(x => (x.getAs[org.apache.spark.mllib.linalg.DenseVector](1)(1), x.getDouble(0))).
+      toDF("probability", "label")
+
+    val predsRaw = predsRaw1.withColumn("adjprob", g(predsRaw1("probability"))).select("probability", "label")
+
+    val preds = predsRaw.orderBy("label").map({ case Row(p: Double, l: Double) => (l.toInt, p) }).collect
+
+    val sub = new FileWriter(s"/home/hadoop/${filename}.csv", true)
+    sub.write("ID,IsClick\n")
+    println("saving file...")
+    preds.foreach { case (id, prob) =>
+      sub.write(id + "," + f"$prob%1.8f" + "\n")
+    }
+    sub.close()
+    println("done")
+  }
 
   def fitExample(sc: SparkContext, sqlContext: SQLContext) = {
 
