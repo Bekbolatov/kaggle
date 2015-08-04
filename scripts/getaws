@@ -63,7 +63,7 @@ TYPE=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep "InstanceType" | 
 NUM=$(aws emr describe-cluster --cluster-id $CLUSTERID | grep CORE -B 11 | grep "RequestedInstanceCount" | head -n 1 | awk -F " " '{ print  $2 }' | awk -F "," '{print $1}')
 
 echo "ssh $MASTER"
-scp ../avito/AvitoProject/target/scala-2.10/AvitoProject-assembly-1.0.jar $MASTER:/home/hadoop/.
+#scp ../events/liberty/target/scala-2.10/LibertyProject-assembly-1.0.jar $MASTER:/home/hadoop/.
 ##scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/spark/conf/.
 scp ../conf/$TYPE/$NUM/spark-defaults.conf $MASTER:/home/hadoop/.
 

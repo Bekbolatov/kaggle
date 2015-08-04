@@ -1,3 +1,5 @@
 
 noglob aws emr create-cluster --name Avito1.4.1  --release-label emr-4.0.0  --applications  Name=Spark --bootstrap-action Path=s3://support.elasticmapreduce/bootstrap-actions/ami/3.3.1/ridetherocket-workaround.bash --instance-type r3.xlarge --instance-count 13 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373
 
+
+noglob aws emr create-cluster --name Liberty  --release-label emr-4.0.0  --applications  Name=Spark --bootstrap-action Path=s3://support.elasticmapreduce/bootstrap-actions/ami/3.3.1/ridetherocket-workaround.bash --instance-type r3.xlarge --instance-count 5 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373

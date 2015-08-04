@@ -5,11 +5,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
 
 
-object DataSet  extends Serializable {
-
-  val localPath: String = "/Users/rbekbolatov/data/kaggle/liberty/scratch"
-  val location: String = "data/kaggle/liberty"
-  val processedDir: String = "apple"
+object DataSet extends Serializable {
 
   def getDatasets(rw: ReadWrite) = (rw.load("typedKnown"), rw.load("typedLb"))
 

@@ -2,7 +2,7 @@ package com.sparkydots.kaggle.liberty.models
 
 import com.sparkydots.kaggle.liberty.dataset.Columns
 import com.sparkydots.kaggle.liberty.error.GiniError
-import com.sparkydots.kaggle.liberty.features.CategoricalFeatureOneHotEncoder
+import com.sparkydots.kaggle.liberty.features.CategoricalFeatureEncoder
 import com.sparkydots.spark.dataframe.ReadWrite
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -19,7 +19,7 @@ object DecisionTreeRegression extends Serializable {
     val universe = typedKnown.unionAll(typedLb).cache()
 
     val encoders = Columns.predictors.zipWithIndex.
-      map { case (p, i) => (i, new CategoricalFeatureOneHotEncoder(universe, p)) }
+      map { case (p, i) => (i, new CategoricalFeatureEncoder(universe, p)) }
 
     val encoderSizes = encoders.map { case (i, e) => (i, e.size) }.toMap
 

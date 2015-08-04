@@ -8,11 +8,11 @@ import org.apache.spark.sql.SQLContext
 
 object Script extends Serializable {
 
-  val localPath:String = "/Users/rbekbolatov/data/kaggle/liberty/scratch"
-  val location: String = "data/kaggle/liberty"
-  val processedDir: String = "apple"
-
-  def run(sc: SparkContext, featurePrefix: String = "ADAM") = {
+  def run(sc: SparkContext,
+          localPath:String = "/Users/rbekbolatov/data/kaggle/liberty/scratch",
+          location: String = "data/kaggle/liberty",
+          processedDir: String = "apple",
+          featurePrefix: String = "ADAM") = {
 
     initLoggers
     val sqlContext = new SQLContext(sc)
@@ -37,6 +37,26 @@ object Script extends Serializable {
 
 
 /*
+
+
+
+SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1512m -Xmx=8g" spark-shell --driver-cores 4 --driver-memory 8g --properties-file spark-defaults.conf --jars LibertyProject-assembly-1.0.jar
+
+import com.sparkydots.kaggle.liberty._
+
+
+//AWS:
+val localPath = "/home/hadoop"
+val location = s"s3n://sparkydotsdata/kaggle/liberty"
+val processedDir = "apple"
+val featurePrefix = "ADAM"
+val (sqlContext, rw, typedKnown, typedLb) = Script.run(sc, localPath, location, processedDir, featurePrefix)
+
+// Local:
+//val (sqlContext, rw, typedKnown, typedLb) = Script.run(sc)
+
+
+
 
 import org.apache.spark.sql.SQLContext
 import com.sparkydots.spark.dataframe.{RichDataFrame, ReadWrite}

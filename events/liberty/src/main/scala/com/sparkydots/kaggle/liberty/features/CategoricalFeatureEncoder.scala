@@ -4,7 +4,7 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{IntegerType, StringType}
 
-class CategoricalFeatureOneHotEncoder(universeDF: DataFrame, colname: String) extends Serializable {
+class CategoricalFeatureEncoder(universeDF: DataFrame, colname: String) extends Serializable {
 
   lazy val size = dictionary.size
   def apply(value: Any) = dictionary(value)
