@@ -79,7 +79,7 @@ object ModelLogisticRegression {
      val clusters = KMeans.train(parsedData, numClusters, numIterations)
 
 
-     clusters.predict()
+     //clusters.predict()
 
 
 

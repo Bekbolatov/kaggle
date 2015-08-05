@@ -5,7 +5,14 @@ import org.apache.spark.sql.functions._
 
 object GiniError {
 
-  // (label, pred)
+  /**
+   * ("id", "label"), ("id", "pred")
+   */
+  def error(labels: DataFrame, preds: DataFrame) = error(labels.join(preds, "id").select("label", "pred"))
+
+  /**
+   * (label, pred)
+   */
   def error(labelsAndPredictions: DataFrame): Double = {
 
     val lap = labelsAndPredictions.cache()

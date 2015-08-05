@@ -44,7 +44,6 @@ SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1512m -Xmx=8g" sp
 
 import com.sparkydots.kaggle.liberty._
 
-
 //AWS:
 val localPath = "/home/hadoop"
 val location = s"s3n://sparkydotsdata/kaggle/liberty"
@@ -53,7 +52,8 @@ val featurePrefix = "ADAM"
 val (sqlContext, rw, typedKnown, typedLb) = Script.run(sc, localPath, location, processedDir, featurePrefix)
 
 // Local:
-//val (sqlContext, rw, typedKnown, typedLb) = Script.run(sc)
+val (sqlContext, rw, typedKnown, typedLb) = com.sparkydots.kaggle.liberty.Script.run(sc)
+
 
 
 
