@@ -16,8 +16,8 @@ object ModelFM {
     def error(labels: DataFrame, preds: DataFrame) = GiniError.error(labels.join(preds, "id").select("label", "pred"))
 
     val ohe = new OHE(sqlContext, typedKnown, typedLb)
-//        val classes = (d: Double) => if (d > 10) 1.0 else 0.0
-    val classes = (d: Double) => d
+        val classes = (d: Double) => if (d > 11) 1.0 else 0.0
+//    val classes = (d: Double) => d
 
     val Seq(known, lb) = ohe.convert(typedKnown, typedLb).
       map { s =>
@@ -26,9 +26,9 @@ object ModelFM {
       }
     }
 
-    val Array(train, validate, test) = known.randomSplit(Array(0.7, 0.29, 0.01), 101L).map(_.cache()) //.map(s => s.map(_._2).cache())
+    val Array(train, validate, test) = known.randomSplit(Array(0.50, 0.49, 0.01), 11101L).map(_.cache()) //.map(s => s.map(_._2).cache())
 
-    val Array(trainOrig, validateOrig, testOrig) = Array(train, validate, test).map(rdd => rdd.map(r => (r._1, r._2.label)).toDF("id", "label"))
+    val Array(trainOrig, validateOrig, testOrig, lbOrig) = Array(train, validate, test, lb).map(rdd => rdd.map(r => (r._1, r._2.label)).toDF("id", "label"))
     //task 0 for Regression, and 1 for Binary Classification
     //val model = FMWithLBFGS.train(train, task = 1, numIterations = 20, numCorrections = 5, dim = (true, true, 4), regParam = (0, 0, 0), initStd = 0.1)
 //    trainRegression(input: RDD[(Long, LabeledPoint)],
@@ -40,13 +40,24 @@ object ModelFM {
 //    miniBatchFraction: Double = {},
 //    storageLevel: StorageLevel = {}): FMModel
 
-    val model =  FM.trainRegression(train, numIterations = 39, stepSize = 0.1, (0, 0, 0), 3, true, 1.0, StorageLevel.MEMORY_ONLY)
+//    val model =  FM.trainRegression(train, numIterations = 39, stepSize = 0.1, (0, 0, 0), 3, true, 1.0, StorageLevel.MEMORY_ONLY)
+
+    //[val model =  FM.trainClassification(train, numIterations = 39, stepSize = 0.1, (0, 0, 0), 3, true, 1.0, StorageLevel.MEMORY_ONLY)]   d>11 0.46564795962944233, 0.43790897788434036
+    val model =  FM.trainClassification(train, numIterations = 80, stepSize = 0.1, (0, 0, 0), 7, true, 1.0, StorageLevel.MEMORY_ONLY)
 
     println(error(trainOrig, model.predict(train.map(x => (x._1, x._2.features))).toDF("id", "pred")))
     println(error(validateOrig, model.predict(validate.map(x => (x._1, x._2.features))).toDF("id", "pred")))
     println(error(testOrig, model.predict(test.map(x => (x._1, x._2.features))).toDF("id", "pred")))
 
-//    val errorTrain = GiniError.error(lapTrain)
+
+
+
+    val submissionModel =  FM.trainClassification(known, numIterations = 80, stepSize = 0.1, (0, 0, 0), 7, true, 1.0, StorageLevel.MEMORY_ONLY)
+    println(error(trainOrig, submissionModel.predict(train.map(x => (x._1, x._2.features))).toDF("id", "pred")))
+    val submPreds = submissionModel.predict(lb.map(x => (x._1, x._2.features))).toDF("id", "pred")
+    rw.writeToFile("Id,Hazard", submPreds, "submission01.csv")
+
+    //    val errorTrain = GiniError.error(lapTrain)
 //    val errorValidate = GiniError.error(lapValidate)
 //    val errorTest = GiniError.error(lapTest)
 //

@@ -32,5 +32,22 @@ class ReadWrite(@transient sqlContext: SQLContext, location: String, processedDi
     sub.close()
   }
 
+  /**
+   *
+   * @param header  "Id,Hazard"
+   * @param data     "id": Int, "pred": Double
+   * @param filename   "mysub1.csv"
+   * @param append
+   */
+  def writeToFile(header: String, data: DataFrame, filename: String, append: Boolean = true) = {
+    val localData = data.orderBy("id").map(r => (r.getLong(0).toInt, r.getDouble(1))).collect()
+    val sub = new FileWriter(s"$localPath/$filename", append)
+    sub.write(header + "\n")
+    localData.foreach { case (label, pred) =>
+      sub.write(f"$label,$pred%1.17f\n")
+    }
+    sub.close()
+  }
+
 }
 
