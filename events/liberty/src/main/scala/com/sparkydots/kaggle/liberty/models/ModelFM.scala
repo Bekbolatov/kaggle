@@ -52,10 +52,11 @@ object ModelFM {
 
 
 
+    val dds = known.map(x => (x._2.label, x._2.label)).toDF("label", "pred")
     val submissionModel =  FM.trainClassification(known, numIterations = 80, stepSize = 0.1, (0, 0, 0), 7, true, 1.0, StorageLevel.MEMORY_ONLY)
-    println(error(trainOrig, submissionModel.predict(train.map(x => (x._1, x._2.features))).toDF("id", "pred")))
-    val submPreds = submissionModel.predict(lb.map(x => (x._1, x._2.features))).toDF("id", "pred")
-    rw.writeToFile("Id,Hazard", submPreds, "submission01.csv")
+    println(error(trainOrig, submissionModel.predict(train.map(x => (x._1, x._2.features))).map(x => (x._1, (x._2*1000).toInt.toDouble)).toDF("id", "pred")))
+    val submPreds = submissionModel.predict(lb.map(x => (x._1, x._2.features))).map(x => (x._1, (x._2*1000).toInt.toDouble)).toDF("id", "pred")
+    rw.writeToFile("Id,Hazard", submPreds, "submission02.csv")
 
     //    val errorTrain = GiniError.error(lapTrain)
 //    val errorValidate = GiniError.error(lapValidate)

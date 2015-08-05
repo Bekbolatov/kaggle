@@ -44,7 +44,7 @@ class ReadWrite(@transient sqlContext: SQLContext, location: String, processedDi
     val sub = new FileWriter(s"$localPath/$filename", append)
     sub.write(header + "\n")
     localData.foreach { case (label, pred) =>
-      sub.write(f"$label,$pred%1.17f\n")
+      sub.write(f"$label,$pred%1.0f\n")
     }
     sub.close()
   }
