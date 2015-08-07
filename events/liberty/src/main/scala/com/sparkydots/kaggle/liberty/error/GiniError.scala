@@ -8,7 +8,7 @@ object GiniError {
   /**
    * ("id", "label"), ("id", "pred")
    */
-  def error(labels: DataFrame, preds: DataFrame) = error(labels.join(preds, "id").select("label", "pred"))
+  def error(labels: DataFrame, preds: DataFrame): Double = error(labels.join(preds, "id").select("label", "pred"))
 
   /**
    * (label, pred)

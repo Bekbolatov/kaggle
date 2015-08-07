@@ -8,8 +8,10 @@ class OHE(sqlContext: SQLContext, typedKnown: DataFrame, typedLb: DataFrame) ext
 
   val universe = typedKnown.unionAll(typedLb).cache()
 
-  val encoders = Columns.predictors.zipWithIndex.
-    map { case (p, i) => (i, new CategoricalFeatureEncoder(universe, p)) }
+  val encoders = Columns.predictors.zipWithIndex.map {
+    case (p, i) if Columns.intPredictors.contains(p) => (i, new IntFeatureEncoder)
+    case (p, i) if Columns.letterPredictors.contains(p) => (i, new CategoricalFeatureEncoder(universe, p))
+  }
 
   val encoderSizes = encoders.map { case (i, e) => (i, e.size) }.toMap
 
@@ -21,10 +23,17 @@ class OHE(sqlContext: SQLContext, typedKnown: DataFrame, typedLb: DataFrame) ext
       val hazard = r.getInt(1).toDouble
       var offset = 0
       val feats = bcEncoders.value.map {
-        case (i, enc) =>
-          val idx = enc(r.get(i + 2)) + offset
+        case (i, enc: CategoricalFeatureEncoder) =>
+          val (localIdx, value) = enc(r.getString(i + 2))
+          val idx = localIdx + offset
           offset = offset + enc.size
-          (idx, 1.0)
+          (idx, value)
+        case (i, enc: IntFeatureEncoder) =>
+          val (localIdx, value) = enc(r.getInt(i + 2))
+          val idx = localIdx + offset
+          offset = offset + enc.size
+          (idx, value)
+
       }.toArray
 
       (id, hazard, Vectors.sparse(offset, feats))

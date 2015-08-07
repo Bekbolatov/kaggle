@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+CLUSTERID=$(aws emr list-clusters --active | grep "\"Id\"" | awk -F "\"" '{ print $4 }')
+if [[ -z $CLUSTERID ]]; then 
+    echo "No active cluster"
+    exit
+fi
+
+echo "ClusterID: $CLUSTERID"
+
+aws emr terminate-clusters --cluster-ids $CLUSTERID
+
