@@ -133,7 +133,7 @@ object ModelRank {
      val numClasses = 2
      val categoricalFeaturesInfo = Map[Int, Int]()
      val numTrees = 400 //200
-     val featureSubsetStrategy = "auto" // Let the algorithm choose.
+     val featureSubsetStrategy = "all" // "auto" Let the algorithm choose.
      val impurity = "variance"
      val maxDepth = 11
      val maxBins = 100
@@ -188,7 +188,7 @@ object ModelRank {
        (id.toLong, prediction)
      }.toDF("id", "pred")
 
-     rw.writeLibertySubmissionToFile("Id,Hazard", rfSubmTest, "RF2.csv")
+     rw.writeLibertySubmissionToFile("Id,Hazard", rfSubmTest, "RF4.csv")
 
    }
 
