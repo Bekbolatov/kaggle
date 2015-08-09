@@ -1,0 +1,28 @@
+http://www.quora.com/How-do-random-forests-and-boosted-decision-trees-compare
+
+
+Sergey Feldman, machine learning PhD & consultant @ www.data-cowboys.com
+
+Upvoted by Vladimir Novakovski, Led machine learning at Quora
+
+Random Forests are better! They are probably close in average accuracy to boosted decision trees, but are less sensitive to outliers and parameter choices.
+
+Here are two references, with quotes.
+
+First from a recent paper charmingly titled"Do we Need Hundreds of Classifiers to Solve Real World Classification Problems?"
+
+"This paper presents an exhaustive evaluation of 179 classifiers belonging to a wide collection of 17 families over the whole UCI machine learning classification database, discarding the large-scale data sets due to technical reasons, plus 4 own real sets, summing up to 121 datasets  from  10  to  130,064  patterns,  from  3  to  262  inputs  and  from  2  to  100  classes.
+The best results are achieved by the parallel random forest (parRF_t), implemented in R with caret, tuning the parameter mtry."
+
+Next something a bit older - Rich Caruana's & Alexandru Niculescu-Mizil's exhaustive & well-cited benchmark paper [1]:
+
+"With excellent performance on all eight metrics, calibrated boosted trees were the best learning algorithm overall. Random forests are close second, followed by uncalibrated bagged trees, calibrated SVMs, and uncalibrated neural nets. The models that performed poorest were naive bayes, logistic regression, decision trees, and boosted stumps. Although some methods clearly perform better or worse than other methods on average, there is significant variability across the problems and metrics. Even the best models sometimes perform poorly, and models with poor average performance occasionally perform exceptionally well."
+
+Calibration here refers to Platt's method or Isotonic regression, but earlier in the paper the authors point out that Random Forests don't really need calibration!
+
+So, while (calibrated) bosted decision trees did best here on average (not the case in the first study I cited), I tend to use Random Forests (if feeling too lazy to validate more than one model) because they are straightforward, robust, and output good probabilities right out of the box.
+
+
+http://icml2006.autonlab.org/icml_documents/camera-ready/021_An_Empirical_Compari.pdf
+http://jmlr.org/papers/volume15/delgado14a/delgado14a.pdf
+

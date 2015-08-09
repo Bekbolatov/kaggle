@@ -52,6 +52,18 @@ val processedDir = "apple"
 val featurePrefix = "ADAM"
 val (sqlContext, rw, typedKnown, typedLb) = Script.run(sc, localPath, location, processedDir, featurePrefix)
 
+import com.sparkydots.kaggle.liberty.error.GiniError
+import com.sparkydots.kaggle.liberty.features.OHE
+import com.sparkydots.spark.dataframe.ReadWrite
+import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.mllib.tree.RandomForest
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import com.sparkydots.util.TimeTracker
+
+
+
+
 // Local:
 val (sqlContext, rw, typedKnown, typedLb) = com.sparkydots.kaggle.liberty.Script.run(sc)
 
