@@ -37,65 +37,49 @@ train <- train[sample(n),]
 y <- log(train$Hazard)*25
 train$Hazard <- NULL
 
-test <- sparse.model.matrix(~., data = test)
-xgtest <- xgb.DMatrix(data = test)
-
-offset <- 15000
-num_rounds <- 20000
-logfile <- data.frame(shrinkage=c(0.01, 0.01, 0.005, 0.005, 0.008),
-          depth = c(3, 3, 3, 3, 3),
-          gamma = c(0, 0, 0, 0, 0),
-          min.child = c(4, 4, 4, 4, 4),
-          colsample.bytree = c(0.3, 0.3, 0.3, 0.3, 0.3),
-          subsample = c(1, 1, 1, 1, 1))
-#logfile <- data.frame(shrinkage=c(0.04, 0.03, 0.03, 0.03, 0.02),
-#                      depth = c(8, 7, 9, 10, 10),
-#                      gamma = c(0, 0, 0, 0, 0),
-#                      min.child = c(5, 5, 5, 5, 5),
-#                      colsample.bytree = c(0.7, 0.6, 0.65, 0.6, 0.85),
-#                      subsample = c(1, 0.9, 0.95, 1, 0.6))
-
-
-
-# this will use default evaluation metric = rmse which we want to minimise
-models <- 5 #5, 5
-repeats <- 10 #10, 20
-yhat.test  <- rep(0,nrow(xgtest))
-for (j in 1:repeats) {
-  for (i in 1:models){
-    print(j)
-    print(i)
-    set.seed(j*1187 + i*83 + 30000)
-    
-    shuf = sample(1:n)
-    train_train <- sparse.model.matrix(~., data = train[shuf[offset:n],])
-    train_validate <- sparse.model.matrix(~., data = train[shuf[1:offset],])
-    xgtrain <- xgb.DMatrix(data = train_train, label= y[shuf[offset:n]])
-    xgval <-  xgb.DMatrix(data = train_validate, label= y[shuf[1:offset]])
-    watchlist <- list(val=xgval, train=xgtrain)
-    
-    #bst1 <- xgb.train(params = param, data = xgtrain, nround=num_rounds, print.every.n = 100, watchlist=watchlist, early.stop.round = 50, maximize = FALSE)
-    xgboost.mod <- xgb.train(data = xgtrain, nround = num_rounds, print.every.n = 1000,  early.stop.round = 50, maximize = FALSE,
-                           watchlist=watchlist, 
-                           nthread = 8,
-                           max.depth = logfile$depth[i],
-                           objective = "reg:linear",
-                           eta = logfile$shrinkage[i],
-                           min.child.weight=logfile$min.child[i],
-                           subsample=logfile$subsample[i],
-                           colsample_bytree=logfile$colsample.bytree[i],
-                           gamma=logfile$gamma[i])
-    #scale_pos_weight = 1.0, # from chippy
-    yhat.test  <- yhat.test + predict(xgboost.mod, xgtest)
-    #validateNumber <- data.frame(label=y[shuf[1:offset]])
-    #validateNumber$pred <- predict(xgboost.mod, xgval)
-    #print(NormalizedGini(validateNumber$label, validateNumber$pred))
-    
+# replace factors with level mean hazard
+for (i in 1:ncol(train)) {
+  if (class(train[,i])=="factor") {
+    mm <- aggregate(y~train[,i], data=train, mean)
+    levels(train[,i]) <- as.numeric(mm[,2])
+    levels(test[,i]) <- as.numeric(mm[,2])
+    train[,i] <- as.numeric(as.character(train[,i]))
+    test[,i] <- as.numeric(as.character(test[,i]))
   }
 }
-yhat.test <-  yhat.test/(models*repeats)
-write.csv(data.frame(Id=id.test, Hazard=yhat.test),"/Users/rbekbolatov/data/kaggle/liberty/subms/chippy_beharX.csv",row.names=F, quote=FALSE)
 
+# Using 5000 rows for early stopping.
+offset <- 5000
+test <- sparse.model.matrix(~., data = test)
+train_train <- sparse.model.matrix(~., data = train[offset:n,])
+train_validate <- sparse.model.matrix(~., data = train[1:offset,])
+
+
+# Set xgboost test and training and validation datasets
+xgtest <- xgb.DMatrix(data = test)
+xgtrain <- xgb.DMatrix(data = train_train, label= y[offset:n])
+xgval <-  xgb.DMatrix(data = train_validate, label= y[1:offset])
+
+# setup watchlist to enable train and validation, validation must be first for early stopping
+watchlist <- list(val=xgval, train=xgtrain)
+# to train with watchlist, use xgb.train, which contains more advanced features
+
+# Set xgboost parameters
+num_rounds <- 5000
+param <- list("objective" = "reg:linear",
+              "eta" = 0.001,
+              "min_child_weight" = 1,
+              "subsample" = 1.0,
+              "colsample_bytree" = 0.2,
+              "scale_pos_weight" = 1.0,
+              "max_depth" = 10)
+
+# this will use default evaluation metric = rmse which we want to minimise
+bst1 <- xgb.train(params = param, data = xgtrain, nround=num_rounds, print.every.n = 100, watchlist=watchlist, early.stop.round = 150, maximize = FALSE)
+
+validateNumber <- data.frame(label=y[1:offset])
+validateNumber$pred <- predict(bst1, sparse.model.matrix(~., data = train[1:offset,]))
+NormalizedGini(validateNumber$label, validateNumber$pred)
 
 
 finalSubmision <- data.frame(Id=test_Id)

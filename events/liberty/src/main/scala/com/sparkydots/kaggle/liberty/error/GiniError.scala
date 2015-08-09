@@ -13,10 +13,9 @@ object GiniError {
   /**
    * (label, pred)
    */
-  def error(labelsAndPredictions: DataFrame): Double = {
-    val lap = labelsAndPredictions.cache()
+  def error(lap: DataFrame): Double = {
 
-    val best = lap.orderBy(col("label").desc).map(_.getDouble(0)).collect()
+    val best = lap.map(_.getDouble(0)).collect()
     val pred = lap.orderBy(col("pred").desc).map(_.getDouble(0)).collect()
 
     val sumsBest = best.scanLeft(0.0)(_ + _)
@@ -29,7 +28,6 @@ object GiniError {
 
     val modelRandom = total * (best.size.toDouble + 1.0) / 2.0
 
-    labelsAndPredictions.unpersist()
     (modelPred - modelRandom) / (modelBest - modelRandom)
   }
 
