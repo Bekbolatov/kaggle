@@ -14,19 +14,6 @@ import breeze.linalg.{DenseVector => BDV, SparseVector => BSV, Vector => BV}
 
 object ModelRank {
 
-  def genpairs(singlesRDD: RDD[(Int, Double, Vector)], times: Int): RDD[LabeledPoint] = {
-    val singles = singlesRDD.repartition(1)
-    (1 to times).map { t =>
-      singles.mapPartitions { valsIter =>
-        val vals = valsIter.toList
-        Random.shuffle(vals).zip(Random.shuffle(vals)).collect {
-          case ((_, l1, v1), (_, l2, v2)) if l1 != l2 =>
-            LabeledPoint((math.signum(l1 - l2)+1)/2, Vectors.dense((new BDV(v1.toArray) - new BDV(v2.toArray)).toArray).toSparse)
-        }.toIterator
-      }.repartition(16)
-    }.reduce(_ union _)
-  }
-
    def run(sqlContext: SQLContext, rw: ReadWrite, typedKnown: DataFrame, typedLb: DataFrame): Unit = {
 
      import sqlContext.implicits._
@@ -34,12 +21,14 @@ object ModelRank {
 
      val bohe = new OHE(sqlContext, typedKnown, typedLb)
 
-     val Seq(known, lb) = Seq(typedKnown, typedLb).map(bohe.encode)
+     val Seq(known, lb) = Seq(typedKnown, typedLb).map(bohe.encode(_))
 
 //          val classes = (d: Double) => if (d > 10) 1.0 else 0.0 //if (d > 10) 2.0 else if(d > 2) 1.0 else 0.0
 //     val classes = (d: Double) => if (d > 10) 2.0 else if(d > 2) 1.0 else 0.0
-     val classes = (d: Double) => if (d > 2) 1.0 else 0.0
+//     val classes = (d: Double) => if (d > 2) 1.0 else 0.0
+     val classes = (d: Double) => d
 //     val classes = (d: Double) => if (d > 10) 3.0 else if(d > 5) 2.0 else if (d > 2) 1.0 else 0.0
+
      val Array(trainSingles, validateSingles, testSingles) = known.randomSplit(Array(0.50, 0.49, 0.01), 11101L).map(_.cache())
 
      val Array(train, validate, test, knownLabeledPoints, lbLabeledPoints) = Array(trainSingles, validateSingles, testSingles, known, lb).
@@ -192,4 +181,19 @@ object ModelRank {
 
    }
 
- }
+  def genpairs(singlesRDD: RDD[(Int, Double, Vector)], times: Int): RDD[LabeledPoint] = {
+    val singles = singlesRDD.repartition(1)
+    (1 to times).map { t =>
+      singles.mapPartitions { valsIter =>
+        val vals = valsIter.toList
+        Random.shuffle(vals).zip(Random.shuffle(vals)).collect {
+          case ((_, l1, v1), (_, l2, v2)) if l1 != l2 =>
+            LabeledPoint((math.signum(l1 - l2)+1)/2, Vectors.dense((new BDV(v1.toArray) - new BDV(v2.toArray)).toArray).toSparse)
+        }.toIterator
+      }.repartition(16)
+    }.reduce(_ union _)
+  }
+
+
+
+}

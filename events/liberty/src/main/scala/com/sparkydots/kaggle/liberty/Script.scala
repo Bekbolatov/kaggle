@@ -40,6 +40,7 @@ object Script extends Serializable {
 
 
 
+SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1512m -Xmx=8g" spark-shell --driver-cores 8 --driver-memory 39g --properties-file spark-defaults.conf --jars LibertyProject-assembly-1.0.jar
 SPARK_REPL_OPTS="-XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=1512m -Xmx=8g" spark-shell --driver-cores 4 --driver-memory 8g --properties-file spark-defaults.conf --jars LibertyProject-assembly-1.0.jar
 
 import com.sparkydots.kaggle.liberty._

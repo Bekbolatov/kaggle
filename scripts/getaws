@@ -45,6 +45,10 @@ echo -e "Master:\t$MASTER"
 STATE=$(aws emr describe-cluster --cluster-id $CLUSTERID 2>/dev/null | grep "State\":" | head -n 1 | awk -F "\"" ' { print $4 }')
 echo "$STATE"
 
+if [[ "$STATE" == "TERMINATING" ]]; then
+    exit
+fi
+
 COUNTER=40
 while [[ "$STATE" != "WAITING" ]] && [[ $COUNTER -gt 1 ]]; do
     let COUNTER=COUNTER-1 
