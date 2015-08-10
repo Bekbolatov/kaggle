@@ -1,0 +1,272 @@
+https://github.com/dmlc/xgboost/issues/276
+
+
+I am using OS X.
+
+I have brew install gcc --without-multilib. And I have successfully installed multithread c-version and python-version by changing Makefile as indicated in readme.
+
+When it comes to R-package, problems arises.
+
+Firstly, I have to tried to tell R to use g++-4.9 to compile it. I changed xgboost/R-packages/MakeVars by adding line CXX=g++-4.9 but R still used clang++. After a lot of tries, I found that I have to change ~/.R/src/Makevars then R knew to use g++-4.9.
+
+Secondly, even I use g++4.9, I could not enable multithread yet!!
+
+> devtools::install_local('xgboost/', subdir = 'R-package')
+Installing xgboost
+'/usr/local/Cellar/r/3.2.0/R.framework/Resources/bin/R'  \
+  --no-site-file --no-environ --no-save --no-restore CMD INSTALL  \
+  '/private/var/folders/31/l4r_sk095c5_1km_j1f2r9rm0000gn/T/RtmpJZpa7x/file3a5bde7faf1/xgboost/R-package'  \
+  --library='/Users/fyears/R' --install-tests
+
+* installing *source* package ‘xgboost’ ...
+** libs
+g++-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include     -fPIC  -g -O2  -c xgboost_R.cpp -o xgboost_R.o
+In file included from xgboost_R.cpp:9:0:
+../../src/utils/omp.h:13:165: note: #pragma message: Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading
+ #pragma message ("Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading")
+                                                                                                                                                                     ^
+gcc-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include    -fPIC  -g -O2  -c xgboost_assert.c -o xgboost_assert.o
+g++-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include     -fPIC  -g -O2  -c ../..//wrapper/xgboost_wrapper.cpp -o ../..//wrapper/xgboost_wrapper.o
+In file included from ../..//wrapper/../src/learner/./objective-inl.hpp:17:0,
+                 from ../..//wrapper/../src/learner/./objective.h:64,
+                 from ../..//wrapper/../src/learner/learner-inl.hpp:15,
+                 from ../..//wrapper/xgboost_wrapper.cpp:19:
+../..//wrapper/../src/learner/./../utils/omp.h:13:165: note: #pragma message: Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading
+ #pragma message ("Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading")
+                                                                                                                                                                     ^
+g++-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include     -fPIC  -g -O2  -c ../..//src/io/io.cpp -o ../..//src/io/io.o
+In file included from ../..//src/io/./simple_fmatrix-inl.hpp:11:0,
+                 from ../..//src/io/simple_dmatrix-inl.hpp:20,
+                 from ../..//src/io/io.cpp:8:
+../..//src/io/./../utils/omp.h:13:165: note: #pragma message: Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading
+ #pragma message ("Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading")
+                                                                                                                                                                     ^
+g++-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include     -fPIC  -g -O2  -c ../..//src/gbm/gbm.cpp -o ../..//src/gbm/gbm.o
+In file included from ../..//src/gbm/./gbtree-inl.hpp:12:0,
+                 from ../..//src/gbm/gbm.cpp:6:
+../..//src/gbm/./../utils/omp.h:13:165: note: #pragma message: Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading
+ #pragma message ("Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading")
+                                                                                                                                                                     ^
+g++-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include     -fPIC  -g -O2  -c ../..//src/tree/updater.cpp -o ../..//src/tree/updater.o
+In file included from ../..//src/tree/./updater_refresh-inl.hpp:13:0,
+                 from ../..//src/tree/updater.cpp:7:
+../..//src/tree/./../utils/omp.h:13:165: note: #pragma message: Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading
+ #pragma message ("Warning: OpenMP is not available, xgboost will be compiled into single-thread code. Use OpenMP-enabled compiler to get benefit of multi-threading")
+                                                                                                                                                                     ^
+g++-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include     -fPIC  -g -O2  -c ../..//subtree/rabit/src/engine_empty.cc -o ../..//subtree/rabit/src/engine_empty.o
+g++-4.9 -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include     -fPIC  -g -O2  -c ../..//src/io/dmlc_simple.cpp -o ../..//src/io/dmlc_simple.o
+g++-4.9 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/usr/local/Cellar/r/3.2.0/R.framework/Resources/lib -L/usr/local/opt/gettext/lib -L/usr/local/opt/readline/lib -o xgboost.so xgboost_R.o xgboost_assert.o ../..//wrapper/xgboost_wrapper.o ../..//src/io/io.o ../..//src/gbm/gbm.o ../..//src/tree/updater.o ../..//subtree/rabit/src/engine_empty.o ../..//src/io/dmlc_simple.o -F/usr/local/Cellar/r/3.2.0/R.framework/.. -framework R -lintl -Wl,-framework -Wl,CoreFoundation
+installing to /Users/fyears/R/xgboost/libs
+** R
+** data
+** demo
+** preparing package for lazy loading
+Creating a generic function from function ‘getinfo’ in package ‘xgboost’
+Creating a generic function for ‘predict’ from package ‘stats’ in package ‘xgboost’
+Creating a generic function from function ‘setinfo’ in package ‘xgboost’
+Creating a generic function from function ‘slice’ in package ‘xgboost’
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (xgboost)
+@fyears
+fyears commented on May 1
+Here is my solution to install r package:
+
+There is a project that adds openmp support to clang.
+
+brew install gcc --without-multilib # for c++ and python version
+brew install clang-omp # for r version
+Then, to tell R to use the clang-omp++ and set the flag, I have to modify the ~/.R/Makvars, and I do not know why it ignores xgboost/R-package/src/Makevars:
+
+CC=clang-omp
+CXX=clang-omp++
+SHLIB_OPENMP_CFLAGS = -fopenmp
+SHLIB_OPENMP_CXXFLAGS = -fopenmp
+SHLIB_OPENMP_FCFLAGS = -fopenmp
+SHLIB_OPENMP_FFLAGS = -fopenmp
+Also, I have to change line 9 in xgboost/src/utils/omp.h to:
+
+#include <libiomp/omp.h> /* instead of #include <omp.h> */
+Here is the log while installing r package:
+
+> install_local('xgboost/', subdir = 'R-package')
+Installing xgboost
+'/usr/local/Cellar/r/3.2.0/R.framework/Resources/bin/R'  \
+  --no-site-file --no-environ --no-save --no-restore CMD INSTALL  \
+  '/private/var/folders/31/l4r_sk095c5_1km_j1f2r9rm0000gn/T/RtmpJZpa7x/file3a5b3498409a/xgboost/R-package'  \
+  --library='/Users/fyears/R' --install-tests
+
+* installing *source* package ‘xgboost’ ...
+** libs
+clang-omp++ -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include   -fopenmp  -fPIC  -g -O2  -c xgboost_R.cpp -o xgboost_R.o
+clang-omp -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include    -fPIC  -g -O2  -c xgboost_assert.c -o xgboost_assert.o
+clang-omp++ -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include   -fopenmp  -fPIC  -g -O2  -c ../..//wrapper/xgboost_wrapper.cpp -o ../..//wrapper/xgboost_wrapper.o
+In file included from ../..//wrapper/xgboost_wrapper.cpp:23:
+In file included from ../..//wrapper/../src/io/simple_dmatrix-inl.hpp:22:
+In file included from ../..//wrapper/../src/io/./libsvm_parser.h:18:
+../..//wrapper/../src/io/./sparse_batch_page.h:139:3: warning: control may reach end of non-void function [-Wreturn-type]
+  }
+  ^
+1 warning generated.
+clang-omp++ -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include   -fopenmp  -fPIC  -g -O2  -c ../..//src/io/io.cpp -o ../..//src/io/io.o
+In file included from ../..//src/io/io.cpp:8:
+In file included from ../..//src/io/simple_dmatrix-inl.hpp:22:
+In file included from ../..//src/io/./libsvm_parser.h:18:
+../..//src/io/./sparse_batch_page.h:139:3: warning: control may reach end of non-void function [-Wreturn-type]
+  }
+  ^
+1 warning generated.
+clang-omp++ -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include   -fopenmp  -fPIC  -g -O2  -c ../..//src/gbm/gbm.cpp -o ../..//src/gbm/gbm.o
+clang-omp++ -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include   -fopenmp  -fPIC  -g -O2  -c ../..//src/tree/updater.cpp -o ../..//src/tree/updater.o
+clang-omp++ -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include   -fopenmp  -fPIC  -g -O2  -c ../..//subtree/rabit/src/engine_empty.cc -o ../..//subtree/rabit/src/engine_empty.o
+clang-omp++ -I/usr/local/Cellar/r/3.2.0/R.framework/Resources/include -DNDEBUG -DXGBOOST_CUSTOMIZE_MSG_ -DXGBOOST_CUSTOMIZE_PRNG_ -DXGBOOST_STRICT_CXX98_ -DRABIT_CUSTOMIZE_MSG_ -DRABIT_STRICT_CXX98_ -I../../ -I/usr/local/opt/gettext/include -I/usr/local/opt/readline/include   -fopenmp  -fPIC  -g -O2  -c ../..//src/io/dmlc_simple.cpp -o ../..//src/io/dmlc_simple.o
+clang-omp++ -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/usr/local/Cellar/r/3.2.0/R.framework/Resources/lib -L/usr/local/opt/gettext/lib -L/usr/local/opt/readline/lib -o xgboost.so xgboost_R.o xgboost_assert.o ../..//wrapper/xgboost_wrapper.o ../..//src/io/io.o ../..//src/gbm/gbm.o ../..//src/tree/updater.o ../..//subtree/rabit/src/engine_empty.o ../..//src/io/dmlc_simple.o -fopenmp -F/usr/local/Cellar/r/3.2.0/R.framework/.. -framework R -lintl -Wl,-framework -Wl,CoreFoundation
+installing to /Users/fyears/R/xgboost/libs
+** R
+** data
+** demo
+** preparing package for lazy loading
+Creating a generic function from function ‘getinfo’ in package ‘xgboost’
+Creating a generic function for ‘predict’ from package ‘stats’ in package ‘xgboost’
+Creating a generic function from function ‘setinfo’ in package ‘xgboost’
+Creating a generic function from function ‘slice’ in package ‘xgboost’
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+* DONE (xgboost)
+>
+My above solution should be helpful for developers to add "full" support for os x. In fact, I believe that c version and python version should be able to be compiled using clang-omp++ instead of gcc (without-multilib), though I have not tested it.
+@fyearsfyears changed the title from no way to install r package using g++ to enable multithread? to no way to install r package enabling multithread in os x? on May 1
+@tqchen
+Owner
+tqchen commented on May 1
+Thanks! I think this is valuable for OSX users. I have created an build instruction doc at https://github.com/dmlc/xgboost/blob/master/doc/build.md
+
+It would be great if you can try to summarize your solution and add instructions here
+@fyears
+fyears commented on May 1
+@tqchen Anyway to check that xgboost is really using multithread? Any functions like is_using_multithread()? Because you know, maybe xgboost is just ignoring nthread parameter if openmp is not working correctly.
+
+Here is the complete solution. And I suggest you developers pay attention to step 2 and 4 to make some modifications to original files to simplify the steps.
+
+Obtain gcc with openmp support by brew install gcc --without-multilib or clang with openmp by brew install clang-omp. The clang one is recommended because the first method requires us compiling gcc inside the machine (more than an hour in mine)! (BTW, brew is the de facto standard of apt-get on OS X, in case you do not know. So installing HPC separately is not recommended.)
+
+I am not familiar with C/C++, but on my machine, if plaing to use clang-omp in step 3 and/or 4, I have to change line 9 in xgboost/src/utils/omp.h to
+
+#include <libiomp/omp.h> /* instead of #include <omp.h> */`
+to make it work, otherwise the following steps would show src/tree/../utils/omp.h:9:10: error: 'omp.h' file not found...
+
+Here are what are inside my machine:
+
+/usr/local/lib/libiomp -> ../Cellar/libiomp/20150227/include/libiomp
+/usr/local/include/libiomp -> ../Cellar/libiomp/20150227/include/libiomp
+/usr/local/Cellar/libiomp/20150227/include/libiomp/omp.h
+/usr/local/Cellar/libiomp/20150227/include/libiomp/omp_lib.f
+/usr/local/Cellar/libiomp/20150227/include/libiomp/omp_lib.f90
+/usr/local/Cellar/libiomp/20150227/include/libiomp/omp_lib.h
+Please check the usage and usage with xcode session in the description of clang-omp. Maybe you could change some settings in Makefile to adapt this things. Again, I am not familar with the C++ system but at least I could make it work by changing the header line when using clang-omp.
+
+Set the Makefile correctly for compiling cpp version xgboost then python version xgboost.
+
+export CC  = gcc-4.9
+export CXX = g++-4.9
+Or
+
+export CC = clang-omp
+export CXX = clang-omp++
+Remember to change header if using clang-omp.
+
+Set the Makevars file in highest piority.
+
+The point is, there are three Makevars inside my machine: ~/.R/Makevars, xgboost/R-package/src/Makevars, and /usr/local/Cellar/r/3.2.0/R.framework/Resources/etc/Makeconf, and SHLIB_OPENMP_CXXFLAGS is not set by default!! After trying, it seems that the first one has highest piority (surprising!)
+
+So, add or change ~/.R/Makevars to the following lines:
+
+CC=gcc-4.9
+CXX=g++-4.9
+SHLIB_OPENMP_CFLAGS = -fopenmp
+SHLIB_OPENMP_CXXFLAGS = -fopenmp
+SHLIB_OPENMP_FCFLAGS = -fopenmp
+SHLIB_OPENMP_FFLAGS = -fopenmp
+Or
+
+CC=clang-omp
+CXX=clang-omp++
+SHLIB_OPENMP_CFLAGS = -fopenmp
+SHLIB_OPENMP_CXXFLAGS = -fopenmp
+SHLIB_OPENMP_FCFLAGS = -fopenmp
+SHLIB_OPENMP_FFLAGS = -fopenmp
+Again, remember to change header if using clang-omp.
+
+Then inside R, run
+
+install.packages('xgboost/R-package/', repos=NULL, type='source')
+#devtools::install_local('xgboost/', subdir = 'R-package') # you may use devtools
+gcc shows no warnings but clang-omp shows with two warnings.
+
+@fyearsfyears referenced this issue on May 1
+ Merged
+The complete ways to install XGBoost in OS X. #280
+@tqchen
+Owner
+tqchen commented on May 1
+Thanks for the guide! Can you post the warning you get for clang-omp?
+@fyears
+fyears commented on May 1
+@tqchen
+
+Huh, interesting... The second response in this issue showed the log in R yesterday. But today, after I git clone the latest code, I saw the different log now.
+
+R package with clang-omp do not have warnings now!
+
+BTW, c-version has warnings.
+
+$ git clone https://github.com/dmlc/xgboost.git
+$ vim xgboost/Makefile  # change to use clang-omp
+$ vim xgboost/src/utils/omp.h # change header
+$ vim  ~/.R/Makevars # add vars for R
+$
+$ cd xgboost
+$ bash build.sh
+clang-omp++ -c -Wall -O3 -msse2  -Wno-unknown-pragmas -fPIC -fopenmp -o updater.o src/tree/updater.cpp
+clang-omp++ -c -Wall -O3 -msse2  -Wno-unknown-pragmas -fPIC -fopenmp -o gbm.o src/gbm/gbm.cpp
+clang-omp++ -c -Wall -O3 -msse2  -Wno-unknown-pragmas -fPIC -fopenmp -o io.o src/io/io.cpp
+clang-omp++ -c -Wall -O3 -msse2  -Wno-unknown-pragmas -fPIC -fopenmp -o main.o src/xgboost_main.cpp
+cd subtree/rabit;make lib/librabit.a; cd ../..
+clang-omp++ -c -O3 -msse2 -fPIC -Wall -Wextra -Wno-unused-parameter -Wno-unknown-pragmas -pedantic   -o allreduce_base.o src/allreduce_base.cc
+src/allreduce_base.cc:138:32: warning: format specifies type 'unsigned long *'
+      but the argument has type 'uint64_t *' (aka 'unsigned long long *')
+      [-Wformat]
+  int n = sscanf(val, "%lu%c", &amount, &unit);
+                       ~~~     ^~~~~~~
+                       %llu
+1 warning generated.
+clang-omp++ -c -O3 -msse2 -fPIC -Wall -Wextra -Wno-unused-parameter -Wno-unknown-pragmas -pedantic   -o allreduce_robust.o src/allreduce_robust.cc
+clang-omp++ -c -O3 -msse2 -fPIC -Wall -Wextra -Wno-unused-parameter -Wno-unknown-pragmas -pedantic   -o engine.o src/engine.cc
+ar cr lib/librabit.a allreduce_base.o allreduce_robust.o engine.o
+clang-omp++ -c -Wall -O3 -msse2  -Wno-unknown-pragmas -fPIC -fopenmp -o dmlc_simple.o src/io/dmlc_simple.cpp
+clang-omp++ -Wall -O3 -msse2  -Wno-unknown-pragmas -fPIC -fopenmp -o xgboost updater.o gbm.o io.o main.o subtree/rabit/lib/librabit.a dmlc_simple.o -pthread -lm
+clang: warning: argument unused during compilation: '-pthread'
+clang-omp++ -Wall -O3 -msse2  -Wno-unknown-pragmas -fPIC -fopenmp -fPIC -shared -o wrapper/libxgboostwrapper.so wrapper/xgboost_wrapper.cpp updater.o gbm.o io.o subtree/rabit/lib/librabit.a dmlc_simple.o -pthread -lm
+Successfully build multi-thread xgboost
+$
+@tqchen
+Owner
+tqchen commented on May 1
+ok, that was a thing that I fixed, I will try fix this one as well.
+@fyearsfyears referenced this issue on May 1
+ Merged
+update build instruction in OS X #281
+@tqchen
+Owner
+tqchen commented on May 1
+Thanks this is helpful!
+@tqchentqchen closed this on May 6
+
+
+
