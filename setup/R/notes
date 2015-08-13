@@ -1,0 +1,37 @@
+Benchmark BLAS: http://www.r-bloggers.com/faster-r-through-better-blas/
+
+Replace BLAS
+OpenBLAS: ln -sf /usr/local/Cellar/openblas/0.2.14_1/lib/libopenblas.dylib /Library/Frameworks/R.framework/Resources/lib/libRblas.dylib
+
+Mac's BLAS:
+
+Zachary Mayer
+July 10, 2013 at 10:19 am
+
+For reference, mac users can use Apple's version of BLAS in the accelerate framework using:
+cd /Library/Frameworks/R.framework/Resources/lib
+ln -sf /System/Library/Frameworks/Accelerate.framework/Frameworks/vecLib.framework/Versions/Current/libBLAS.dylib libRblas.dylib
+
+
+
+You can go back to the default BLAS using:
+cd /Library/Frameworks/R.framework/Resources/lib
+ln -sf libRblas.0.dylib libRblas.dylib
+
+
+
+For me (on R 3):
+Regular BLAS: 141 seconds (2.35 minutes)
+Apple's BLAS: 43 seconds (0.71 minutes)
+
+For more info, read here:
+http://r.research.att.com/man/RMacOSX-FAQ.html#Which-BLAS-is-used-and-how-can-it-be-changed_003f
+
+and here:
+https://groups.google.com/forum/#!topic/r-sig-mac/k4rDRRdtNwE
+
+Note that R 3.0 no longer includes libRblas.vecLib.dylib, but you can still link against the system version of libBLAS.
+
+
+cuBLAS: /Developer/NVIDIA/CUDA-7.0/lib ...  libnvblas.dylib
+

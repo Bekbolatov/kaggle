@@ -1,0 +1,6 @@
+brew tap homebrew/science
+brew install openblas
+
+
+
+

@@ -1,0 +1,38 @@
+   R Benchmark 2.5
+   ===============
+Number of times each test is run__________________________:  3
+
+   I. Matrix calculation
+   ---------------------
+Creation, transp., deformation of a 2500x2500 matrix (sec):  0.841666666666667
+2400x2400 normal distributed random matrix ^1000____ (sec):  0.146333333333333
+Sorting of 7,000,000 random values__________________ (sec):  0.613000000000002
+2800x2800 cross-product matrix (b = a' * a)_________ (sec):  1.16333333333333
+Linear regr. over a 3000x3000 matrix (c = a \ b')___ (sec):  0.454333333333333
+                      --------------------------------------------
+                 Trimmed geom. mean (2 extremes eliminated):  0.616583266864284
+
+   II. Matrix functions
+   --------------------
+FFT over 2,400,000 random values____________________ (sec):  0.216333333333334
+Eigenvalues of a 640x640 random matrix______________ (sec):  0.568
+Determinant of a 2500x2500 random matrix____________ (sec):  0.127666666666665
+Cholesky decomposition of a 3000x3000 matrix________ (sec):  0.193666666666668
+Inverse of a 1600x1600 random matrix________________ (sec):  0.157333333333334
+                      --------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated):  0.187499316057862
+
+   III. Programmation
+   ------------------
+3,500,000 Fibonacci numbers calculation (vector calc)(sec):  0.217000000000001
+Creation of a 3000x3000 Hilbert matrix (matrix calc) (sec):  0.221999999999999
+Grand common divisors of 400,000 pairs (recursion)__ (sec):  0.309333333333332
+Creation of a 500x500 Toeplitz matrix (loops)_______ (sec):  0.273666666666666
+Escoufier's method on a 45x45 matrix (mixed)________ (sec):  0.274000000000001
+                      --------------------------------------------
+                Trimmed geom. mean (2 extremes eliminated):  0.255333900669925
+
+
+Total time for all 15 tests_________________________ (sec):  5.77766666666667
+Overall mean (sum of I, II and III trimmed means/3)_ (sec):  0.309053239865063
+                      --- End of test ---

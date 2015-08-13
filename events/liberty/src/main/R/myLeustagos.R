@@ -34,14 +34,38 @@ test <- read.csv('/Users/rbekbolatov/data/kaggle/liberty/test.csv')
 train$more1 <- train$T1_V1 - train$T1_V2 * 0.8
 test$more1 <- test$T1_V1 - test$T1_V2 * 0.8
 
+train$more1_p <- train$T1_V1 + train$T1_V2 * 0.8
+test$more1_p <- test$T1_V1 + test$T1_V2 * 0.8
+
 train$more2 <- train$T2_V2 - train$T2_V15 * 3.5
 test$more2 <- test$T2_V2 - test$T2_V15 * 3.5
 
-train$more3 <- train$T2_V4 + train$T2_V9
-test$more3 <- test$T2_V4 + test$T2_V9
+train$more2_p <- train$T2_V2 + train$T2_V15 * 3.5
+test$more2_p <- test$T2_V2 + test$T2_V15 * 3.5
+
+train$more3 <- train$T2_V4 - train$T2_V9
+test$more3 <- test$T2_V4 - test$T2_V9
+
+train$more3_p <- train$T2_V4 + train$T2_V9
+test$more3_p <- test$T2_V4 + test$T2_V9
 
 train$more4 <- train$T2_V1 - train$T2_V7*2.5
 test$more4 <- test$T2_V1 - test$T2_V7*2.5
+
+train$more4_p <- train$T2_V1 + train$T2_V7*2.5
+test$more4_p <- test$T2_V1 + test$T2_V7*2.5
+
+train$more5 <- train$T2_V4 / (train$T2_V9 + 1)
+test$more5 <- test$T2_V4 / (test$T2_V9 + 1)
+
+train$more6 <- train$T2_V1 / (train$T2_V7 + 1)
+test$more6 <- test$T2_V1 / (test$T2_V7 + 1)
+
+train$more7 <- train$T2_V2 / (train$T2_V15 + 1)
+test$more7 <- test$T2_V2 / (test$T2_V15 + 1)
+
+train$more8 <- train$T1_V1 / (train$T1_V2 + 1)
+test$more8 <- test$T1_V1 / (test$T1_V2 + 1)
 
 
 # extract id
@@ -70,20 +94,16 @@ test <- as.matrix(test)
 xgtest <- xgb.DMatrix(data = test)
 
 
-offset <- 5000
+offset <- 10000
 
-logfile <- data.frame(shrinkage=c(0.04, 0.03, 0.03, 0.03, 0.02), #c(0.0005), #
-                      rounds = c(140, 160, 170, 140, 180),
-                      depth = c(8, 7, 9, 10, 10), #c(3), #
-                      gamma = c(0, 0, 0, 0, 0),
-                      min.child = c(5, 5, 5, 5, 5),
-                      colsample.bytree = c(0.7, 0.6, 0.65, 0.6, 0.85), #c(1), #
-                      subsample = c(1, 0.9, 0.95, 1, 0.6)) #c(1), # 
+logfile <- data.frame(shrinkage=        c(0.01, 0.01), # c(0.005,  0.010,  0.015,  0.020,  0.025,  0.030 ),
+                      depth =           rep(7, times=6),  #c(3,    4,     5,     6,    7,     8  ),
+                      min.child =        c(5,     5,     5 ,   5,    5,     5  ),
+                      colsample.bytree = c(0.5,   0.5,  0.5,     0.5,   0.5,  0.5 ), #c(1), #
+                      subsample =        c(1,     1,     1,     1,     1,    1   )) #c(1), # 
 
-
-# this will use default evaluation metric = rmse which we want to minimise
-models <- 5 #5, 5
-repeats <- 2 #10, 20
+models <- 2
+repeats <- 10 #10, 20
 startTime = as.numeric(Sys.time())
 yhat.test  <- rep(0,nrow(xgtest))
 avgValScore <- 0
@@ -91,12 +111,17 @@ scores <- matrix(numeric(0), repeats, models)
 for (j in 1:repeats) {
   for (i in 1:models) {
     cat("\n", format(Sys.time(), "%a %b %d %X %Y"), ":", j,  "/", i, "\n")
-    set.seed(j*1187 + i*83 + 30001)
-    
+    set.seed(j*1187 + 0*i*83 + 30002)
+    ####   ONLY TRY SAME DATASET TO COMPARE
     shuf = sample(1:n)
-    
-    xgtrain <- xgb.DMatrix(data = train[shuf[offset:n],], label= train_y[shuf[offset:n]])
-    xgval <-  xgb.DMatrix(data = train[shuf[1:offset],], label= train_y[shuf[1:offset]])
+    if (i == 1) {
+      xgtrain <- xgb.DMatrix(data = train[shuf[offset:n],], label= train_y[shuf[offset:n]])
+      xgval <-  xgb.DMatrix(data = train[shuf[1:offset],], label= train_y[shuf[1:offset]])
+    } else {
+      xgtrain <- xgb.DMatrix(data = train[shuf[offset:n],c(1:10, 12:15, 19:32)], label= train_y[shuf[offset:n]])
+      xgval <-  xgb.DMatrix(data = train[shuf[1:offset],c(1:10, 12:15, 19:32)], label= train_y[shuf[1:offset]])
+      
+    }
     
     watchlist <- list(val=xgval, train=xgtrain)
     
@@ -127,15 +152,69 @@ for (j in 1:repeats) {
     score.prev <- score.new
     
   }
+  scores.compare.lessfeats <- scores[1:j,]
+  boxplot(scores.compare.lessfeats, use.cols=T)
 }
 yhat.test <-  yhat.test/(models*repeats)
 avgValScore <- avgValScore / (models*repeats)
 cat("\n avg score:", avgValScore)
 
-scores.plain.linear <- scores
 
-mean(scores.plain.rank)
-mean(scores.plain.linear)
 
-#write.csv(data.frame(Id=id.test, Hazard=yhat.test),"/Users/rbekbolatov/data/kaggle/liberty/subms/chippy_behar_0810_1.csv",row.names=F, quote=FALSE)
+#write.csv(data.frame(Id=id.test, Hazard=yhat.test),"/Users/rbekbolatov/data/kaggle/liberty/subms/leustagos_1_only_second_third.csv",row.names=F, quote=FALSE)
+
+# boxplot(scores.compare.models, use.cols=T)
+# mean(scores.compare.models)
+
+
+
+mean(scores.plain)
+mean(scores.plain.noextra)
+mean(scores.plain.extra.more1)
+mean(scores.plain.extra.more2)
+mean(scores.plain.extra.more3)
+mean(scores.plain.extra.more4)
+mean(scores.plain.extra.more5)
+mean(scores.plain.extra.more6)
+mean(scores.plain.extra.more7)
+mean(scores.plain.extra.more8)
+mean(scores.plain.extra.more1.more)
+mean(scores.plain.lower.colsample)
+
+# > mean(scores.plain)
+# [1] 0.3870998
+# > mean(scores.plain.noextra) *
+# [1] 0.3878905  
+# > mean(scores.plain.extra.more1) **
+# [1] 0.3883197
+# > mean(scores.plain.extra.more2)
+# [1] 0.3872126
+# > mean(scores.plain.extra.more3)
+# [1] 0.3876028
+# > mean(scores.plain.extra.more4)
+# [1] 0.3858249
+# > mean(scores.plain.extra.more5)
+# [1] 0.3865417
+# > mean(scores.plain.extra.more6)
+# [1] 0.3868264
+# > mean(scores.plain.extra.more7)
+# [1] 0.3875499
+
+# > colMeans(scores.plain.extra.more1.more)
+# [1] 0.3835696 0.3908961 0.3820005 0.3847195 0.3859035
+# > mean(scores.plain.shrinkage.half)
+# [1] 0.3874439
+
+
+# boxplot(scores.plain.shrinkage.half, use.cols=T)
+# boxplot(scores.plain.noextra, use.cols=T)
+# boxplot(scores.plain.extra.more1.more, use.cols=T)
+# 
+# boxplot(scores.plain.lower.colsample, use.cols=T)
+# 
+# boxplot(cbind(scores.plain.noextra, scores.plain.lower.colsample[1:3,]), use.cols=T, col=c(rep("green", times = 5), rep("blue", 5)))
+
+
+
+
 
