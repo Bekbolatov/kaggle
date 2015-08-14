@@ -81,6 +81,7 @@ id.test <- test$Id
 test$Id <- NULL
 train$Id <- NULL
 y <- train$Hazard ^ 0.75
+y_classes_2 <- train$Hazard 
 train$Hazard <- NULL
 
 # save this 

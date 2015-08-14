@@ -3,7 +3,6 @@ library(xgboost)
 library(data.table)
 library(Matrix)
 library(caret)
-library(e1071)
 
 # build Gini functions for use in custom xgboost evaluation metric
 SumModelGini <- function(solution, submission) {
@@ -67,11 +66,38 @@ encodeCollapseABCD <- function(vtrain, newvariable, variables) {
   vtrain
 }
 
+
+encodeBlockT1_V7_8_12 <- function(vtrain) {
+  vtrain$T1_V7_A <- ifelse(vtrain$T1_V7 == 'A', 1, 0)
+#   vtrain$T1_V7_C <- ifelse(vtrain$T1_V7 == 'C', 1, 0)
+#   vtrain$T1_V8_C <- ifelse(vtrain$T1_V8 == 'C', 1, 0)
+#   vtrain$T1_V12_C <- ifelse(vtrain$T1_V12 == 'C', 1, 0)
+  vtrain$T1_V7_8_12_C <- ifelse(vtrain$T1_V7 == 'C' | vtrain$T1_V8 == 'C' | vtrain$T1_V12 == 'C', 1, 0)
+#   vtrain$T1_V7 <- NULL
+#   vtrain$T1_V8 <- NULL
+#   vtrain$T1_V9 <- NULL
+  vtrain
+}
+
+encodeBlockT1_V16 <- function(vtrain) {
+  vtrain$T1_V16_ABC <- ifelse(vtrain$T1_V16 == 'A' | vtrain$T1_V16 == 'B' | vtrain$T1_V16 == 'C', 1, 0)
+  vtrain$T1_V16_R <- ifelse(vtrain$T1_V16 == 'R' , 1, 0)
+  # vtrain$T1_V16 <- NULL
+  vtrain
+}
+
+
+
 orig_train <- read.csv('/Users/rbekbolatov/data/kaggle/liberty/train.csv')
 orig_test <- read.csv('/Users/rbekbolatov/data/kaggle/liberty/test.csv')
 
 #### DATA SAMPLE
 #orig_train <- orig_train[orig_train$Hazard < 20, ]
+
+library(rpart)
+mm <- rpart(Hazard ~. - Id, data=orig_train, control=rpart.control(cp=0.001, minbucket=100))
+library(treeClust)
+orig_train$leaf <- as.factor(rpart.predict.leaves(mm, orig_train, type="where"))
 
 
 n <- nrow(orig_train)
@@ -82,7 +108,6 @@ id.test <- test$Id
 test$Id <- NULL
 train$Id <- NULL
 y <- train$Hazard ^ 0.75
-y_classes_2 <- ifelse(train$Hazard > 10, 1, 0) 
 train$Hazard <- NULL
 
 # save this 
@@ -92,29 +117,18 @@ parsed_test <- test
 
 
 
+  ############             ##################################################################
+ ############     START   ##################################################################
 ############             ##################################################################
-############     START   ##################################################################
-############             ##################################################################
 
-
-
-# as sparse matrices, with OHE  ======  [1] ===========
-train <- parsed_train
-test <- parsed_test
-train_sparse_matrix <- sparse.model.matrix(~ . -1, data = train)
-test_sparse_matrix <- sparse.model.matrix(~ . -1, data = test)
-#x2 <- t(apply(x, 1, combn, 2, prod))
-
-
-xgtest_dmatrix_from_sparse_matrix <- xgb.DMatrix(data = test_sparse_matrix)
 # as matrices, with mean Hz ======  [2] ===========
 train <- parsed_train
 test <- parsed_test
 
-train <- encodeBinary(train, c('T1_V6', 'T1_V17', 'T2_V3', 'T2_V11', 'T2_V12'))
-test <- encodeBinary(test, c('T1_V6', 'T1_V17', 'T2_V3', 'T2_V11', 'T2_V12'))
-train <- encodeOHEABCD(train, c('T1_V7', 'T1_V8', 'T1_V12'))
-test <- encodeOHEABCD(test, c('T1_V7', 'T1_V8', 'T1_V12'))
+train <- encodeBlockT1_V7_8_12(train)
+test <- encodeBlockT1_V7_8_12(test)
+train <- encodeBlockT1_V16(train)
+test <- encodeBlockT1_V16(test)
 
 for (i in 1:ncol(train)) {
   if (class(train[,i])=="factor") {
@@ -131,53 +145,10 @@ test_matrix <- as.matrix(test)
 xgtest_dmatrix_from_matrix <- xgb.DMatrix(data = test_matrix)
 
 ################################################################################
-train <- train_sparse_matrix
-test <- test_sparse_matrix
-# train <- train_matrix
-# test <- test_matrix
+train <- train_matrix
+test <- test_matrix
+################################################################################
 
-########################   TRY ADDING EXTRA FEATURE (=SVM score for label: hz > 10) ########################################################
-
-offset <- 5000
-
-t_train <- train[1:(n-offset),]
-t_test <- train[(n-offset + 1):n,]
-y_svm_labels <- y_classes_2[1:(n-offset)]
-
-y_train <- y[1:(n-offset)]
-y_test <- y[(n-offset + 1):n]
-
-msvm <- svm(t_train, y_svm_labels)
-msvm.fitted <- fitted(msvm)
-msvm.pred <- predict(msvm, t_test)
-
-tt_train <- cbind(t_train, msvm.fitted)
-tt_test <- cbind(t_test, msvm.pred)
-
-xgtrain <- xgb.DMatrix(data = as.matrix(tt_train), label= as.matrix(y_train))
-xgval <-  xgb.DMatrix(data = as.matrix(tt_test), label= as.matrix(y_test))
-
-
-xgboost.mod <- xgb.train(data = xgtrain, feval = evalgini, nround = 2500, 
-                         early.stop.round = 50, maximize = TRUE,
-                         print.every.n = 150,
-                         watchlist=watchlist, 
-                         nthread = 8,
-                         eta = 0.04,
-                         subsample = 1,
-                         max.depth = 8,
-                         objective = "reg:linear",
-                         min.child.weight= 50,
-                         colsample_bytree = 0.7,
-                         gamma = 0)
-
-yhat.test  <- yhat.test + predict(xgboost.mod, xgtest, ntreelimit = xgboost.mod$bestInd)
-
-validateNumber <- data.frame(label=y_test)
-validateNumber$pred <- predict(xgboost.mod, xgval, ntreelimit = xgboost.mod$bestInd)
-score.new <- NormalizedGini(validateNumber$label, validateNumber$pred)
-
-##################################################################################
 
 offset <- 5000
 # train & tune --skipped--
@@ -185,13 +156,15 @@ logfile <- data.frame(shrinkage=c(0.04, 0.03, 0.03, 0.03, 0.02),
                       rounds = c(140, 160, 170, 140, 180),
                       depth = c(8, 7, 9, 10, 10),
                       gamma = c(0, 0, 0, 0, 0),
-                      min.child = 10*c(5, 5, 5, 5, 5),    ################### WARNIN  
+                      min.child = c(5, 5, 5, 5, 5),    ################### WARNIN  
                       colsample.bytree = c(0.7, 0.6, 0.65, 0.6, 0.85),
                       subsample = c(1, 0.9, 0.95, 1, 0.6))
 
 
+#par(mfrow=c(2,2))
+
 models <- 5
-repeats <- 2
+repeats <- 5
 
 yhat.test  <- rep(0,n)
 avgValScore <- 0
@@ -202,7 +175,7 @@ startTime = as.numeric(Sys.time())
 for (j in 1:repeats) {
   for (i in 1:models) {
     cat("\n", format(Sys.time(), "%a %b %d %X %Y"), ":", j,  "/", i, "\n")
-    set.seed(j*1187 + i*83 + 30002)
+    set.seed(j*2187 + i*83 + 30002)
     # set.seed(j*1187 + 0*i*83 + 30002)
     ####   ONLY TRY SAME DATASET TO COMPARE
     shuf = sample(1:n)
@@ -213,30 +186,30 @@ for (j in 1:repeats) {
     raw_set_cv <- train[shuf[1:offset],]
     raw_set_cv_labels <- y[shuf[1:offset]]
     
-    #     set_cv <- raw_set_cv[raw_set_cv_labels < sqrt(60),]
-    #     set_cv_labels <- raw_set_cv_labels[raw_set_cv_labels < sqrt(60)]
+#     set_cv <- raw_set_cv[raw_set_cv_labels < sqrt(60),]
+#     set_cv_labels <- raw_set_cv_labels[raw_set_cv_labels < sqrt(60)]
     set_cv <- raw_set_cv
     set_cv_labels <- raw_set_cv_labels
     
     xgtrain <- xgb.DMatrix(data = set_tr, label= set_tr_labels)
     xgval <-  xgb.DMatrix(data = set_cv, label= set_cv_labels)
     xgtest <- test
-    
+
     watchlist <- list(val=xgval, train=xgtrain)
     
     xgboost.mod <- xgb.train(data = xgtrain, feval = evalgini, nround = 2500, 
-                             early.stop.round = 50, maximize = TRUE,
-                             print.every.n = 150,
-                             watchlist=watchlist, 
-                             nthread = 8,
-                             eta = logfile$shrinkage[i],
-                             subsample = logfile$subsample[i],
-                             max.depth = logfile$depth[i],
-                             objective = "reg:linear",
-                             min.child.weight= logfile$min.child[i],
-                             colsample_bytree = logfile$colsample.bytree[i],
-                             gamma = 0)
-    
+                           early.stop.round = 50, maximize = TRUE,
+                           print.every.n = 150,
+                           watchlist=watchlist, 
+                           nthread = 8,
+                           eta = logfile$shrinkage[i],
+                           subsample = logfile$subsample[i],
+                           max.depth = logfile$depth[i],
+                           objective = "reg:linear",
+                           min.child.weight= logfile$min.child[i],
+                           colsample_bytree = logfile$colsample.bytree[i],
+                           gamma = 0)
+
     yhat.test  <- yhat.test + predict(xgboost.mod, xgtest, ntreelimit = xgboost.mod$bestInd)
     
     validateNumber <- data.frame(label=set_cv_labels)
@@ -253,7 +226,7 @@ for (j in 1:repeats) {
     
   }
   scores.compare <- scores[1:j,]
-  print('Avg score so far:', mean(scores[1:j,]))
+  cat('Avg score so far:', mean(scores[1:j,]))
   boxplot(scores.compare, use.cols=T)
 }
 yhat.test <-  yhat.test/(models*repeats)
@@ -261,7 +234,7 @@ avgValScore <- avgValScore / (models*repeats)
 cat("\n avg score:", avgValScore)
 
 
-#write.csv(data.frame(Id=id.test, Hazard=yhat.test),"/Users/rbekbolatov/data/kaggle/liberty/subms/chippy_behar_uw3_2.csv",row.names=F, quote=FALSE)
+write.csv(data.frame(Id=id.test, Hazard=yhat.test),"/Users/rbekbolatov/data/kaggle/liberty/subms/pzad1_2.csv",row.names=F, quote=FALSE)
 scores.compare.seed1 <- scores.compare
 
 # badCVScore = 0.3716892

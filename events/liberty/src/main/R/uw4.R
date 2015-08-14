@@ -138,45 +138,80 @@ test <- test_sparse_matrix
 
 ########################   TRY ADDING EXTRA FEATURE (=SVM score for label: hz > 10) ########################################################
 
-offset <- 5000
+offset <- 15000
 
 t_train <- train[1:(n-offset),]
 t_test <- train[(n-offset + 1):n,]
-y_svm_labels <- y_classes_2[1:(n-offset)]
+t_train_labels <- y[1:(n-offset)]
+t_test_labels <- y[(n-offset + 1):n]
+#y_svm_labels <- y_classes_2[1:(n-offset)]
 
 y_train <- y[1:(n-offset)]
 y_test <- y[(n-offset + 1):n]
 
-msvm <- svm(t_train, y_svm_labels)
-msvm.fitted <- fitted(msvm)
-msvm.pred <- predict(msvm, t_test)
+
+
+set.seed(8)
+rf <- randomForest(as.matrix(t_train), t_train_labels, ntree=200, imp=TRUE, sampsize=10000, do.trace=TRUE)
+validateNumber <- data.frame(label=y_test)
+validateNumber$pred <- predict(rf, as.matrix(t_test))
+score.new <- NormalizedGini(validateNumber$label, validateNumber$pred)
+print(score.new)
+
+
+#msvm <- svm(t_train, y_svm_labels)
+# msvm <- svm(t_train, t_train_labels)
+# msvm.fitted <- fitted(msvm)
+# msvm.pred <- predict(msvm, t_test)
+
 
 tt_train <- cbind(t_train, msvm.fitted)
 tt_test <- cbind(t_test, msvm.pred)
 
-xgtrain <- xgb.DMatrix(data = as.matrix(tt_train), label= as.matrix(y_train))
-xgval <-  xgb.DMatrix(data = as.matrix(tt_test), label= as.matrix(y_test))
+# tt_train <- t_train
+# tt_test <- t_test
+
+# xgtrain <- xgb.DMatrix(data = as.matrix(tt_train), label= as.matrix(y_train))
+# xgval <-  xgb.DMatrix(data = as.matrix(tt_test), label= as.matrix(y_test))
+#=============================================================================
+xgtrain <- xgb.DMatrix(data = t_train, label= y_train)
+xgval <-  xgb.DMatrix(data = t_test, label= y_test)
 
 
+watchlist <- list(val=xgval, train=xgtrain)
 xgboost.mod <- xgb.train(data = xgtrain, feval = evalgini, nround = 2500, 
-                         early.stop.round = 50, maximize = TRUE,
+                         early.stop.round = 150, maximize = TRUE,
                          print.every.n = 150,
                          watchlist=watchlist, 
                          nthread = 8,
                          eta = 0.04,
-                         subsample = 1,
+                         subsample = 0.5,
                          max.depth = 8,
                          objective = "reg:linear",
                          min.child.weight= 50,
-                         colsample_bytree = 0.7,
+                         colsample_bytree = 1,
                          gamma = 0)
 
-yhat.test  <- yhat.test + predict(xgboost.mod, xgtest, ntreelimit = xgboost.mod$bestInd)
+levelOneInput <- data.frame(label=y_train)
+levelOneInput$first <- predict(xgboost.mod, xgtrain, ntreelimit = xgboost.mod$bestInd)
+levelOneInput$second <- msvm.fitted
+
+levelOneInputVal <-  data.frame(label=y_test)
+levelOneInputVal$first <- predict(xgboost.mod, xgval, ntreelimit = xgboost.mod$bestInd)
+levelOneInputVal$second <- msvm.pred
+
+model1 <- lm(label ~ first + second, data=levelOneInput)
+
+
+library(gam)
+
 
 validateNumber <- data.frame(label=y_test)
-validateNumber$pred <- predict(xgboost.mod, xgval, ntreelimit = xgboost.mod$bestInd)
+#validateNumber$pred <- predict(xgboost.mod, xgval, ntreelimit = xgboost.mod$bestInd)
+validateNumber$pred <- predict(model1, levelOneInputVal)
+# validateNumber$pred <- tt_test[,97]
 score.new <- NormalizedGini(validateNumber$label, validateNumber$pred)
-
+print(score.new)
 ##################################################################################
 
 offset <- 5000
