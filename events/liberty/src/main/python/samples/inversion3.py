@@ -7,7 +7,6 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn import metrics
 from sklearn.preprocessing import StandardScaler
 from sklearn.grid_search import GridSearchCV,RandomizedSearchCV
-from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from scipy.stats import randint, uniform
 from sklearn.metrics import mean_squared_error
 from sklearn.datasets import load_boston

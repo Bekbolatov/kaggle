@@ -1,4 +1,5 @@
 from lasagne.layers import InputLayer, DenseLayer, DropoutLayer
+from lasagne import NeuralNet
 
 
 def NeuralNetConstructor(num_features):

@@ -60,6 +60,6 @@ for i in range(5):
 total_lb_preds /= total_runs
 #   end
 
-submission = pd.DataFrame({"Id": lb_indices, "Hazard": total_lb_preds})
+submission = pd.DataFrame({"Id": lb_ind, "Hazard": total_lb_preds})
 submission = submission.set_index('Id')
 submission.to_csv('../subm/xgboost_in_python2.csv')
