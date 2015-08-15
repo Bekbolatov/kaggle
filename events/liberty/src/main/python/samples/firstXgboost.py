@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 from sklearn import preprocessing
-import xgboost as xgb
+import xgboost_avhi as xgb
 from sklearn.feature_extraction import DictVectorizer
 from gini import gini
 

@@ -16,6 +16,12 @@ def normalized_gini(solution, submission):
     normalized_gini = gini(solution, submission)/gini(solution, solution)
     return normalized_gini
 
+def gini_eval(submission, solutionDmat):
+    solution = solutionDmat.get_label()
+    normalized_gini = gini(solution, submission)/gini(solution, solution)
+    return ("Gini", normalized_gini)
+
+
 def gini2(y_true, y_pred):
     assert y_true.shape == y_pred.shape
     n_samples = y_true.shape[0]

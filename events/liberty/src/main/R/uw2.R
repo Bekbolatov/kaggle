@@ -180,13 +180,22 @@ for (j in 1:repeats) {
     xgtest <- test
 
     watchlist <- list(val=xgval, train=xgtrain)
-    
+
+    params["objective"] = "reg:linear"
+    params["eta"] = 0.005
+    params["min_child_weight"] = 6
+    params["subsample"] = 0.7
+    params["colsample_bytree"] = 0.7
+    params["scale_pos_weight"] = 1
+    params["silent"] = 1
+    params["max_depth"] = 9
+
     xgboost.mod <- xgb.train(data = xgtrain, feval = evalgini, nround = 2500, 
-                           early.stop.round = 50, maximize = TRUE,
+                           early.stop.round = 120, maximize = TRUE,
                            print.every.n = 150,
                            watchlist=watchlist, 
                            nthread = 8,
-                           eta = logfile$shrinkage[i],
+                           eta = 0.005,
                            subsample = logfile$subsample[i],
                            max.depth = logfile$depth[i],
                            objective = "reg:linear",
