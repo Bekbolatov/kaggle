@@ -29,7 +29,7 @@ def add_metafeatures(dat_x, dat_y, cv_x, lb_x, n_folds=5, n_neighbors=101, xgb_p
         dst_y_fold = dat_y[dst_index]
 
         #  KNN Regressor preds
-        print("+ KNN regressor")
+        print("+ KNN regressor with %d neighbors" % (n_neighbors))
         neigh_model = KNeighborsRegressor(n_neighbors=n_neighbors, weights='distance', p=1)
         neigh_model.fit(src_X_fold, src_y_fold)
         dst_KNN_metafeatures = neigh_model.predict(dst_X_fold)
