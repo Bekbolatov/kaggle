@@ -39,7 +39,29 @@ cv_x = dat_x[test_index, :]
 cv_y = dat_y[test_index]
 
 
-
+'''
+info = {
+                'epoch': num_epochs_past + epoch,
+                'train_loss': avg_train_loss,
+                'train_loss_best': best_train_loss == avg_train_loss,
+                'valid_loss': avg_valid_loss,
+                'valid_loss_best': best_valid_loss == avg_valid_loss,
+                'valid_accuracy': avg_valid_accuracy,
+                'dur': time() - t0,
+                }
+'''
+def on_epoch_finished(obj, train_history):
+    if (len(train_history) > 20):
+        inLastEight = any([h['valid_loss_best'] for h in  train_history[-8:-1]] +
+                          [train_history[-1]['valid_loss'] < train_history[-2]['valid_loss'],
+                           train_history[-1]['valid_loss'] < train_history[-3]['valid_loss'],
+                           train_history[-1]['valid_loss'] < train_history[-4]['valid_loss'],
+                           train_history[-2]['valid_loss'] < train_history[-3]['valid_loss'],
+                           train_history[-2]['valid_loss'] < train_history[-4]['valid_loss'],
+                           ])
+        if not inLastEight:
+            print("Stopping early")
+            raise StopIteration
 
 
 def NeuralNetConstructor(num_features):
@@ -49,9 +71,9 @@ def NeuralNetConstructor(num_features):
         ('hidden1', DenseLayer),
         ('dropout1', DropoutLayer),
         ('hidden2', DenseLayer),
-        # ('dropout2', DropoutLayer),
-        # ('hidden3', DenseLayer),
-        # ('dropout3', DropoutLayer),
+        ('dropout2', DropoutLayer),
+        ('hidden3', DenseLayer),
+        ('dropout3', DropoutLayer),
         ('output', DenseLayer)]
 
     net0 = NeuralNet(
@@ -66,18 +88,20 @@ def NeuralNetConstructor(num_features):
 
         dropout1_p=0.2,
 
-        hidden2_num_units=70,
+        hidden2_num_units=50,
         hidden2_nonlinearity=sigmoid,
 
-        # dropout2_p=0.1,
+        dropout2_p=0.2,
 
-        # hidden3_num_units=8,
-        # hidden3_nonlinearity=sigmoid,
+        hidden3_num_units=20,
+        hidden3_nonlinearity=sigmoid,
 
-        # dropout3_p=0.4,
+        dropout3_p=0.1,
 
         output_num_units=1,
         output_nonlinearity=linear,
+
+        on_epoch_finished=[on_epoch_finished],
 
         objective_loss_function=squared_error,
         update=nesterov_momentum,
@@ -86,7 +110,7 @@ def NeuralNetConstructor(num_features):
         train_split=TrainSplit(eval_size=0.1),
         verbose=1,
         regression=True,
-        max_epochs=40)
+        max_epochs=300)
 
     return net0
 

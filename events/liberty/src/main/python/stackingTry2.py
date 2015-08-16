@@ -43,6 +43,6 @@ print("\nAverage CV error: %0.6f" % (cv_pred_error))
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": subm_y})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/stacked_KNN_XGB_to_XGB_NN_run_test_' + run_id + '.csv')
+submission.to_csv('../subm/stacked_KNN_XGB_to_NN_NN_run_test_' + run_id + '.csv')
 
 
