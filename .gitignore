@@ -2,3 +2,8 @@
 .idea/
 target/
 
+*.pyc
+
+**/metafeatures/*.dat
+**/subm/*.csv
+

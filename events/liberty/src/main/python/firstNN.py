@@ -81,12 +81,12 @@ def NeuralNetConstructor(num_features):
 
         objective_loss_function=squared_error,
         update=nesterov_momentum,
-        update_learning_rate=0.0003,
+        update_learning_rate=0.001,
         update_momentum=0.9,
         train_split=TrainSplit(eval_size=0.1),
         verbose=1,
         regression=True,
-        max_epochs=100)
+        max_epochs=40)
 
     return net0
 
