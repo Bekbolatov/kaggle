@@ -3,7 +3,8 @@ import pandas as pd
 import xgboost as xgb
 
 from gini import normalized_gini, gini_eval
-from metafeatures import add_metafeatures
+from metafeatures import add_metafeatures_KNN, add_metafeatures_XGB
+
 
 dataloc = "metafeatures/"
 
@@ -39,7 +40,9 @@ def meta_fit(dat_x, dat_y, train_index, cv_index, lb_x, main_fold_id, read_cache
         subm_x = np.reshape(np.fromfile(subm_x_file), (-1, 113))
     else:
         print("generating metafeatures")
-        train_x, train_y, cv_x, subm_x = add_metafeatures(train_x_raw, train_y_raw, cv_x_raw, subm_x_raw, n_folds=5, n_neighbors=100, xgb_params=xgb_params.iloc[5,:].to_dict(), random_state=101)
+        train_x_1, train_y_1, cv_x_1, subm_x_1 = add_metafeatures_KNN(train_x_raw, train_y_raw, cv_x_raw, subm_x_raw, n_neighbors=100, random_state=101, skip_right=0)
+        train_x, train_y, cv_x, subm_x = add_metafeatures_XGB(train_x_1, train_y_1, cv_x_1, subm_x_1, n_folds=5,  xgb_params=xgb_params.iloc[5,:].to_dict(), random_state=101, skip_right=1)
+
         train_x.tofile(train_x_file)
         train_y.tofile(train_y_file)
         cv_x.tofile(cv_x_file)
