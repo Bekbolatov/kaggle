@@ -7,7 +7,7 @@ import theano
 import xgboost as xgb
 import time
 
-from metaregressor import on_epoch_finished
+from lasagne_helper import on_epoch_finished
 
 from gini import normalized_gini, gini_eval
 
@@ -33,15 +33,14 @@ from gini import normalized_gini
 
 
 
-
-def add_metafeatures_KNN(dat_x, dat_y, cv_x, lb_x, n_neighbors=101, skip_right=0):
+def add_metafeatures_KNN(dat_x, dat_y, cv_x, lb_x, base_ncols, n_neighbors=101):
     print("KNN regressor with %d neighbors" % (n_neighbors))
     print (time.strftime("%H:%M:%S"))
     ncols = dat_x.shape[1]
 
     model = KNeighborsRegressor(n_neighbors=n_neighbors, weights='uniform', p=1)
-    model.fit(dat_x[:, :(ncols - skip_right)], dat_y)
-    dat_metafeatures = model.predict(dat_x[:, :(ncols - skip_right)]) - dat_y/n_neighbors
+    model.fit(dat_x[:, :base_ncols], dat_y)
+    dat_metafeatures = model.predict(dat_x[:, :base_ncols]) - dat_y/n_neighbors
     print("KNN pred error: {:.4f}".format(normalized_gini(dat_y, dat_metafeatures)))
 
     print("Calculating KNN metafeatures")
@@ -58,77 +57,46 @@ def add_metafeatures_KNN(dat_x, dat_y, cv_x, lb_x, n_neighbors=101, skip_right=0
     print (time.strftime("%H:%M:%S"))
     return (dst_dat_x, dst_dat_y, dst_cv_x, dst_lb_x)
 
+class feature_gen_XGB:
 
-def add_metafeatures_XGB(dat_x, dat_y, cv_x, lb_x, n_folds=5, xgb_params={}, random_state=101, skip_right=0):
-    print("XGB regressor")
-    print (time.strftime("%H:%M:%S"))
-    ncols = dat_x.shape[1]
+    def __init__(self, xgb_params={}):
+        self.xgb_params = xgb_params
 
-    dst_dat_x = np.empty((0, dat_x.shape[1] + 1))
-    dst_dat_y = np.empty(0)
-    dst_cv_x_metafeatures = np.zeros((cv_x.shape[0], 1))
-    dst_lb_x_metafeatures = np.zeros((lb_x.shape[0], 1))
-
-    print("Generating metafeatures using %d folds." % (n_folds))
-    fold_number = 1
-    kf = KFold(n=dat_x.shape[0], n_folds=n_folds, shuffle=True, random_state=random_state)
-    for src_index, dst_index in kf:
-        print("\n   [XGB metafeatures gen fold %d/%d]\n" %(fold_number, n_folds))
-        src_X_fold = dat_x[src_index, :]
-        src_y_fold = dat_y[src_index]
-        dst_X_fold = dat_x[dst_index, :]
-        dst_y_fold = dat_y[dst_index]
-
-        # XGBoost preds
-        xgb_src_fold = xgb.DMatrix(src_X_fold[:, :(ncols - skip_right)], label=src_y_fold)
-        xgb_dst_fold = xgb.DMatrix(dst_X_fold[:, :(ncols - skip_right)], label=dst_y_fold)
-        watchlist = [(xgb_dst_fold, 'val')]
-
-        xgb_model = xgb.train(xgb_params, xgb_src_fold, num_boost_round=3000,
+    def fit(self, train_x, train_y, cv_x, cv_y):
+        xgb_train = xgb.DMatrix(train_x, label=train_y)
+        xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
+        watchlist = [(xgb_cv, 'val')]
+        model = xgb.train(self.xgb_params, xgb_train, num_boost_round=3000,
                           evals=watchlist,
                           feval=gini_eval,
                           verbose_eval=False,
-                          early_stopping_rounds=100)
+                          early_stopping_rounds=50)
+        return model
 
-        xgb_dat_metafeatures_fold = xgb_model.predict(xgb_dst_fold, ntree_limit=xgb_model.best_iteration)
-        print("  Fold XGB pred error: {:.4f}".format(normalized_gini(dst_y_fold, xgb_dat_metafeatures_fold)))
-        print("  Calculating XGB metafeatures")
-        print("  ... cv")
-        xgb_cv_metafeatures = xgb_model.predict(xgb.DMatrix(cv_x[:, :(ncols - skip_right)]))
-        print("  ... lb")
-        xgb_lb_metafeatures = xgb_model.predict(xgb.DMatrix(lb_x[:, :(ncols - skip_right)]))
+    def predict(self, model, x):
+        y = model.predict(xgb.DMatrix(x), ntree_limit=model.best_iteration)
+        return y
 
-        # Merge metafeatures
-        print("  Merging metafeatures")
-        dst_dat_x = np.vstack((dst_dat_x, np.hstack((dst_X_fold, xgb_dat_metafeatures_fold.reshape(-1, 1)))))
-        dst_dat_y = np.hstack((dst_dat_y, dst_y_fold))
-        dst_cv_x_metafeatures += xgb_cv_metafeatures.reshape(-1, 1)
-        dst_lb_x_metafeatures += xgb_lb_metafeatures.reshape(-1, 1)
 
-        print (time.strftime("%H:%M:%S"))
-        fold_number += 1
+class feature_gen_NN:
 
-    dst_cv_x = np.hstack((cv_x, dst_cv_x_metafeatures/n_folds))
-    dst_lb_x = np.hstack((lb_x, dst_lb_x_metafeatures/n_folds))
+    def __init__(self, learning_rate=0.02):
+        self.learning_rate = learning_rate
 
-    return (dst_dat_x, dst_dat_y, dst_cv_x, dst_lb_x)
+    def predict(self, model, x):
+        preds = model.predict(np.asarray(x, dtype = theano.config.floatX))[:, 0]
+        return preds
 
-def add_metafeatures_NN_class1(dat_x, dat_y, cv_x, lb_x, n_folds=5, random_state=101, skip_right=0):
-    pass
+    def fit(self, train_x, train_y, cv_x, cv_y):
+        train_x = np.asarray(train_x, dtype = theano.config.floatX)
+        train_y = np.asarray(train_y, dtype = theano.config.floatX)
 
-def add_metafeatures_NN(dat_x, dat_y, cv_x, lb_x, n_folds=5, random_state=101, skip_right=0):
-    print("NN regressor")
-    print (time.strftime("%H:%M:%S"))
-    ncols = dat_x.shape[1]
+        model = self.nn_constructor(train_x.shape[1])
+        model.fit(train_x, train_y)
 
-    random_state = random_state + 107
+        return model
 
-    dst_dat_x = np.empty((0, dat_x.shape[1] + 1))
-    dst_dat_y = np.empty(0)
-    dst_cv_x_metafeatures = np.zeros((cv_x.shape[0], 1))
-    dst_lb_x_metafeatures = np.zeros((lb_x.shape[0], 1))
-
-    def NeuralNetConstructor(num_features):
+    def nn_constructor(self, num_features):
         layers0 = [
             ('input', InputLayer),
             ('dropout0', DropoutLayer),
@@ -139,89 +107,66 @@ def add_metafeatures_NN(dat_x, dat_y, cv_x, lb_x, n_folds=5, random_state=101, s
 
         net0 = NeuralNet(
             layers=layers0,
-
             input_shape=(None, num_features),
-
-            dropout0_p=0.2,
-
-            hidden1_num_units=70,
+            dropout0_p=0.3,
+            hidden1_num_units=20, #20,
             hidden1_nonlinearity=sigmoid,
-
             dropout1_p=0.2,
-
-            hidden2_num_units=70,
+            hidden2_num_units=24, #24,
             hidden2_nonlinearity=sigmoid,
-
             output_num_units=1,
             output_nonlinearity=linear,
-
             on_epoch_finished=[on_epoch_finished],
             objective_loss_function=squared_error,
             update=nesterov_momentum,
-            update_learning_rate=0.0005,
+            update_learning_rate=self.learning_rate,
             update_momentum=0.9,
             train_split=TrainSplit(eval_size=0.1),
             verbose=1,
             regression=True,
             max_epochs=200)
-
         return net0
 
-    print("Generating metafeatures using %d folds." % (n_folds))
+
+def add_metafeature_from_folds(dat_x, dat_y, cv_x, lb_x, base_ncols, feature_gen, n_folds=5, random_state=101):
+    print (time.strftime("%H:%M:%S"))
+
+    dst_dat_x = np.empty((0, dat_x.shape[1] + 1))
+    dst_dat_y = np.empty(0)
+    dst_cv_x_metafeatures = np.zeros(cv_x.shape[0])
+    dst_lb_x_metafeatures = np.zeros(lb_x.shape[0])
+
+    cv_x_cropped = cv_x[:, :base_ncols]
+    lb_x_cropped = lb_x[:, :base_ncols]
+
+    print("generating metafeatures using %d folds." % (n_folds))
     fold_number = 1
     kf = KFold(n=dat_x.shape[0], n_folds=n_folds, shuffle=True, random_state=random_state)
     for src_index, dst_index in kf:
-        print("\n   [NN metafeatures gen fold %d/%d]\n" %(fold_number, n_folds))
-        src_X_fold = dat_x[src_index, :]
+        print("\n   [metafeatures gen fold %d/%d]\n" %(fold_number, n_folds))
+        src_x_fold = dat_x[src_index, :]
         src_y_fold = dat_y[src_index]
-        dst_X_fold = dat_x[dst_index, :]
+        dst_x_fold = dat_x[dst_index, :]
         dst_y_fold = dat_y[dst_index]
 
-        xgb_src_fold = xgb.DMatrix(src_X_fold[:, :(ncols - skip_right)], label=src_y_fold)
-        xgb_dst_fold = xgb.DMatrix(dst_X_fold[:, :(ncols - skip_right)], label=dst_y_fold)
-        watchlist = [(xgb_dst_fold, 'val')]
+        src_x_fold_cropped = src_x_fold[:, :base_ncols]
+        dst_x_fold_cropped = dst_x_fold[:, :base_ncols]
 
-        scaler = preprocessing.StandardScaler().fit(src_X_fold[:, :(ncols - skip_right)])
-        train_x = scaler.transform(src_X_fold[:, :(ncols - skip_right)])
-        cv_x = scaler.transform(dst_X_fold[:, :(ncols - skip_right)])
-        subm_x = scaler.transform(lb_x[:, :(ncols - skip_right)])
+        model = feature_gen.fit(src_x_fold_cropped, src_y_fold, dst_x_fold_cropped, dst_y_fold)
+        dst_x_pred_fold = feature_gen.predict(model, dst_x_fold_cropped)
+        print("pred error: {:.4f}".format(normalized_gini(dst_y_fold, dst_x_pred_fold)))
+        cv_x_pred_fold = feature_gen.predict(model, cv_x_cropped)
+        lb_x_pred_fold = feature_gen.predict(model, lb_x_cropped)
 
-        train_x = np.asarray(train_x, dtype = theano.config.floatX)
-        train_y = np.asarray(train_y, dtype = theano.config.floatX)
-
-        network = NeuralNetConstructor(train_x.shape[1])
-        network.fit(train_x, train_y)
-
-        cv_y_preds = network.predict(np.asarray(cv_x, dtype = theano.config.floatX))
-        subm_y_preds = network.predict(np.asarray(subm_x, dtype = theano.config.floatX))[:, 0]
-
-        cv_pred_error = normalized_gini(cv_y, cv_y_preds)
-        print("NN CV score: {:.6f} (normalized gini).".format(cv_pred_error))
-
-        return (cv_pred_error, subm_y_preds)
-
-
-
-
-        xgb_dat_metafeatures_fold = xgb_model.predict(xgb_dst_fold, ntree_limit=xgb_model.best_iteration)
-        print("  Fold XGB pred error: {:.4f}".format(normalized_gini(dst_y_fold, xgb_dat_metafeatures_fold)))
-        print("  Calculating XGB metafeatures")
-        print("  ... cv")
-        xgb_cv_metafeatures = xgb_model.predict(xgb.DMatrix(cv_x[:, :(ncols - skip_right)]))
-        print("  ... lb")
-        xgb_lb_metafeatures = xgb_model.predict(xgb.DMatrix(lb_x[:, :(ncols - skip_right)]))
-
-        # Merge metafeatures
-        print("  Merging metafeatures")
-        dst_dat_x = np.vstack((dst_dat_x, np.hstack((dst_X_fold, xgb_dat_metafeatures_fold.reshape(-1, 1)))))
+        dst_dat_x = np.vstack((dst_dat_x, np.hstack((dst_x_fold, dst_x_pred_fold.reshape(-1, 1)))))
         dst_dat_y = np.hstack((dst_dat_y, dst_y_fold))
-        dst_cv_x_metafeatures += xgb_cv_metafeatures.reshape(-1, 1)
-        dst_lb_x_metafeatures += xgb_lb_metafeatures.reshape(-1, 1)
+        dst_cv_x_metafeatures += cv_x_pred_fold
+        dst_lb_x_metafeatures += lb_x_pred_fold
 
         print (time.strftime("%H:%M:%S"))
         fold_number += 1
 
-    dst_cv_x = np.hstack((cv_x, dst_cv_x_metafeatures/n_folds))
-    dst_lb_x = np.hstack((lb_x, dst_lb_x_metafeatures/n_folds))
+    dst_cv_x = np.hstack((cv_x, (dst_cv_x_metafeatures/n_folds).reshape(-1, 1)))
+    dst_lb_x = np.hstack((lb_x, (dst_lb_x_metafeatures/n_folds).reshape(-1, 1)))
 
     return (dst_dat_x, dst_dat_y, dst_cv_x, dst_lb_x)

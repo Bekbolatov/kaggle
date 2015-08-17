@@ -25,7 +25,7 @@ total_val_error = 0.0
 total_runs = 0.0
 total_lb_preds = np.repeat(0.0, lb_ind.shape[0])
 
-kf = KFold(n=dat_x.shape[0], n_folds=10, shuffle=True, random_state=101 + i)
+kf = KFold(n=dat_x.shape[0], n_folds=10, shuffle=True, random_state=101)
 for train_index, test_index in kf:
     train_X = dat_x.iloc[train_index, :]
     train_y = dat_y[train_index]
@@ -52,9 +52,11 @@ for train_index, test_index in kf:
         print("Avg Validation Score: {:.10f} (normalized gini).".format(total_val_error / total_runs))
 
         total_lb_preds += model.predict(xglb, ntree_limit=model.best_iteration)
+    print("Completed %d runs." % total_runs)
 
 total_lb_preds /= total_runs
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": total_lb_preds})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/xgboost_in_python2.csv')
+submission.to_csv('../subm/only_xgboost_2.csv')
+

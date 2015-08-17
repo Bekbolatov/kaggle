@@ -4,6 +4,8 @@ target/
 
 *.pyc
 
-**/metafeatures/*.dat
-**/subm/*.csv
+metafeatures
+*/metafeatures/*.dat
+*/subm/*.csv
+*.csv
 

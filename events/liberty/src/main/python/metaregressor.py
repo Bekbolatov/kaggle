@@ -3,8 +3,7 @@ import pandas as pd
 import xgboost as xgb
 
 from gini import normalized_gini, gini_eval
-from metafeatures import add_metafeatures_KNN, add_metafeatures_XGB, add_metafeatures_NN, add_metafeatures_NN_class1
-
+from metafeatures import add_metafeatures_KNN, add_metafeature_from_folds, feature_gen_XGB, feature_gen_NN
 
 from nolearn.lasagne import NeuralNet, TrainSplit
 
@@ -24,19 +23,21 @@ from dataset import get_data
 
 warnings.simplefilter('always', NonBLASDotWarning)
 from gini import normalized_gini
-
+from lasagne_helper import on_epoch_finished
+from numpy import log, exp, sqrt, power
 
 dataloc = "metafeatures/"
 
 
 def meta_fit(dat_x, dat_y, train_index, cv_index, lb_x, main_fold_id, read_cached=True):
-    final_num_features = 113
+    final_num_features = 111 + 3
     train_x = dat_x[train_index, :]
     train_y = dat_y[train_index]
     cv_x = dat_x[cv_index, :]
     cv_y = dat_y[cv_index]
     subm_x = lb_x
 
+    print(cv_y[0:5])
     train_x_file = dataloc + "fold_" + main_fold_id +"_train_x.dat"
     train_y_file = dataloc + "fold_" + main_fold_id +"_train_y.dat"
     cv_x_file = dataloc + "fold_" + main_fold_id +"_cv_x.dat"
@@ -50,27 +51,43 @@ def meta_fit(dat_x, dat_y, train_index, cv_index, lb_x, main_fold_id, read_cache
         subm_x = np.reshape(np.fromfile(subm_x_file), (-1, final_num_features))
     else:
         print("generating metafeatures")
-        train_x, train_y, cv_x, subm_x = add_metafeatures_KNN(train_x, train_y, cv_x, subm_x, n_neighbors=100, skip_right=0)
-        train_x, train_y, cv_x, subm_x = add_metafeatures_KNN(train_x, train_y, cv_x, subm_x, n_neighbors=20, skip_right=1)
-        train_x, train_y, cv_x, subm_x = add_metafeatures_XGB(train_x, train_y, cv_x, subm_x, n_folds=5, xgb_params=xgb_params.iloc[5,:].to_dict(), random_state=101, skip_right=2)
-        train_x, train_y, cv_x, subm_x = add_metafeatures_NN(train_x, train_y, cv_x, subm_x, random_state=101, skip_right=3)
-        train_x, train_y, cv_x, subm_x = add_metafeatures_NN_class1(train_x, train_y, cv_x, subm_x, random_state=101, skip_right=4)
+        base_ncols = train_x.shape[0]
+
+        train_x, train_y, cv_x, subm_x = add_metafeatures_KNN(train_x, train_y, cv_x, subm_x, n_neighbors=100, base_ncols=base_ncols)
+
+        train_x, train_y, cv_x, subm_x = add_metafeature_from_folds(train_x, train_y, cv_x, subm_x, base_ncols=base_ncols,
+                                                                    feature_gen=feature_gen_NN(0.025),
+                                                                    n_folds=2, random_state=101)
+
+        train_x, train_y, cv_x, subm_x = add_metafeature_from_folds(train_x, train_y, cv_x, subm_x, base_ncols=base_ncols,
+                                                                    feature_gen=feature_gen_XGB(xgb_params.iloc[5, :].to_dict()),
+                                                                    n_folds=2, random_state=104)
+
+#        train_x, train_y, cv_x, subm_x = add_metafeatures_KNN(train_x, train_y, cv_x, subm_x, n_neighbors=10, base_ncols=base_ncols)
+
+
+        print("train_x.shape %s" % str(train_x.shape))
+        print("train_y.shape %s" % str(train_y.shape))
+        print("cv_x.shape %s" % str(cv_x.shape))
+        print("subm_x.shape %s" % str(subm_x.shape))
 
         train_x.tofile(train_x_file)
         train_y.tofile(train_y_file)
         cv_x.tofile(cv_x_file)
         subm_x.tofile(subm_x_file)
 
-    nn_cv_pred_error, nn_subm_preds = regressor_NN(train_x, train_y, cv_x, cv_y, subm_x, middle_dropout=0.2)
-    xgb_cv_pred_error, xgb_subm_preds = regressor_NN(train_x, train_y, cv_x, cv_y, subm_x, middle_dropout=0.25)
-    ## CHANGE back to XGB
-    #xgb_cv_pred_error, xgb_subm_preds = regressor_XGB(train_x, train_y, cv_x, cv_y, subm_x)
+    # ADD
+    #nn_cv_pred_error, nn_subm_preds = regressor_NN(train_x, train_y, cv_x, cv_y, subm_x, middle_dropout=0.2)
+    #xgb_cv_pred_error, xgb_subm_preds  = regressor_NN(train_x, train_y, cv_x, cv_y, subm_x, middle_dropout=0.2)
+    xgb_cv_pred_error, xgb_subm_preds = regressor_XGB(train_x, train_y, cv_x, cv_y, subm_x)
+    # REMOVE
+    nn_cv_pred_error, nn_subm_preds = (xgb_cv_pred_error, xgb_subm_preds)
 
     cv_pred_error = (xgb_cv_pred_error + nn_cv_pred_error)/2
     subm_preds = (xgb_subm_preds + nn_subm_preds)/2
 
     print("Finished fold: %s" %(main_fold_id))
-    return (cv_pred_error, subm_preds)
+    return (cv_pred_error, subm_preds, xgb_cv_pred_error, xgb_subm_preds, nn_cv_pred_error, nn_subm_preds)
 
 
 xgb_params = pd.DataFrame({
@@ -131,9 +148,9 @@ def regressor_NN(train_x, train_y, cv_x, cv_y, subm_x, middle_dropout=0.2):
 
             input_shape=(None, num_features),
 
-            dropout0_p=0.2,
+            dropout0_p=0.3,
 
-            hidden1_num_units=70,
+            hidden1_num_units=75,
             hidden1_nonlinearity=sigmoid,
 
             dropout1_p=middle_dropout,
@@ -147,16 +164,18 @@ def regressor_NN(train_x, train_y, cv_x, cv_y, subm_x, middle_dropout=0.2):
             on_epoch_finished=[on_epoch_finished],
             objective_loss_function=squared_error,
             update=nesterov_momentum,
-            update_learning_rate=0.0005,
+            update_learning_rate=0.02,
             update_momentum=0.9,
             train_split=TrainSplit(eval_size=0.1),
             verbose=1,
             regression=True,
-            max_epochs=200)
+            max_epochs=300)
 
         return net0
 
     network = NeuralNetConstructor(train_x.shape[1])
+
+    print(train_y[0:5])
 
     network.fit(train_x, train_y)
 
@@ -168,15 +187,3 @@ def regressor_NN(train_x, train_y, cv_x, cv_y, subm_x, middle_dropout=0.2):
 
     return (cv_pred_error, subm_y_preds)
 
-def on_epoch_finished(obj, train_history):
-    if (len(train_history) > 20):
-        inLastEight = any([h['valid_loss_best'] for h in  train_history[-7:-1]] +
-                          [train_history[-1]['valid_loss'] < train_history[-2]['valid_loss'],
-                           train_history[-1]['valid_loss'] < train_history[-3]['valid_loss'],
-                           train_history[-1]['valid_loss'] < train_history[-4]['valid_loss'],
-                           train_history[-2]['valid_loss'] < train_history[-3]['valid_loss'],
-                           train_history[-2]['valid_loss'] < train_history[-4]['valid_loss'],
-                           ])
-        if not inLastEight:
-            print("Stopping early")
-            raise StopIteration
