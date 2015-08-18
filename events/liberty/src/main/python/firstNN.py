@@ -5,9 +5,9 @@ import warnings
 from lasagne.layers import DenseLayer
 from lasagne.layers import InputLayer
 from lasagne.layers import DropoutLayer
-from lasagne.updates import nesterov_momentum
+from lasagne.updates import nesterov_momentum, sgd
 from lasagne.objectives import squared_error
-from lasagne.nonlinearities import sigmoid, rectify, softmax, linear
+from lasagne.nonlinearities import sigmoid, rectify, softmax, linear, tanh
 from sklearn import preprocessing
 from sklearn.cross_validation import train_test_split
 from sklearn.utils.validation import NonBLASDotWarning
@@ -31,7 +31,7 @@ dat_y = dat_y_orig #** 0.75
 dat_x = np.asarray(dat_x, dtype = theano.config.floatX)
 dat_y = np.asarray(dat_y, dtype = theano.config.floatX)
 
-train_index, test_index = train_test_split(range(dat_x.shape[0]), test_size=0.15, random_state=104)
+train_index, test_index = train_test_split(range(dat_x.shape[0]), test_size=0.10, random_state=103)
 
 train_x = dat_x[train_index, :]
 train_y = dat_y[train_index]
@@ -55,9 +55,7 @@ def on_epoch_finished(obj, train_history):
         inLastEight = any([h['valid_loss_best'] for h in  train_history[-8:-1]] +
                           [train_history[-1]['valid_loss'] < train_history[-2]['valid_loss'],
                            train_history[-1]['valid_loss'] < train_history[-3]['valid_loss'],
-                           train_history[-1]['valid_loss'] < train_history[-4]['valid_loss'],
                            train_history[-2]['valid_loss'] < train_history[-3]['valid_loss'],
-                           train_history[-2]['valid_loss'] < train_history[-4]['valid_loss'],
                            ])
         if not inLastEight:
             print("Stopping early")
@@ -83,12 +81,12 @@ def NeuralNetConstructor(num_features):
 
         dropout0_p=0.3,
 
-        hidden1_num_units=40, #75, #20,
+        hidden1_num_units=20, #75, #20,
         hidden1_nonlinearity=sigmoid,
 
         dropout1_p=0.2,
 
-        hidden2_num_units=40, #70, #24,
+        hidden2_num_units=20, #70, #24,
         hidden2_nonlinearity=sigmoid,
 
         # dropout2_p=0.2,
@@ -99,18 +97,18 @@ def NeuralNetConstructor(num_features):
         # dropout3_p=0.1,
 
         output_num_units=1,
-        output_nonlinearity=linear,
+        output_nonlinearity=None,
 
         on_epoch_finished=[on_epoch_finished],
 
         objective_loss_function=squared_error,
         update=nesterov_momentum,
-        update_learning_rate=0.02, #0.02,
+        update_learning_rate=0.005, #0.02,
         update_momentum=0.9,
         train_split=TrainSplit(eval_size=0.1),
         verbose=1,
         regression=True,
-        max_epochs=300)
+        max_epochs=50)
 
     return net0
 
@@ -120,5 +118,6 @@ network = NeuralNetConstructor(111)
 network.fit(train_x, train_y)
 
 cv_preds = network.predict(cv_x)
+sum(np.power( cv_preds - cv_y.reshape(-1, 1), 2 ))/cv_y.shape[0]
 
 print(normalized_gini(cv_y, cv_preds))

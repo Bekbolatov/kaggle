@@ -18,7 +18,6 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
 import pylab as pl
 
-
 params = pd.DataFrame({
     "objective": "reg:linear",
     "eta": [0.04, 0.03, 0.03, 0.03, 0.02],
@@ -35,7 +34,7 @@ params = pd.DataFrame({
 dat_x, dat_y, lb_x, lb_ind = get_data()
 
 dat_x['label'] = dat_y
-#dat_x = dat_x[dat_x['label'] > 1]
+dat_x = dat_x[dat_x['label'] < 6]
 dat_y = np.asarray(dat_x['label'])
 dat_x = dat_x.drop('label', axis=1)
 
@@ -47,19 +46,27 @@ cv_x = dat_x.iloc[test_index, :]
 cv_y = dat_y[test_index]
 
 # model 1
-# xgb_train = xgb.DMatrix(train_x, label=train_y)
-# xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
-# watchlist = [(xgb_cv, 'cv')]
-# model = xgb.train(params.iloc[0,:].to_dict(), xgb_train, num_boost_round = 3000,
-#                   evals = watchlist,
-#                   feval = gini_eval,
-#                   verbose_eval = False,
-#                   early_stopping_rounds=50)
-# cv_y_preds = model.predict(xgb_cv, ntree_limit=model.best_iteration)
+xgb_train = xgb.DMatrix(train_x, label=train_y)
+xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
+watchlist = [(xgb_cv, 'cv')]
+model = xgb.train(params.iloc[0,:].to_dict(), xgb_train, num_boost_round = 3000,
+                  evals = watchlist,
+                  feval = gini_eval,
+                  verbose_eval = False,
+                  early_stopping_rounds=50)
+cv_y_preds = model.predict(xgb_cv, ntree_limit=model.best_iteration)
+
+sum(np.power( cv_y_preds - cv_y, 2 ))/cv_y.shape[0]
+
+cv_y_preds[1:3]
+cv_y[1:3]
+
 # model 2
-model = KNeighborsRegressor(n_neighbors=15, weights='distance', p=1)
+model = KNeighborsRegressor(n_neighbors=1, weights='distance', p=1)
 model.fit(train_x, train_y)
 cv_y_preds = model.predict(cv_x)
+
+
 # evaluate
 
 cv_error = normalized_gini(cv_y, cv_y_preds)
