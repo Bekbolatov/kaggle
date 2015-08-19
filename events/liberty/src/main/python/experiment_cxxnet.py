@@ -7,7 +7,7 @@ import pylab as pl
 from gini import normalized_gini
 from dataset import get_data
 
-data_root = '/Users/rbekbolatov/repos/gh/dmlc/cxxnet/example/liberty'
+data_root = '/Users/rbekbolatov/repos/gh/bekbolatov/kaggle/events/liberty/cxxnet_proj'
 dat_x, dat_y, lb_x, lb_ind = get_data()
 
 def labels(n):
@@ -21,10 +21,10 @@ def labels(n):
         return 9
 
 def labels_1_2(n):
-    if n < 3:
-        0
+    if n < 11:
+        return 0
     else:
-        1
+        return 1
 
 nplabels = np.vectorize(labels_1_2)
 
@@ -64,12 +64,19 @@ cv_x.to_csv(data_root + '/data/cv.csv', index=False, header=False)
 train_x = train_x.drop('label', axis=1)
 cv_x = cv_x.drop('label', axis=1)
 
+
+
 #  cxxnet run
 #  ...
 #  cxxnet done
 
+
+
 cxxnet_preds = pd.read_csv(data_root + '/out/pred.csv', header=None)
-cv_error = normalized_gini(cv_y, np.asarray(cxxnet_preds[0]))
+print(max(cxxnet_preds))
+
+cxxnet_preds[0] == cv_y
+cv_error = normalized_gini(cv_y, np.asarray(cxxnet_preds[0], dtype='float32'))
 print("Validation Sample Score: {:.10f} (normalized gini).".format(cv_error))
 print("MSE = %0.3f" % (sum(np.power( np.asarray(cxxnet_preds[0]) - cv_y, 2 ))/cv_y.shape[0]))
 

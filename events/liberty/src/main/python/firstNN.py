@@ -6,7 +6,7 @@ from lasagne.layers import DenseLayer
 from lasagne.layers import InputLayer
 from lasagne.layers import DropoutLayer
 from lasagne.updates import nesterov_momentum, sgd
-from lasagne.objectives import squared_error
+from lasagne.objectives import squared_error, categorical_crossentropy, binary_crossentropy
 from lasagne.nonlinearities import sigmoid, rectify, softmax, linear, tanh
 from sklearn import preprocessing
 from sklearn.cross_validation import train_test_split
@@ -22,14 +22,22 @@ from numpy import log
 print("Loading datasets")
 dat_x_orig, dat_y_orig, lb_x_orig, lb_ind = get_data()
 
+def labels_1_2(n):
+    if n < 11:
+        return 0
+    else:
+        return 1
+
+nplabels = np.vectorize(labels_1_2)
+
 scaler = preprocessing.StandardScaler().fit(dat_x_orig)
 dat_x = scaler.transform(dat_x_orig)
 lb_x = scaler.transform(lb_x_orig)
-dat_y = dat_y_orig #** 0.75
+dat_y = nplabels(dat_y_orig) #** 0.75
 
 
 dat_x = np.asarray(dat_x, dtype = theano.config.floatX)
-dat_y = np.asarray(dat_y, dtype = theano.config.floatX)
+dat_y = np.asarray(dat_y, dtype = theano.config.intX)
 
 train_index, test_index = train_test_split(range(dat_x.shape[0]), test_size=0.10, random_state=103)
 
@@ -78,6 +86,7 @@ def NeuralNetConstructor(num_features):
         layers=layers0,
 
         input_shape=(None, num_features),
+        input_nonlinearity=sigmoid,
 
         dropout0_p=0.3,
 
@@ -91,33 +100,78 @@ def NeuralNetConstructor(num_features):
 
         # dropout2_p=0.2,
 
-        # hidden3_num_units=20,
+        # hidden3_num_units=2,
         # hidden3_nonlinearity=sigmoid,
 
         # dropout3_p=0.1,
 
-        output_num_units=1,
-        output_nonlinearity=None,
+        output_num_units=2,
+        output_nonlinearity=softmax,
 
         on_epoch_finished=[on_epoch_finished],
 
-        objective_loss_function=squared_error,
+        objective_loss_function=binary_crossentropy, #binary_crossentropy, #squared_error, categorical_crossentropy
         update=nesterov_momentum,
         update_learning_rate=0.005, #0.02,
         update_momentum=0.9,
         train_split=TrainSplit(eval_size=0.1),
         verbose=1,
-        regression=True,
-        max_epochs=50)
+        regression=False,
+        max_epochs=5)
 
     return net0
 
 #add bias
 network = NeuralNetConstructor(111)
-
 network.fit(train_x, train_y)
 
 cv_preds = network.predict(cv_x)
-sum(np.power( cv_preds - cv_y.reshape(-1, 1), 2 ))/cv_y.shape[0]
 
-print(normalized_gini(cv_y, cv_preds))
+# output: 2 units, no softmax, then labels are (1, 0) form -  predictions are (0.93, 0.001)
+
+#  >>>
+def labels_transform(n):
+    if n == 0:
+        return (1, 0)
+    else:
+        return (0, 1)
+
+ltran = np.vectorize(labels_transform)
+train_yy = ltran(train_y)
+train_yyy = np.asarray(np.c_[train_yy[0].ravel(), train_yy[1].ravel()], dtype=theano.config.floatX)
+network.fit(train_x, train_yyy)
+
+cv_yy = ltran(cv_y)
+cv_yyy = np.asarray(np.c_[cv_yy[0].ravel(), cv_yy[1].ravel()], dtype=theano.config.floatX)
+cv_preds_yyy = network.predict(cv_x)
+
+# <<<<
+network.fit(train_x, train_y)
+
+cv_preds = network.predict(cv_x)
+
+np.uint8
+
+
+#sum(np.power( cv_preds - cv_y.reshape(-1, 1), 2 ))/cv_y.shape[0]
+
+#print(normalized_gini(cv_y, cv_preds))
+
+def fds(x):
+    if x == 0:
+        return (1, 0, 0)
+    elif x == 1:
+        return (0, 1, 0)
+    else:
+        return (0, 0, 1)
+
+fdss = np.vectorize(fds)
+
+cvv_y = fdss(cv_y)
+
+
+cvv_y = fdss(train_y)
+train_y = np.asarray( np.c_[cvv_y[0].ravel(), cvv_y[1].ravel(), cvv_y[2].ravel()], dtype= theano.config.floatX)
+
+#############################
+
