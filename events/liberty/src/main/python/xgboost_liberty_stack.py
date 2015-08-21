@@ -26,14 +26,16 @@ import time
 
 # to try later:
 #  different y-transformation
+#  min-child 5->50?
 #  could it be just the single best parameters for all level 1 XGBs?
+#  add feature KNN: avg label of some neighbors, distances to some neighbors
 #  use classes
 #  can use something other than LR for blending?
 
 params = pd.DataFrame({
     "objective": "reg:linear",
     "eta": [0.04, 0.03, 0.03, 0.03, 0.02],
-    "min_child_weight": 5,
+    "min_child_weight": 50,
     "subsample": [1, 0.9, 0.95, 1, 1],  # changed last
     "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.6],
     "max_depth": [8, 7, 8, 7, 7],   #changed last two from 10 to 7
@@ -52,7 +54,7 @@ def evaluate(true_y, pred_y, label):
 dat_x_orig, dat_y_orig, lb_x_orig, lb_ind_orig = get_data()
 
 dat_x = dat_x_orig
-dat_y = dat_y_orig
+dat_y = dat_y_orig ** 0.75
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
@@ -131,6 +133,6 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug21_no_log_0.csv')
+submission.to_csv('../subm/Aug21_pow75_minchild50_2.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
