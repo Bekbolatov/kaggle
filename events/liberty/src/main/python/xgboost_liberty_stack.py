@@ -32,13 +32,24 @@ import time
 #  use classes
 #  can use something other than LR for blending?
 
+# params = pd.DataFrame({
+#     "objective": "reg:linear",
+#     "eta": [0.04, 0.03, 0.03, 0.03, 0.02],
+#     "min_child_weight": 50,
+#     "subsample": [1, 0.9, 0.95, 1, 1],  # changed last
+#     "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.6],
+#     "max_depth": [8, 7, 8, 7, 7],   #changed last two from 10 to 7
+#     "eval_metric": "auc",
+#     "scale_pos_weight": 1,
+#     "silent": 1
+# })
 params = pd.DataFrame({
     "objective": "reg:linear",
     "eta": [0.04, 0.03, 0.03, 0.03, 0.02],
     "min_child_weight": 50,
-    "subsample": [1, 0.9, 0.95, 1, 1],  # changed last
-    "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.6],
-    "max_depth": [8, 7, 8, 7, 7],   #changed last two from 10 to 7
+    "subsample": [1, 0.9, 0.95, 1, 0.6],
+    "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.85],
+    "max_depth": [8, 7, 9, 10, 10],
     "eval_metric": "auc",
     "scale_pos_weight": 1,
     "silent": 1
@@ -58,7 +69,7 @@ dat_y = dat_y_orig ** 0.75
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 5
+RUNS = 10
 MODELS = 5
 
 
@@ -133,6 +144,33 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug21_pow75_minchild50_2.csv')
+submission.to_csv('../subm/Aug21_pow75_minchild50__orig_10runs_4.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
+
+# Trying with 5 runs
+# base
+# Avg cv Gini:  pre-blend=0.37848, post-blend=0.38141
+# Avg cv MSE:   pre-blend=14.002,  post-blend=13.930
+# LB: 0.381599
+
+# + label pow 0.75
+# Avg cv Gini:  pre-blend=0.36284, post-blend=0.36499
+# Avg cv MSE:   pre-blend=3.215,  post-blend=3.203
+# LB: 0.384230
+
+# + min child 50
+# Avg cv Gini:  pre-blend=0.36546, post-blend=0.36910
+# Avg cv MSE:   pre-blend=3.204,  post-blend=3.193
+# LB: 0.384988
+
+# use orig params (Behroz)
+# Avg cv Gini:  pre-blend=0.36565, post-blend=0.36909
+# Avg cv MSE:   pre-blend=3.205,  post-blend=3.193
+# LB: 0.385928
+
+# Run the last with all 10x runs instead of 5x
+# Avg cv Gini:  pre-blend=0.37033, post-blend=0.37385
+# Avg cv MSE:   pre-blend=3.220,  post-blend=3.205
+# LB: 0.387498
+
