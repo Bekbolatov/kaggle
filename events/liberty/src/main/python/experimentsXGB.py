@@ -38,7 +38,7 @@ dat_x = dat_x[dat_x['label'] < 6]
 dat_y = np.asarray(dat_x['label'])
 dat_x = dat_x.drop('label', axis=1)
 
-train_index, test_index = train_test_split(range(dat_x.shape[0]), test_size=0.1, random_state=103)
+train_index, test_index = train_test_split(range(dat_x.shape[0]), test_size=0.1, random_state=107)
 
 train_x = dat_x.iloc[train_index, :]
 train_y = dat_y[train_index]
@@ -62,9 +62,9 @@ cv_y_preds[1:3]
 cv_y[1:3]
 
 # model 2
-model = KNeighborsRegressor(n_neighbors=1, weights='distance', p=1)
-model.fit(train_x, train_y)
-cv_y_preds = model.predict(cv_x)
+#model = KNeighborsRegressor(n_neighbors=1, weights='distance', p=1)
+#model.fit(train_x, train_y)
+#cv_y_preds = model.predict(cv_x)
 
 
 # evaluate
