@@ -25,11 +25,13 @@ import time
 
 
 # to try later:
-#  Add Faron's T2_V3 x T1_V7 interaction
-#  Combine T1_V7, T1_V8, T1_V12 when they are C
+#  OHE with interactions?
+#  Try lower eta
 #  + try eval metric  rmse instead of auc?
 #  + different y-transformation
 #  + min-child 5->50->60?
+#  Combine T1_V7, T1_V8, T1_V12 when they are C
+#  Add other interactions/drop?
 #  try increasing the size of cv - since it is used to tune combinations (in LR)
 #  could it be just the single best parameters for all level 1 XGBs?
 #  add feature KNN: avg label of some neighbors, distances to some neighbors
@@ -69,22 +71,22 @@ def evaluate(true_y, pred_y, label):
 dat_x_orig, dat_y_orig, lb_x_orig, lb_ind_orig = get_data()
 
 def label_to_(x):
-    return x ** 0.65
+    return x ** 0.50
 
 
 def label_from_(x):
-    return x ** (1.0/0.65)
+    return x ** (1.0/0.50)
 
 
-label_to = np.log # np.vectorize(label_to_)
-label_from = np.exp #np.vectorize(label_from_)
+label_to = np.vectorize(label_to_)
+label_from = np.vectorize(label_from_)
 
 dat_x = dat_x_orig
 dat_y =label_to(dat_y_orig)
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 2
+RUNS = 10
 MODELS = 5
 FOLDS = 10
 ITERATIONS = (RUNS/FOLDS + 1)
@@ -164,7 +166,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug22_pow75_minchild50_behroz_10runs_Qinchen_5fold___TEST___5.csv')
+submission.to_csv('../subm/Aug23_pow50_minchild50_behroz_10runs_Qinchen_10fold_repeat10x__TEST_0.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
@@ -220,8 +222,32 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # LB:  0.390023
 
 #################  Figured out what is going on with label ** 0.75 transformation - it is good - I was just using transformed labels to calculate scores.
+# Now checking if some other transform is better, with confidence
+#Avg cv Gini:  pre-blend=0.40224, post-blend=0.40494  # 0.75
+#Avg cv Gini:  pre-blend=0.40227, post-blend=0.40637  # 0.65
+#Avg cv Gini:  pre-blend=0.40255, post-blend=0.40699  # 0.50  *
+#Avg cv Gini:  pre-blend=0.40104, post-blend=0.40536  # 0.25
+#Avg cv Gini:  pre-blend=0.39971, post-blend=0.40409  # log
 
-#Avg cv Gini:  pre-blend=0.40224, post-blend=0.40494
-#Avg cv MSE:   pre-blend=16.297,  post-blend=16.162
-#Avg cv Gini:  pre-blend=0.40227, post-blend=0.40637
-#Avg cv Gini:  pre-blend=0.39971, post-blend=0.40409
+# Also try eta = 0.01
+#Avg cv Gini:  pre-blend=0.40388, post-blend=0.40551
+
+# Trying submission with y <- y ** 0.50 transform
+# Avg cv Gini:  pre-blend=0.39278, post-blend=0.39677  *
+# Avg cv MSE:   pre-blend=20.356,  post-blend=20.262
+# LB: 0.390334
+
+# Try removing all those 2nd order Qinchen interactions
+# Avg cv Gini:  pre-blend=0.38650, post-blend=0.38908
+
+# Without last two interactions:
+# Avg cv Gini:  pre-blend=0.39194, post-blend=0.39574  *
+
+
+
+
+
+
+
+
+
