@@ -95,5 +95,5 @@ total_lb_preds /= total_runs
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": total_lb_preds})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/KNN_feat_xgboost_2.csv')
+#submission.to_csv('../subm/KNN_feat_xgboost_2.csv')
 

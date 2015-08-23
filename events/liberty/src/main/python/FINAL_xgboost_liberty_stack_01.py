@@ -70,7 +70,7 @@ dat_y = dat_y_orig ** 0.75
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 5 ######### 10
+RUNS = 2 ######### 10
 MODELS = 5
 
 
@@ -145,11 +145,11 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug22_pow75_minchild50__orig_5runs_Qinchen_1.csv')
+submission.to_csv('../subm/Aug21_pow75_minchild50__orig_10runs__TEST_4.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
-# Trying with 5 runs
+# Trying with 5 runs on Aug 21 AM
 # base
 # Avg cv Gini:  pre-blend=0.37848, post-blend=0.38141
 # Avg cv MSE:   pre-blend=14.002,  post-blend=13.930

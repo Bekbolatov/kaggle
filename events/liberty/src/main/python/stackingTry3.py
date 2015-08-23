@@ -19,9 +19,9 @@ dat_x = scaler.transform(dat_x_orig)
 lb_x = scaler.transform(lb_x_orig)
 dat_y = dat_y_orig
 
-run_id = "3"
+run_id = "4"
 read_cached=True
-n_folds = 7
+n_folds = 2
 fold_number = 1
 kf = KFold(n=dat_x.shape[0], n_folds=n_folds, shuffle=True, random_state=1007)
 cv_pred_error = 0.0
