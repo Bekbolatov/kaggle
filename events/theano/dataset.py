@@ -61,6 +61,8 @@ def get_data():
     test_s = np.column_stack([test_s, np.multiply(test_s[:, 21], test_s[:, 25])])
     train_s = np.column_stack([train_s, np.multiply(train_s[:, 24], train_s[:, 25])])
     test_s = np.column_stack([test_s, np.multiply(test_s[:, 23], test_s[:, 24])])
+    #train_s = np.column_stack([train_s, np.multiply(train_s[:, 7], train_s[:, 18])])
+    #test_s = np.column_stack([test_s, np.multiply(test_s[:, 6], test_s[:, 17])])
 
     train_s = train_s.astype(float)
     test_s = test_s.astype(float)

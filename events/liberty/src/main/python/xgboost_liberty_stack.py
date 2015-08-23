@@ -25,6 +25,8 @@ import time
 
 
 # to try later:
+#  Add Faron's T2_V3 x T1_V7 interaction
+#  Combine T1_V7, T1_V8, T1_V12 when they are C
 #  + try eval metric  rmse instead of auc?
 #  + different y-transformation
 #  + min-child 5->50->60?
@@ -66,71 +68,86 @@ def evaluate(true_y, pred_y, label):
 
 dat_x_orig, dat_y_orig, lb_x_orig, lb_ind_orig = get_data()
 
+def label_to_(x):
+    return x ** 0.65
+
+
+def label_from_(x):
+    return x ** (1.0/0.65)
+
+
+label_to = np.log # np.vectorize(label_to_)
+label_from = np.exp #np.vectorize(label_from_)
+
 dat_x = dat_x_orig
-dat_y = dat_y_orig ** 0.75
+dat_y =label_to(dat_y_orig)
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 5 ######### 10
+RUNS = 2
 MODELS = 5
-FOLDS = 5
-
+FOLDS = 10
+ITERATIONS = (RUNS/FOLDS + 1)
 
 lb_blend_y_all = np.repeat(0.0, lb_ind.shape[0])
 cv_errors_all = np.empty([1, 2])
 cv_errors_blends = np.empty([1, 2])
 
 run_number = 0
-kf = KFold(n=dat_x.shape[0], n_folds=FOLDS, shuffle=True, random_state=2187)
-for seen_index, cv_index in kf:
-    run_number = run_number + 1
-    print("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
+for iteration in range(ITERATIONS):
+    kf = KFold(n=dat_x.shape[0], n_folds=FOLDS, shuffle=True, random_state=2187 + 87*iteration)
+    for seen_index, cv_index in kf:
+        run_number = run_number + 1
+        print("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
 
-    train_x = dat_x.iloc[seen_index]
-    train_y = dat_y[seen_index]
-    cv_x = dat_x.iloc[cv_index]
-    cv_y = dat_y[cv_index]
+        train_x = dat_x.iloc[seen_index]
+        train_y = dat_y[seen_index]
+        cv_x = dat_x.iloc[cv_index]
+        cv_y = dat_y[cv_index]
 
-    # DATA FOR XGB
-    xgb_train = xgb.DMatrix(train_x, label=train_y)
-    xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
-    xgb_lb = xgb.DMatrix(lb_x)
-    watchlist = [(xgb_cv, 'cv')]
+        # DATA FOR XGB
+        xgb_train = xgb.DMatrix(train_x, label=train_y)
+        xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
+        xgb_cv_val = xgb.DMatrix(cv_x, label=label_from(cv_y))
+        xgb_lb = xgb.DMatrix(lb_x)
+        watchlist = [(xgb_cv_val, 'cv')]
 
-    cv_blend_x = np.empty([1, cv_x.shape[0]])
-    lb_blend_x = np.empty([1, lb_x.shape[0]])
-    cv_errors = np.empty([1, 2])
+        cv_blend_x = np.empty([1, cv_x.shape[0]])
+        lb_blend_x = np.empty([1, lb_x.shape[0]])
+        cv_errors = np.empty([1, 2])
 
-    for model_number in range(MODELS):
-        model = xgb.train(params.iloc[model_number].to_dict(), xgb_train, num_boost_round = 3000,
-                          evals = watchlist,
-                          feval = gini_eval,
-                          verbose_eval = False,
-                          early_stopping_rounds=50)
+        for model_number in range(MODELS):
+            model = xgb.train(params.iloc[model_number].to_dict(), xgb_train, num_boost_round = 3000,
+                              evals = watchlist,
+                              feval = gini_eval,
+                              verbose_eval = False,
+                              early_stopping_rounds=50)
 
-        cv_y_preds = model.predict(xgb_cv, ntree_limit=model.best_iteration)
-        lb_y_preds = model.predict(xgb_lb, ntree_limit=model.best_iteration)
+            cv_y_preds = model.predict(xgb_cv, ntree_limit=model.best_iteration)
+            lb_y_preds = model.predict(xgb_lb, ntree_limit=model.best_iteration)
 
-        cv_errors = np.vstack((cv_errors, np.asarray(evaluate(cv_y, cv_y_preds, "cv #%d" % model_number))))
+            cv_errors = np.vstack((cv_errors, np.asarray(evaluate(label_from(cv_y), cv_y_preds, "cv #%d" % model_number))))
 
-        cv_blend_x = np.vstack( (cv_blend_x, cv_y_preds))
-        lb_blend_x = np.vstack( (lb_blend_x, lb_y_preds))
+            cv_blend_x = np.vstack( (cv_blend_x, cv_y_preds))
+            lb_blend_x = np.vstack( (lb_blend_x, lb_y_preds))
 
-    cv_blend_x = cv_blend_x[1:].T
-    lb_blend_x = lb_blend_x[1:].T
-    cv_errors = cv_errors[1:].T
+        cv_blend_x = cv_blend_x[1:].T
+        lb_blend_x = lb_blend_x[1:].T
+        cv_errors = cv_errors[1:].T
 
-    print("(Avg cv1) Gini: %0.5f MSE: %0.5f" %(np.mean(cv_errors[0]), np.mean(cv_errors[1])))
+        print("(Avg cv1) Gini: %0.5f MSE: %0.5f" %(np.mean(cv_errors[0]), np.mean(cv_errors[1])))
 
-    lr1 = LinearRegression()
-    lr1.fit(cv_blend_x, cv_y)
-    cv_blend_y = lr1.predict(cv_blend_x)
-    lb_blend_y = lr1.predict(lb_blend_x)
-    cv_errors_blends = np.vstack((cv_errors_blends, evaluate(cv_y, cv_blend_y, "cv_blend_y")))
-    cv_errors_all = np.vstack((cv_errors_all, cv_errors.T))
+        lr1 = LinearRegression()
+        lr1.fit(cv_blend_x, cv_y)
+        cv_blend_y = lr1.predict(cv_blend_x)
+        lb_blend_y = lr1.predict(lb_blend_x)
+        cv_errors_blends = np.vstack((cv_errors_blends, evaluate(label_from(cv_y), cv_blend_y, "cv_blend_y")))
+        cv_errors_all = np.vstack((cv_errors_all, cv_errors.T))
 
-    lb_blend_y_all += lb_blend_y
+        lb_blend_y_all += lb_blend_y
 
+        if run_number == RUNS:
+            break
     if run_number == RUNS:
         break
 
@@ -147,7 +164,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug22_pow75_minchild50_behroz_5runs_Qinchen_1.csv')
+submission.to_csv('../subm/Aug22_pow75_minchild50_behroz_10runs_Qinchen_5fold___TEST___5.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
@@ -182,3 +199,29 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Try using the new feat with 5x runs
 # Avg cv Gini:  pre-blend=0.37327, post-blend=0.37660
 # Avg cv MSE:   pre-blend=3.214,  post-blend=3.202
+# LB: 0.390281
+
+# Now go back to no transform of label y (before it was x ^ 3/4)
+# Avg cv Gini:  pre-blend=0.38940, post-blend=0.39264
+# Avg cv MSE:   pre-blend=14.149,  post-blend=14.092
+# LB: 0.387785
+
+# Okay, unresolved why label ** 0.75 does that -  problem is that I want to trust CV
+# Again going back to label ** 0.75
+# Avg cv Gini:  pre-blend=0.37575, post-blend=0.37993
+# Avg cv MSE:   pre-blend=3.208,  post-blend=3.192
+# LB:  0.390186
+
+# Was a bit surprised to see no improvement with 10x vs 5x.
+# Maybe problem was that blending was done on too small a cv set
+# Trying 5-fold for blending, but running everything 2 times, with different seeds
+# Avg cv Gini:  pre-blend=0.37429, post-blend=0.37797
+# Avg cv MSE:   pre-blend=3.208,  post-blend=3.196
+# LB:  0.390023
+
+#################  Figured out what is going on with label ** 0.75 transformation - it is good - I was just using transformed labels to calculate scores.
+
+#Avg cv Gini:  pre-blend=0.40224, post-blend=0.40494
+#Avg cv MSE:   pre-blend=16.297,  post-blend=16.162
+#Avg cv Gini:  pre-blend=0.40227, post-blend=0.40637
+#Avg cv Gini:  pre-blend=0.39971, post-blend=0.40409
