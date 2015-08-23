@@ -25,9 +25,10 @@ import time
 
 
 # to try later:
+#  + try eval metric  rmse instead of auc?
+#  + different y-transformation
+#  + min-child 5->50->60?
 #  try increasing the size of cv - since it is used to tune combinations (in LR)
-#  different y-transformation
-#  min-child 5->50?
 #  could it be just the single best parameters for all level 1 XGBs?
 #  add feature KNN: avg label of some neighbors, distances to some neighbors
 #  use classes
@@ -72,6 +73,7 @@ lb_ind = lb_ind_orig
 
 RUNS = 5 ######### 10
 MODELS = 5
+FOLDS = 5
 
 
 lb_blend_y_all = np.repeat(0.0, lb_ind.shape[0])
@@ -79,7 +81,7 @@ cv_errors_all = np.empty([1, 2])
 cv_errors_blends = np.empty([1, 2])
 
 run_number = 0
-kf = KFold(n=dat_x.shape[0], n_folds=5, shuffle=True, random_state=2187)
+kf = KFold(n=dat_x.shape[0], n_folds=FOLDS, shuffle=True, random_state=2187)
 for seen_index, cv_index in kf:
     run_number = run_number + 1
     print("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
@@ -145,7 +147,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug22_pow75_minchild50__orig_5runs_Qinchen_1.csv')
+submission.to_csv('../subm/Aug22_pow75_minchild50_behroz_5runs_Qinchen_1.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
@@ -175,3 +177,8 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv MSE:   pre-blend=3.220,  post-blend=3.205
 # LB: 0.387498
 
+
+#  [ Aug 22 Sat:  Qingchen -  back to Hazard means ]
+# Try using the new feat with 5x runs
+# Avg cv Gini:  pre-blend=0.37327, post-blend=0.37660
+# Avg cv MSE:   pre-blend=3.214,  post-blend=3.202
