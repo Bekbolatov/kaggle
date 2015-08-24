@@ -9,7 +9,7 @@ import xgboost as xgb
 from sklearn.cross_validation import train_test_split, KFold
 
 from gini import normalized_gini, gini_eval
-from dataset import get_data
+from dataset import LibertyEncoder
 
 from time import time
 import numpy as np
@@ -25,6 +25,7 @@ import time
 
 
 # to try later:
+#  Something about order (Devin and Qinchen)
 #  OHE with interactions?
 #  Try lower eta
 #  + try eval metric  rmse instead of auc?
@@ -51,11 +52,11 @@ import time
 # })
 params = pd.DataFrame({
     "objective": "reg:linear",
-    "eta": [0.04, 0.03, 0.03, 0.03, 0.02],
+    "eta": [0.04, 0.03, 0.03, 0.03, 0.02, 0.02],
     "min_child_weight": 50,
-    "subsample": [1, 0.9, 0.95, 1, 0.6],
-    "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.85],
-    "max_depth": [8, 7, 9, 10, 10],
+    "subsample": [1, 0.9, 0.95, 1, 0.6, 0.8],
+    "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.85, 0.6],
+    "max_depth": [8, 7, 9, 10, 10, 5],
     "eval_metric": "auc",
     "scale_pos_weight": 1,
     "silent": 1
@@ -68,25 +69,18 @@ def evaluate(true_y, pred_y, label):
     return (gini, mse)
 
 
-dat_x_orig, dat_y_orig, lb_x_orig, lb_ind_orig = get_data()
+data = LibertyEncoder()
+# dat_x_orig, dat_y_orig, dat_y_raw_orig, lb_x_orig, lb_ind_orig = data.get_data_qinchen()
+dat_x_orig, dat_y_orig, dat_y_raw_orig, lb_x_orig, lb_ind_orig = data.get_orig_data_copy()
 
-def label_to_(x):
-    return x ** 0.50
-
-
-def label_from_(x):
-    return x ** (1.0/0.50)
-
-
-label_to = np.vectorize(label_to_)
-label_from = np.vectorize(label_from_)
 
 dat_x = dat_x_orig
-dat_y =label_to(dat_y_orig)
+dat_y = dat_y_orig
+dat_y_raw = dat_y_raw_orig
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 10
+RUNS = 2
 MODELS = 5
 FOLDS = 10
 ITERATIONS = (RUNS/FOLDS + 1)
@@ -102,15 +96,20 @@ for iteration in range(ITERATIONS):
         run_number = run_number + 1
         print("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
 
-        train_x = dat_x.iloc[seen_index]
+        train_x = dat_x[seen_index, :]
         train_y = dat_y[seen_index]
-        cv_x = dat_x.iloc[cv_index]
+        train_y_raw = dat_y_raw[seen_index]
+
+        cv_x = dat_x[cv_index, :]
         cv_y = dat_y[cv_index]
+        cv_y_raw = dat_y_raw[cv_index]
+
+        train_x, cv_x, lb_x = data.transform_qinchen(train_y, train_x, cv_x, lb_x)
 
         # DATA FOR XGB
         xgb_train = xgb.DMatrix(train_x, label=train_y)
         xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
-        xgb_cv_val = xgb.DMatrix(cv_x, label=label_from(cv_y))
+        xgb_cv_val = xgb.DMatrix(cv_x, label=cv_y_raw)
         xgb_lb = xgb.DMatrix(lb_x)
         watchlist = [(xgb_cv_val, 'cv')]
 
@@ -128,7 +127,7 @@ for iteration in range(ITERATIONS):
             cv_y_preds = model.predict(xgb_cv, ntree_limit=model.best_iteration)
             lb_y_preds = model.predict(xgb_lb, ntree_limit=model.best_iteration)
 
-            cv_errors = np.vstack((cv_errors, np.asarray(evaluate(label_from(cv_y), cv_y_preds, "cv #%d" % model_number))))
+            cv_errors = np.vstack((cv_errors, np.asarray(evaluate(cv_y_raw, cv_y_preds, "cv #%d" % model_number))))
 
             cv_blend_x = np.vstack( (cv_blend_x, cv_y_preds))
             lb_blend_x = np.vstack( (lb_blend_x, lb_y_preds))
@@ -143,7 +142,7 @@ for iteration in range(ITERATIONS):
         lr1.fit(cv_blend_x, cv_y)
         cv_blend_y = lr1.predict(cv_blend_x)
         lb_blend_y = lr1.predict(lb_blend_x)
-        cv_errors_blends = np.vstack((cv_errors_blends, evaluate(label_from(cv_y), cv_blend_y, "cv_blend_y")))
+        cv_errors_blends = np.vstack((cv_errors_blends, evaluate(cv_y_raw, cv_blend_y, "cv_blend_y")))
         cv_errors_all = np.vstack((cv_errors_all, cv_errors.T))
 
         lb_blend_y_all += lb_blend_y
@@ -166,7 +165,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug23_pow50_minchild50_behroz_10runs_Qinchen_10fold_repeat10x__TEST_0.csv')
+submission.to_csv('../subm/Aug23_pow50_minchild50_behroz_10runs_Qinchen_10fold_repeat10x_6models_0.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
@@ -225,7 +224,7 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Now checking if some other transform is better, with confidence
 #Avg cv Gini:  pre-blend=0.40224, post-blend=0.40494  # 0.75
 #Avg cv Gini:  pre-blend=0.40227, post-blend=0.40637  # 0.65
-#Avg cv Gini:  pre-blend=0.40255, post-blend=0.40699  # 0.50  *
+#Avg cv Gini:  pre-blend=0.40255, post-blend=0.40699  # 0.50  (**)
 #Avg cv Gini:  pre-blend=0.40104, post-blend=0.40536  # 0.25
 #Avg cv Gini:  pre-blend=0.39971, post-blend=0.40409  # log
 
@@ -241,8 +240,12 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv Gini:  pre-blend=0.38650, post-blend=0.38908
 
 # Without last two interactions:
-# Avg cv Gini:  pre-blend=0.39194, post-blend=0.39574  *
+# < BAD Avg cv Gini:  pre-blend=0.39194, post-blend=0.39574 >
+# Avg cv Gini:  pre-blend=0.39305, post-blend=0.39752
+# LB: 0.389209
 
+# Should be same as 2x (**) above
+# Avg cv Gini:  pre-blend=0.40244, post-blend=0.40708
 
 
 
