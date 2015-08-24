@@ -22,9 +22,14 @@ from sklearn.datasets import load_digits
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
 import time
+import os
 
+
+LOCATION = os.getenv('DATA_LOCATION', '/Users/rbekbolatov/data/kaggle/liberty')
 
 # to try later:
+#  Into Libffm classes
+#  Into hashed space - add interactions
 #  Something about order (Devin and Qinchen)
 #  OHE with interactions?
 #  Try lower eta
@@ -69,9 +74,9 @@ def evaluate(true_y, pred_y, label):
     return (gini, mse)
 
 
-data = LibertyEncoder()
-# dat_x_orig, dat_y_orig, dat_y_raw_orig, lb_x_orig, lb_ind_orig = data.get_data_qinchen()
+data = LibertyEncoder(loc=LOCATION)
 dat_x_orig, dat_y_orig, dat_y_raw_orig, lb_x_orig, lb_ind_orig = data.get_orig_data_copy()
+dat_x_orig, lb_x_orig = data.transform('renat', dat_y_orig, dat_x_orig, lb_x_orig)
 
 
 dat_x = dat_x_orig
@@ -80,9 +85,9 @@ dat_y_raw = dat_y_raw_orig
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 10
+RUNS = 2
 MODELS = 5
-FOLDS = 10
+FOLDS = 2
 ITERATIONS = (RUNS/FOLDS + 1)
 
 lb_blend_y_all = np.repeat(0.0, lb_ind.shape[0])
@@ -105,7 +110,7 @@ for iteration in range(ITERATIONS):
         cv_y_raw = dat_y_raw[cv_index]
 
         # train_x, cv_x, lb_x = data.transform('qinchen', train_y, train_x, cv_x, lb_x)
-        train_x, cv_x, lb_x = data.transform('renat', train_y, train_x, cv_x, lb_x)
+        # train_x, cv_x, lb_x = data.transform('renat', train_y, train_x, cv_x, lb_x)
 
         # DATA FOR XGB
         xgb_train = xgb.DMatrix(train_x, label=train_y)
@@ -166,7 +171,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug24_CheckRefactor_1.csv')
+submission.to_csv('../subm/Aug24_CheckRefactor__raw_y_perfold_5.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
@@ -248,6 +253,10 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Should be same as 2x (**) above
 # Avg cv Gini:  pre-blend=0.40244, post-blend=0.40708
 
+##  Aug 24 3am
+# Should be identical:
+# Avg cv Gini:  pre-blend=0.39233, post-blend=0.39622
+# LB:
 
 
 

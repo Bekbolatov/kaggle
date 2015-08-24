@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.feature_extraction import DictVectorizer
 from collections import defaultdict
 
-class StatsEncoder:
+class FactorToNumericEncoder:
 
     def get_data_stats(self, labels, *data_sets):
         self.stats_new_fit(labels, data_sets[0])
@@ -35,12 +35,12 @@ class StatsEncoder:
 
 class LibertyFeatures:
 
-    def featurize(self, version, *data_sets):
+    def featurize(self, version, labels, *data_sets):
         print(version)
         if version == 'qinchen':
-            return self.qinchen_featurize(*data_sets)
+            return self.qinchen_featurize(labels, *data_sets)
         elif version == 'renat':
-            return self.renat_featurize(*data_sets)
+            return self.renat_featurize(labels, *data_sets)
         else:
             raise KeyError
 
@@ -66,7 +66,8 @@ class LibertyFeatures:
             data = np.delete(data, a, axis=1)
         return data
 
-    def qinchen_featurize(self, *data_sets):
+    def qinchen_featurize(self, labels, *data_sets):
+        data_sets = FactorToNumericEncoder().get_data_stats(labels, *data_sets)
         data_sets = [
             self.qinchen_drop_cols(self.qinchen_add_second_order(data_set))
             for data_set in data_sets
@@ -100,7 +101,8 @@ class LibertyFeatures:
             data[:, col_num] = fn(data[:, col_num])
         return data
 
-    def renat_featurize(self, *data_sets):
+    def renat_featurize(self, labels, *data_sets):
+        data_sets = FactorToNumericEncoder().get_data_stats(labels, *data_sets)
         data_sets = [self.renat_add_second_order(data_set) for data_set in data_sets]
         data_sets = [self.renat_change_cols(data_set) for data_set in data_sets]
         data_sets = [self.renat_drop_cols(data_set) for data_set in data_sets]
@@ -130,21 +132,11 @@ class LibertyEncoder:
             np.copy(np.asarray(self.test)),
             np.copy(np.asarray(self.test_ind)))
 
-    def transform_qinchen(self, labels, *data_sets):
-        data_sets = StatsEncoder().get_data_stats(labels, *data_sets)
-        return LibertyFeatures().qinchen_featurize(*data_sets)
-
     def transform(self, version, labels, *data_sets):
-        data_sets = StatsEncoder().get_data_stats(labels, *data_sets)
-        transformed = LibertyFeatures().featurize(version, *data_sets)
+        data_sets = [np.copy(data_set) for data_set in data_sets]
+        transformed = LibertyFeatures().featurize(version, labels, *data_sets)
         print("Number of features = %d" % transformed[0].shape[1])
-        print(transformed[0][0, :])
         return transformed
-
-    def get_data_qinchen(self):
-        train, labels, labels_raw, test, test_ind = self.get_orig_data_copy()
-        train, test = self.transform_qinchen(labels, train, test)
-        return (train, labels, labels_raw, test, test_ind)
 
 
 class Other:
