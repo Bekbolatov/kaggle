@@ -80,7 +80,7 @@ dat_y_raw = dat_y_raw_orig
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 2
+RUNS = 10
 MODELS = 5
 FOLDS = 10
 ITERATIONS = (RUNS/FOLDS + 1)
@@ -104,7 +104,8 @@ for iteration in range(ITERATIONS):
         cv_y = dat_y[cv_index]
         cv_y_raw = dat_y_raw[cv_index]
 
-        train_x, cv_x, lb_x = data.transform_qinchen(train_y, train_x, cv_x, lb_x)
+        # train_x, cv_x, lb_x = data.transform('qinchen', train_y, train_x, cv_x, lb_x)
+        train_x, cv_x, lb_x = data.transform('renat', train_y, train_x, cv_x, lb_x)
 
         # DATA FOR XGB
         xgb_train = xgb.DMatrix(train_x, label=train_y)
@@ -136,7 +137,7 @@ for iteration in range(ITERATIONS):
         lb_blend_x = lb_blend_x[1:].T
         cv_errors = cv_errors[1:].T
 
-        print("(Avg cv1) Gini: %0.5f MSE: %0.5f" %(np.mean(cv_errors[0]), np.mean(cv_errors[1])))
+        print("\ncv_prebl_y: Gini=%0.5f, MSE=%0.3f" %(np.mean(cv_errors[0]), np.mean(cv_errors[1])))
 
         lr1 = LinearRegression()
         lr1.fit(cv_blend_x, cv_y)
@@ -157,15 +158,15 @@ cv_errors_all = cv_errors_all[1:].T
 cv_errors_blends = cv_errors_blends[1:].T
 #print(cv_errors_blends.T)
 
+print("\n----------------------------------------------\n")
 print("Avg cv Gini:  pre-blend=%0.5f, post-blend=%0.5f" % (np.mean(cv_errors_all[0]), np.mean(cv_errors_blends[0])))
 print("Avg cv MSE:   pre-blend=%0.3f,  post-blend=%0.3f" % (np.mean(cv_errors_all[1]), np.mean(cv_errors_blends[1])))
 
-print("lb_blend_y.shape %s"% str(lb_blend_y.shape))
 lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug23_pow50_minchild50_behroz_10runs_Qinchen_10fold_repeat10x_6models_0.csv')
+submission.to_csv('../subm/Aug24_CheckRefactor_1.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
