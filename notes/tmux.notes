@@ -1,0 +1,9 @@
+tmux new -s hello
+tmux a -t hello
+tmux ls
+
+
+^b    c/n/p
+^b [    fn-up
+
+

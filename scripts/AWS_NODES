@@ -1,0 +1,2 @@
+aws ec2 describe-instances --filters Name=tag:purpose,Values=xgboost | jq '.Reservations[].Instances[].PublicIpAddress'
+
