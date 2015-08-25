@@ -3,6 +3,7 @@
 target/
 
 *.pyc
+*.log
 
 metafeatures
 */metafeatures/*.dat

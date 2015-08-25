@@ -41,6 +41,7 @@ print(param_drop)
 USAGE="python hla.py 5:6,7:8,5:22;4,6,7"
 
 LOCATION = os.getenv('DATA_LOCATION', '/Users/rbekbolatov/data/kaggle/liberty')
+OUTPUT_LOCATION = os.getenv('OUTPUT_LOCATION', '/Users/rbekbolatov/data/kaggle/liberty')
 
 # to try later:
 #  Into Libffm classes
@@ -100,8 +101,8 @@ dat_y_raw = dat_y_raw_orig
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 2
-MODELS = 5
+RUNS = 1
+MODELS = 1
 FOLDS = 2
 ITERATIONS = (RUNS/FOLDS + 1)
 
@@ -186,7 +187,19 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug24_CheckRefactor__raw_y_perfold_5.csv')
+#submission.to_csv('../subm/Aug24_CheckRefactor__raw_y_perfold_5.csv')
+
+results = pd.DataFrame(cv_errors_all)
+print(results)
+results['Id'] = np.arange(run_number*MODELS)
+results = results.set_index('Id')
+results.to_csv(OUTPUT_LOCATION + '/results.csv')
+
+results_blends = pd.DataFrame(cv_errors_blends)
+print(results_blends)
+results_blends['Id'] = np.arange(run_number)
+results_blends = results_blends.set_index('Id')
+results_blends.to_csv(OUTPUT_LOCATION + '/results_blended.csv')
 
 print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 
