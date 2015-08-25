@@ -187,7 +187,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-#submission.to_csv('../subm/Aug24_CheckRefactor__raw_y_perfold_5.csv')
+submission.to_csv('../subm/Aug25_0.csv')
 
 results = pd.DataFrame(cv_errors_all.T)
 print(results)
@@ -266,7 +266,7 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 #Avg cv Gini:  pre-blend=0.40388, post-blend=0.40551
 
 # Trying submission with y <- y ** 0.50 transform
-# Avg cv Gini:  pre-blend=0.39278, post-blend=0.39677  *
+# Avg cv Gini:  pre-blend=0.39278, post-blend=0.39677  *   <-------------------
 # Avg cv MSE:   pre-blend=20.356,  post-blend=20.262
 # LB: 0.390334
 
@@ -286,7 +286,15 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv Gini:  pre-blend=0.39233, post-blend=0.39622
 # LB:
 
+## Aug 25 3:30am: 0:3,0:7,0:16,0:28,2:28,10:14,10:27,22:24,24:29,27:28;9,12,23,26,5,19  (add 5, 19 to Qinchen)
+# Avg cv Gini:  pre-blend=0.39270, post-blend=0.39656  *   <-------------------
+# Avg cv MSE:   pre-blend=20.321,  post-blend=20.261
+# LB: 0.390411
 
+
+## Aug 25 3:55am: 0:3,0:19,0:24,0:18,2:28,10:14,10:27,22:24,24:29,27:28;9,12,23,26,5,19 (replace 0:7,0:16,0:28 with 0:19,0:24,0:18)
+# Avg cv Gini:  pre-blend=0.39220, post-blend=0.39610
+# Avg cv MSE:   pre-blend=20.356,  post-blend=20.266
 
 
 

@@ -85,14 +85,16 @@ class LibertyFeatures:
             27: [28]
         }
         default_interactions_to_add = sum([ map(lambda s: (k, s), v) for k,v in default_interactions_to_add.items()], [])
-        for a, b in (interactions_to_add or default_interactions_to_add):
+        print(",".join([str(x) + ':' + str(y) for x,y in default_interactions_to_add]))
+        for a, b in interactions_to_add:
             data = np.column_stack([data, np.multiply(data[:, a], data[:, b])])
 
         return data
 
     def renat_drop_cols(self, data, cols_to_drop = []):
         default_cols_to_drop = [9, 12, 23, 26]
-        for a in sorted((cols_to_drop or default_cols_to_drop), reverse=True):
+        print(default_cols_to_drop)
+        for a in sorted(cols_to_drop, reverse=True):
             data = np.delete(data, a, axis=1)
         return data
 
