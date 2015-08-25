@@ -103,7 +103,7 @@ lb_ind = lb_ind_orig
 
 RUNS = 10
 MODELS = 5
-FOLDS = 2
+FOLDS = 10
 ITERATIONS = (RUNS/FOLDS + 1)
 
 lb_blend_y_all = np.repeat(0.0, lb_ind.shape[0])
