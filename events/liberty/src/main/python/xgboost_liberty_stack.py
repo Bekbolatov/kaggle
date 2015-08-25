@@ -23,7 +23,22 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
 import time
 import os
+import sys
 
+param_inter = []
+param_drop = []
+if len(sys.argv) == 2:
+    m_param_inter, m_param_drop = sys.argv[1].split(';')
+    m_param_inter = m_param_inter.split(',')
+    if m_param_inter[0]:
+        param_inter = [ tuple(map(int, kv.split(':'))) for kv in m_param_inter]
+    if m_param_drop and m_param_drop[0]:
+        param_drop = map(int, m_param_drop.split(','))
+
+print(param_inter)
+print(param_drop)
+
+USAGE="python hla.py 5:6,7:8,5:22;4,6,7"
 
 LOCATION = os.getenv('DATA_LOCATION', '/Users/rbekbolatov/data/kaggle/liberty')
 
@@ -76,7 +91,7 @@ def evaluate(true_y, pred_y, label):
 
 data = LibertyEncoder(loc=LOCATION)
 dat_x_orig, dat_y_orig, dat_y_raw_orig, lb_x_orig, lb_ind_orig = data.get_orig_data_copy()
-dat_x_orig, lb_x_orig = data.transform('renat', dat_y_orig, dat_x_orig, lb_x_orig)
+dat_x_orig, lb_x_orig = data.transform('renat', param_inter, param_drop, dat_y_orig, dat_x_orig, lb_x_orig)
 
 
 dat_x = dat_x_orig

@@ -35,12 +35,12 @@ class FactorToNumericEncoder:
 
 class LibertyFeatures:
 
-    def featurize(self, version, labels, *data_sets):
+    def featurize(self, version, interactions_to_add, cols_to_drop, labels, *data_sets):
         print(version)
         if version == 'qinchen':
-            return self.qinchen_featurize(labels, *data_sets)
+            return self.qinchen_featurize(interactions_to_add, cols_to_drop, labels, *data_sets)
         elif version == 'renat':
-            return self.renat_featurize(labels, *data_sets)
+            return self.renat_featurize(interactions_to_add, cols_to_drop, labels, *data_sets)
         else:
             raise KeyError
 
@@ -66,7 +66,7 @@ class LibertyFeatures:
             data = np.delete(data, a, axis=1)
         return data
 
-    def qinchen_featurize(self, labels, *data_sets):
+    def qinchen_featurize(self, interactions_to_add, cols_to_drop, labels, *data_sets):
         data_sets = FactorToNumericEncoder().get_data_stats(labels, *data_sets)
         data_sets = [
             self.qinchen_drop_cols(self.qinchen_add_second_order(data_set))
@@ -75,7 +75,7 @@ class LibertyFeatures:
         return data_sets
 
     # renat
-    def renat_add_second_order(self, data, interactions_to_add = {}):
+    def renat_add_second_order(self, data, interactions_to_add = []):
         default_interactions_to_add = {
             0: [3, 7, 16, 28],
             2: [28],
@@ -84,9 +84,9 @@ class LibertyFeatures:
             24: [29],
             27: [28]
         }
-        for a, bs in (interactions_to_add or default_interactions_to_add).items():
-            for b in bs:
-                data = np.column_stack([data, np.multiply(data[:, a], data[:, b])])
+        default_interactions_to_add = sum([ map(lambda s: (k, s), v) for k,v in default_interactions_to_add.items()], [])
+        for a, b in (interactions_to_add or default_interactions_to_add):
+            data = np.column_stack([data, np.multiply(data[:, a], data[:, b])])
 
         return data
 
@@ -101,11 +101,11 @@ class LibertyFeatures:
             data[:, col_num] = fn(data[:, col_num])
         return data
 
-    def renat_featurize(self, labels, *data_sets):
+    def renat_featurize(self, interactions_to_add, cols_to_drop, labels, *data_sets):
         data_sets = FactorToNumericEncoder().get_data_stats(labels, *data_sets)
-        data_sets = [self.renat_add_second_order(data_set) for data_set in data_sets]
+        data_sets = [self.renat_add_second_order(data_set, interactions_to_add) for data_set in data_sets]
         data_sets = [self.renat_change_cols(data_set) for data_set in data_sets]
-        data_sets = [self.renat_drop_cols(data_set) for data_set in data_sets]
+        data_sets = [self.renat_drop_cols(data_set, cols_to_drop) for data_set in data_sets]
         return data_sets
 
 
@@ -132,9 +132,9 @@ class LibertyEncoder:
             np.copy(np.asarray(self.test)),
             np.copy(np.asarray(self.test_ind)))
 
-    def transform(self, version, labels, *data_sets):
+    def transform(self, version, interactions_to_add, cols_to_drop, labels, *data_sets):
         data_sets = [np.copy(data_set) for data_set in data_sets]
-        transformed = LibertyFeatures().featurize(version, labels, *data_sets)
+        transformed = LibertyFeatures().featurize(version, interactions_to_add, cols_to_drop, labels, *data_sets)
         print("Number of features = %d" % transformed[0].shape[1])
         return transformed
 
