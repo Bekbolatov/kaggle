@@ -101,8 +101,8 @@ dat_y_raw = dat_y_raw_orig
 lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
-RUNS = 1
-MODELS = 1
+RUNS = 10
+MODELS = 5
 FOLDS = 2
 ITERATIONS = (RUNS/FOLDS + 1)
 

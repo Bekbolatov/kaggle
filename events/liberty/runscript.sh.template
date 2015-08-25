@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#TASK_ID=1
+TASK_ID=TASK_ID_HERE
+#ARGS="4:5,6:7;2,3"
+ARGS="ARGS_HERE"
+
+export DATA_LOCATION=/home/ec2-user/data/liberty
+export OUTPUT_LOCATION_DIR=/home/ec2-user
+export OUTPUT_LOCATION=${OUTPUT_LOCATION_DIR}/TASK_${TASK_ID}
+
+rm -rf $OUTPUT_LOCATION
+mkdir $OUTPUT_LOCATION
+cd /home/ec2-user/repos/bekbolatov/kaggle/events/liberty/src/main/python
+python xgboost_liberty_stack.py "$ARGS" > $OUTPUT_LOCATION/out.log
+
+echo "$ARGS" > ${OUTPUT_LOCATION}/args.txt
+touch ${OUTPUT_LOCATION}/TASK_${TASK_ID}.done
+
+
+
