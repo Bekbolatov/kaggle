@@ -51,56 +51,6 @@ hosts=[
 ]
 num_hosts = len(hosts)
 
-#0,600,1200,1800,2400
-#2500
-TASK_OFFSET = 3000
-
-# explore
-# tasks = list(enumerate(['0:7;' + str(d) for d in range(32)] +
-#                        [str(a) + ':' + str(b) + ',0:7;'
-#                         for a in range(32)
-#                         for b in range(a + 1, 32) if (a,b) != (0,7)], start=TASK_OFFSET))
-
-# generate subm
-tasks = zip(range(TASK_OFFSET, TASK_OFFSET + num_hosts), ['0:3,0:7,0:16,0:28,2:28,10:14,10:27,22:24,24:29,27:28;9,12,23,26']*num_hosts)
-num_tasks = len(tasks)
-host_tasks = [(host, np.array(tasks)[range(i, num_tasks, num_hosts)]) for i, host in enumerate(hosts)]
-
-
-# distrib_keys = open(LOC_BASE + '/distrib_keys.sh', 'w')
-# for host in hosts:
-#     distrib_keys.write('scp /Users/rbekbolatov/repos/gh/bekbolatov/kaggle/tmp/authorized_keys ' + host + ':/home/ec2-user/.ssh/authorized_keys\n')
-# distrib_keys.close()
-
-# create and distribute tasks, receive results
-task_sender = open(LOC_BASE + '/send_tasks.sh', 'w')
-results_receiver = open(LOC_BASE + '/receive_results.sh', 'w')
-task_sender.write("#!/bin/bash\n")
-results_receiver.write("#!/bin/bash\n")
-for host, ts in host_tasks:
-    # task sending
-    tasks_file_loc = LOC_TASKS + '/' + host
-    tasks_file = open(tasks_file_loc, 'w')
-    tasks_file.write('\n'.join(t[0] + ' ' + t[1] for t in ts) + '\n')
-    tasks_file.close()
-    task_sender.write('scp ' + tasks_file_loc + ' ' + host + ':/home/ec2-user/input_queue\n')
-    # results receiving
-    for task_num, _ in ts:
-        task_directory = '/TASK_' + str(task_num)
-        location = LOC_RESULTS + task_directory
-        results_receiver.write('if [[ ! -e "' + location + '/task_done" ]]; then scp -r ' + host + ':/home/ec2-user' + task_directory + ' ' + LOC_RESULTS + '/. ; fi\n')
-task_sender.close()
-results_receiver.close()
-
-# start queues
-task_sender = open(LOC_BASE + '/start_tasks.sh', 'w')
-task_sender.write("#!/bin/bash\n")
-for host in hosts:
-    tasks_file_loc = LOC_BASE + '/tasks/' + host
-    task_sender.write('ssh ' + host + ' /home/ec2-user/runscript_dropcol.sh & sleep 1\n')
-task_sender.close()
-
-
 # create and distribute tasks, receive results
 use_mine = open(LOC_BASE + '/use_mine.sh', 'w')
 src_file = '/Users/rbekbolatov/repos/gh/bekbolatov/kaggle/events/liberty/src/main/python/xgboost_liberty_stack.py'

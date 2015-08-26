@@ -24,6 +24,9 @@ from sklearn.preprocessing import scale
 import time
 import os
 import sys
+import socket
+import time
+millis = int(round(time.time() * 1000))
 
 param_inter = []
 param_drop = []
@@ -38,10 +41,16 @@ if len(sys.argv) == 2:
 print(param_inter)
 print(param_drop)
 
+EXTRA_SEED = (abs(hash(socket.gethostname())) + int(round(time.time()))) % 10000
+print(EXTRA_SEED)
+if len(sys.argv) == 3:
+    EXTRA_SEED = 0
+
 USAGE="python hla.py 5:6,7:8,5:22;4,6,7"
 
 LOCATION = os.getenv('DATA_LOCATION', '/Users/rbekbolatov/data/kaggle/liberty')
 OUTPUT_LOCATION = os.getenv('OUTPUT_LOCATION', '/Users/rbekbolatov/data/kaggle/liberty')
+output_file = '../subm/Aug26_0.csv' if OUTPUT_LOCATION == '/Users/rbekbolatov/data/kaggle/liberty' else OUTPUT_LOCATION + '/output.csv'
 
 # to try later:
 #  Into Libffm classes
@@ -104,6 +113,7 @@ lb_ind = lb_ind_orig
 RUNS = 10
 MODELS = 5
 FOLDS = 10
+TIMES=1
 ITERATIONS = (RUNS/FOLDS + 1)
 
 lb_blend_y_all = np.repeat(0.0, lb_ind.shape[0])
@@ -111,64 +121,67 @@ cv_errors_all = np.empty([1, 2])
 cv_errors_blends = np.empty([1, 2])
 
 run_number = 0
-for iteration in range(ITERATIONS):
-    kf = KFold(n=dat_x.shape[0], n_folds=FOLDS, shuffle=True, random_state=2187 + 87*iteration)
-    for seen_index, cv_index in kf:
-        run_number = run_number + 1
-        print("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
+for t in range(TIMES):
+    for iteration in range(ITERATIONS):
+        kf = KFold(n=dat_x.shape[0], n_folds=FOLDS, shuffle=True, random_state=2187 + 87*iteration + EXTRA_SEED + t*101)
+        for seen_index, cv_index in kf:
+            run_number = run_number + 1
+            print("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
 
-        train_x = dat_x[seen_index, :]
-        train_y = dat_y[seen_index]
-        train_y_raw = dat_y_raw[seen_index]
+            train_x = dat_x[seen_index, :]
+            train_y = dat_y[seen_index]
+            train_y_raw = dat_y_raw[seen_index]
 
-        cv_x = dat_x[cv_index, :]
-        cv_y = dat_y[cv_index]
-        cv_y_raw = dat_y_raw[cv_index]
+            cv_x = dat_x[cv_index, :]
+            cv_y = dat_y[cv_index]
+            cv_y_raw = dat_y_raw[cv_index]
 
-        # train_x, cv_x, lb_x = data.transform('qinchen', train_y, train_x, cv_x, lb_x)
-        # train_x, cv_x, lb_x = data.transform('renat', train_y, train_x, cv_x, lb_x)
+            # train_x, cv_x, lb_x = data.transform('qinchen', train_y, train_x, cv_x, lb_x)
+            # train_x, cv_x, lb_x = data.transform('renat', train_y, train_x, cv_x, lb_x)
 
-        # DATA FOR XGB
-        xgb_train = xgb.DMatrix(train_x, label=train_y)
-        xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
-        xgb_cv_val = xgb.DMatrix(cv_x, label=cv_y_raw)
-        xgb_lb = xgb.DMatrix(lb_x)
-        watchlist = [(xgb_cv_val, 'cv')]
+            # DATA FOR XGB
+            xgb_train = xgb.DMatrix(train_x, label=train_y)
+            xgb_cv = xgb.DMatrix(cv_x, label=cv_y)
+            xgb_cv_val = xgb.DMatrix(cv_x, label=cv_y_raw)
+            xgb_lb = xgb.DMatrix(lb_x)
+            watchlist = [(xgb_cv_val, 'cv')]
 
-        cv_blend_x = np.empty([1, cv_x.shape[0]])
-        lb_blend_x = np.empty([1, lb_x.shape[0]])
-        cv_errors = np.empty([1, 2])
+            cv_blend_x = np.empty([1, cv_x.shape[0]])
+            lb_blend_x = np.empty([1, lb_x.shape[0]])
+            cv_errors = np.empty([1, 2])
 
-        for model_number in range(MODELS):
-            model = xgb.train(params.iloc[model_number].to_dict(), xgb_train, num_boost_round = 3000,
-                              evals = watchlist,
-                              feval = gini_eval,
-                              verbose_eval = False,
-                              early_stopping_rounds=50)
+            for model_number in range(MODELS):
+                model = xgb.train(params.iloc[model_number].to_dict(), xgb_train, num_boost_round = 3000,
+                                  evals = watchlist,
+                                  feval = gini_eval,
+                                  verbose_eval = False,
+                                  early_stopping_rounds=50)
 
-            cv_y_preds = model.predict(xgb_cv, ntree_limit=model.best_iteration)
-            lb_y_preds = model.predict(xgb_lb, ntree_limit=model.best_iteration)
+                cv_y_preds = model.predict(xgb_cv, ntree_limit=model.best_iteration)
+                lb_y_preds = model.predict(xgb_lb, ntree_limit=model.best_iteration)
 
-            cv_errors = np.vstack((cv_errors, np.asarray(evaluate(cv_y_raw, cv_y_preds, "cv #%d" % model_number))))
+                cv_errors = np.vstack((cv_errors, np.asarray(evaluate(cv_y_raw, cv_y_preds, "cv #%d" % model_number))))
 
-            cv_blend_x = np.vstack( (cv_blend_x, cv_y_preds))
-            lb_blend_x = np.vstack( (lb_blend_x, lb_y_preds))
+                cv_blend_x = np.vstack( (cv_blend_x, cv_y_preds))
+                lb_blend_x = np.vstack( (lb_blend_x, lb_y_preds))
 
-        cv_blend_x = cv_blend_x[1:].T
-        lb_blend_x = lb_blend_x[1:].T
-        cv_errors = cv_errors[1:].T
+            cv_blend_x = cv_blend_x[1:].T
+            lb_blend_x = lb_blend_x[1:].T
+            cv_errors = cv_errors[1:].T
 
-        print("\ncv_prebl_y: Gini=%0.5f, MSE=%0.3f" %(np.mean(cv_errors[0]), np.mean(cv_errors[1])))
+            print("\ncv_prebl_y: Gini=%0.5f, MSE=%0.3f" %(np.mean(cv_errors[0]), np.mean(cv_errors[1])))
 
-        lr1 = LinearRegression()
-        lr1.fit(cv_blend_x, cv_y)
-        cv_blend_y = lr1.predict(cv_blend_x)
-        lb_blend_y = lr1.predict(lb_blend_x)
-        cv_errors_blends = np.vstack((cv_errors_blends, evaluate(cv_y_raw, cv_blend_y, "cv_blend_y")))
-        cv_errors_all = np.vstack((cv_errors_all, cv_errors.T))
+            lr1 = LinearRegression()
+            lr1.fit(cv_blend_x, cv_y)
+            cv_blend_y = lr1.predict(cv_blend_x)
+            lb_blend_y = lr1.predict(lb_blend_x)
+            cv_errors_blends = np.vstack((cv_errors_blends, evaluate(cv_y_raw, cv_blend_y, "cv_blend_y")))
+            cv_errors_all = np.vstack((cv_errors_all, cv_errors.T))
 
-        lb_blend_y_all += lb_blend_y
+            lb_blend_y_all += lb_blend_y
 
+            if run_number == RUNS:
+                break
         if run_number == RUNS:
             break
     if run_number == RUNS:
@@ -187,7 +200,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug25_4.csv')
+submission.to_csv(output_file)
 
 results = pd.DataFrame(cv_errors_all.T)
 print(results)
@@ -297,7 +310,7 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv MSE:   pre-blend=20.356,  post-blend=20.266
 
 ## Aug 25 3:55pm: 0:7; (AWS runs show 0.396047)
-# Avg cv Gini:  pre-blend=0.38986, post-blend=0.39379
+# Avg cv Gini:  pre-blend=0.38986, post-blend=0.39379 ===================
 # Avg cv MSE:   pre-blend=20.375,  post-blend=20.273
 # LB: 0.389266
 
@@ -312,9 +325,21 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # LB: 0.389319
 
 ## Aug 25 10:10pm: 7:12,0:7;
-# Avg cv Gini:  pre-blend=0.38963, post-blend=0.39348
+# Avg cv Gini:  pre-blend=0.38963, post-blend=0.39348 ===================
 # Avg cv MSE:   pre-blend=20.354,  post-blend=20.272
 
 ## Aug 25 10:10pm: 7:12,0:7; skipping model #4 (of# 1, 2, 3, 4, 5)
 # Avg cv Gini:  pre-blend=0.38947, post-blend=0.39280
 # Avg cv MSE:   pre-blend=20.337,  post-blend=20.277
+
+## Aug 26 00:25am: 0:21,7:12,0:7;
+# Avg cv Gini:  pre-blend=0.39033, post-blend=0.39423 ===================
+# Avg cv MSE:   pre-blend=20.347,  post-blend=20.268
+# LB: 0.388384
+
+
+## Aug 26 7:46am: 14:31,7:12,0:7;
+# Avg cv Gini:  pre-blend=0.39052, post-blend=0.39470
+# Avg cv MSE:   pre-blend=20.343,  post-blend=20.268
+# LB:  0.388011
+
