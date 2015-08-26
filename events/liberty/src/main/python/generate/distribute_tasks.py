@@ -2,8 +2,8 @@ import os.path
 import pandas as pd
 import numpy as np
 LOC_BASE = '/Users/rbekbolatov/tmp/runaug25'
-LOC = LOC_BASE + '/results'
-
+LOC_RESULTS = LOC_BASE + '/results'
+LOC_TASKS = LOC_BASE + '/tasks'
 
 hosts=[
     "ec2-52-11-113-19.us-west-2.compute.amazonaws.com",
@@ -50,23 +50,31 @@ hosts=[
 ]
 
 TASK_OFFSET = 0
-tasks = list(enumerate([';' + str(d) for d in range(32)] + [str(a) + ':' + str(b) + ';' for a in range(32) for b in range(a + 1, 32)]))
+tasks = list(enumerate([';' + str(d) for d in range(32)] + [str(a) + ':' + str(b) + ';' for a in range(32) for b in range(a + 1, 32)], start=TASK_OFFSET))
 num_hosts = len(hosts)
 num_tasks = len(tasks)
 host_tasks = [(host, np.array(tasks)[range(i, num_tasks, num_hosts)]) for i, host in enumerate(hosts)]
 
 
-
-# create and distribute tasks
+# create and distribute tasks, receive results
 task_sender = open(LOC_BASE + '/send_tasks.sh', 'w')
+results_receiver = open(LOC_BASE + '/receive_results.sh', 'w')
 task_sender.write("#!/bin/bash\n")
+results_receiver.write("#!/bin/bash\n")
 for host, ts in host_tasks:
-    tasks_file_loc = LOC_BASE + '/tasks/' + host
+    # task sending
+    tasks_file_loc = LOC_TASKS + '/' + host
     tasks_file = open(tasks_file_loc, 'w')
     tasks_file.write('\n'.join(t[0] + ' ' + t[1] for t in ts) + '\n')
     tasks_file.close()
     task_sender.write('scp ' + tasks_file_loc + ' ' + host + ':/home/ec2-user/input_queue\n')
+    # results receiving
+    for task_num, _ in ts:
+        task_directory = '/TASK_' + str(task_num)
+        location = LOC_RESULTS + task_directory
+        results_receiver.write('if [[ ! -e "' + location + '/task_done" ]]; then scp -r ' + host + ':/home/ec2-user' + task_directory + ' ' + LOC_RESULTS + '/. ; fi\n')
 task_sender.close()
+results_receiver.close()
 
 # start queues
 task_sender = open(LOC_BASE + '/start_tasks.sh', 'w')
@@ -76,17 +84,39 @@ for host in hosts:
     task_sender.write('ssh ' + host + ' /home/ec2-user/runscript_dropcol.sh & sleep 1\n')
 task_sender.close()
 
-# create receiving commands
-results_reader = open(LOC + '/get_results.sh', 'w')
-results_reader.write("#!/bin/bash\n")
-for idx, host in enumerate(hosts):
-    newidx = idx + TASK_OFFSET
-    location = 'TASK_' + str(newidx)
-    results_reader.write('if [[ ! -e "' + location + '/task_done" ]]; then scp -r ' + host + ':/home/ec2-user/' + location + ' . ; fi\n')
-results_reader.close()
-
-# kill
-# for idx, host in enumerate(hosts):
-#     print('ssh ' + host + ' "ps aux | grep xgboost | grep -v grep | head -n 1 | awk  \'{print \$2}\' | xargs kill" ; sleep 1')
 
 
+# show
+finished_locs = [
+    LOC_RESULTS + '/TASK_' + str(idx + TASK_OFFSET)
+    for idx in range(600)
+    if os.path.isfile(LOC_RESULTS + '/TASK_' + str(idx+TASK_OFFSET) + '/task_done')
+    ]
+
+results_blended = pd.DataFrame()
+for loc in finished_locs:
+    argsfile = open(loc + '/args.txt', 'r')
+    args = argsfile.readline()[:-1]
+    argsfile.close()
+    rb = pd.read_csv(loc + '/results_blended.csv')
+    print(args)
+    print(rb)
+    results_blended[args] = rb['0']
+
+results_blended.mean().order()[-20:]
+results_blended = results_blended.reindex_axis(results_blended.mean().order().index, axis=1)
+results_blended.boxplot(vert=False, showmeans=True)
+
+
+results = pd.DataFrame()
+for loc in finished_locs:
+    argsfile = open(loc + '/args.txt', 'r')
+    args = argsfile.readline()[:-1]
+    argsfile.close()
+    rb = pd.read_csv(loc + '/results.csv')
+    print(args)
+    print(rb)
+    results[args] = rb['0']
+
+results = results.reindex_axis(results.mean().order().index, axis=1)
+results.boxplot(vert=False, showmeans=True)

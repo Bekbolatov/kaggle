@@ -1,0 +1,19 @@
+{
+    "SpotPrice": "0.15",
+    "TargetCapacity": 60,
+    "LaunchSpecifications": [
+        {
+            "ImageId": "ami-ff8395cf",
+            "InstanceType": "c4.large",
+            "SubnetId": "subnet-04299373"
+        },
+        {
+            "ImageId": "ami-ff8395cf",
+            "InstanceType": "c4.large",
+            "SubnetId": "subnet-705a1915"
+        }
+    ],
+    "KeyName": "panerapig",
+    "SecurityGroupIds":["sg-fdcdd598"]
+}
+

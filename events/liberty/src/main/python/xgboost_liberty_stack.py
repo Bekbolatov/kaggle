@@ -187,7 +187,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug25_0.csv')
+submission.to_csv('../subm/Aug25_3.csv')
 
 results = pd.DataFrame(cv_errors_all.T)
 print(results)
@@ -296,7 +296,18 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv Gini:  pre-blend=0.39220, post-blend=0.39610
 # Avg cv MSE:   pre-blend=20.356,  post-blend=20.266
 
+## Aug 25 3:55pm: 0:7; (AWS runs show 0.396047)
+# Avg cv Gini:  pre-blend=0.38986, post-blend=0.39379
+# Avg cv MSE:   pre-blend=20.375,  post-blend=20.273
+# LB: 0.389266
 
+## Aug 25 4:32pm: ;24 (AWS runs show 0.396029)
+# Avg cv Gini:  pre-blend=0.38964, post-blend=0.39349
+# Avg cv MSE:   pre-blend=20.415,  post-blend=20.275
+# LB: 0.388355
 
-
+## Aug 25 4:52pm:  0:7;24
+# Avg cv Gini:  pre-blend=0.38986, post-blend=0.39424
+# Avg cv MSE:   pre-blend=20.379,  post-blend=20.272
+# LB: 0.389319
 
