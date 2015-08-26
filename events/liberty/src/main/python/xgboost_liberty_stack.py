@@ -187,7 +187,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-submission.to_csv('../subm/Aug25_3.csv')
+#submission.to_csv('../subm/Aug25_3.csv')
 
 results = pd.DataFrame(cv_errors_all.T)
 print(results)

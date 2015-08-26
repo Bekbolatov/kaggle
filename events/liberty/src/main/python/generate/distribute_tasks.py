@@ -1,7 +1,7 @@
 import os.path
 import pandas as pd
 import numpy as np
-LOC_BASE = '/Users/rbekbolatov/tmp/runaug25'
+LOC_BASE = '/home/ec2-user/runaug25_1'
 LOC_RESULTS = LOC_BASE + '/results'
 LOC_TASKS = LOC_BASE + '/tasks'
 
@@ -49,12 +49,20 @@ hosts=[
     "ec2-54-201-210-115.us-west-2.compute.amazonaws.com",
 ]
 
-TASK_OFFSET = 0
-tasks = list(enumerate([';' + str(d) for d in range(32)] + [str(a) + ':' + str(b) + ';' for a in range(32) for b in range(a + 1, 32)], start=TASK_OFFSET))
+TASK_OFFSET = 600
+tasks = list(enumerate(['0:7;' + str(d) for d in range(32)] +
+                       [str(a) + ':' + str(b) + ',0:7;'
+                        for a in range(32)
+                        for b in range(a + 1, 32) if (a,b) != (0,7)], start=TASK_OFFSET))
 num_hosts = len(hosts)
 num_tasks = len(tasks)
 host_tasks = [(host, np.array(tasks)[range(i, num_tasks, num_hosts)]) for i, host in enumerate(hosts)]
 
+
+# distrib_keys = open(LOC_BASE + '/distrib_keys.sh', 'w')
+# for host in hosts:
+#     distrib_keys.write('scp /Users/rbekbolatov/repos/gh/bekbolatov/kaggle/tmp/authorized_keys ' + host + ':/home/ec2-user/.ssh/authorized_keys\n')
+# distrib_keys.close()
 
 # create and distribute tasks, receive results
 task_sender = open(LOC_BASE + '/send_tasks.sh', 'w')
@@ -84,39 +92,3 @@ for host in hosts:
     task_sender.write('ssh ' + host + ' /home/ec2-user/runscript_dropcol.sh & sleep 1\n')
 task_sender.close()
 
-
-
-# show
-finished_locs = [
-    LOC_RESULTS + '/TASK_' + str(idx + TASK_OFFSET)
-    for idx in range(600)
-    if os.path.isfile(LOC_RESULTS + '/TASK_' + str(idx+TASK_OFFSET) + '/task_done')
-    ]
-
-results_blended = pd.DataFrame()
-for loc in finished_locs:
-    argsfile = open(loc + '/args.txt', 'r')
-    args = argsfile.readline()[:-1]
-    argsfile.close()
-    rb = pd.read_csv(loc + '/results_blended.csv')
-    print(args)
-    print(rb)
-    results_blended[args] = rb['0']
-
-results_blended.mean().order()[-20:]
-results_blended = results_blended.reindex_axis(results_blended.mean().order().index, axis=1)
-results_blended.boxplot(vert=False, showmeans=True)
-
-
-results = pd.DataFrame()
-for loc in finished_locs:
-    argsfile = open(loc + '/args.txt', 'r')
-    args = argsfile.readline()[:-1]
-    argsfile.close()
-    rb = pd.read_csv(loc + '/results.csv')
-    print(args)
-    print(rb)
-    results[args] = rb['0']
-
-results = results.reindex_axis(results.mean().order().index, axis=1)
-results.boxplot(vert=False, showmeans=True)
