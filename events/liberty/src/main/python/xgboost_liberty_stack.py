@@ -75,9 +75,9 @@ params = pd.DataFrame({
     "objective": "reg:linear",
     "eta": [0.04, 0.03, 0.03, 0.03, 0.02, 0.02],
     "min_child_weight": 50,
-    "subsample": [1, 0.9, 0.95, 1, 0.6, 0.8],
-    "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.85, 0.6],
-    "max_depth": [8, 7, 9, 10, 10, 5],
+    "subsample": [1, 0.9, 0.95, 1, 0.8, 0.6],
+    "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.6, 0.85],
+    "max_depth": [8, 7, 9, 10, 5, 10],
     "eval_metric": "auc",
     "scale_pos_weight": 1,
     "silent": 1
@@ -187,7 +187,7 @@ lb_blend_y_all /= (MODELS*run_number)
 
 submission = pd.DataFrame({"Id": lb_ind, "Hazard": lb_blend_y_all})
 submission = submission.set_index('Id')
-#submission.to_csv('../subm/Aug25_3.csv')
+submission.to_csv('../subm/Aug25_4.csv')
 
 results = pd.DataFrame(cv_errors_all.T)
 print(results)
@@ -311,3 +311,10 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv MSE:   pre-blend=20.379,  post-blend=20.272
 # LB: 0.389319
 
+## Aug 25 10:10pm: 7:12,0:7;
+# Avg cv Gini:  pre-blend=0.38963, post-blend=0.39348
+# Avg cv MSE:   pre-blend=20.354,  post-blend=20.272
+
+## Aug 25 10:10pm: 7:12,0:7; skipping model #4 (of# 1, 2, 3, 4, 5)
+# Avg cv Gini:  pre-blend=0.38947, post-blend=0.39280
+# Avg cv MSE:   pre-blend=20.337,  post-blend=20.277

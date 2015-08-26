@@ -1,7 +1,8 @@
 import os.path
 import pandas as pd
 import numpy as np
-LOC_BASE = '/home/ec2-user/runaug25_1'
+#LOC_BASE = '/home/ec2-user/runaug25_1'
+LOC_BASE = '/Users/rbekbolatov/tmp/runaug25'
 LOC_RESULTS = LOC_BASE + '/results'
 LOC_TASKS = LOC_BASE + '/tasks'
 
@@ -49,7 +50,7 @@ hosts=[
     "ec2-54-201-210-115.us-west-2.compute.amazonaws.com",
 ]
 
-TASK_OFFSET = 600
+TASK_OFFSET = 1200
 tasks = list(enumerate(['0:7;' + str(d) for d in range(32)] +
                        [str(a) + ':' + str(b) + ',0:7;'
                         for a in range(32)

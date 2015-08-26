@@ -10,7 +10,7 @@ TASK_OFFSET=0
 # show
 finished_locs = [
     LOC_RESULTS + '/TASK_' + str(idx + TASK_OFFSET)
-    for idx in range(600)
+    for idx in range(1800)
     if os.path.isfile(LOC_RESULTS + '/TASK_' + str(idx+TASK_OFFSET) + '/task_done')
     ]
 
@@ -20,12 +20,11 @@ for loc in finished_locs:
     args = argsfile.readline()[:-1]
     argsfile.close()
     rb = pd.read_csv(loc + '/results_blended.csv')
-    print(args)
-    print(rb)
     results_blended[args] = rb['0']
 
-results_blended.mean().order()[-20:]
+#results_blended.mean().order()[-30:]
 results_blended = results_blended.reindex_axis(results_blended.mean().order().index, axis=1)
+results_blended = results_blended.iloc[:, -30:]
 results_blended.boxplot(vert=False, showmeans=True)
 
 
@@ -41,3 +40,6 @@ for loc in finished_locs:
 
 results = results.reindex_axis(results.mean().order().index, axis=1)
 results.boxplot(vert=False, showmeans=True)
+
+pd.DataFrame(np.dot(np.asarray(results).T ,np.kron(np.ones((10, 1)), np.eye(5)))).boxplot(showmeans=True)
+pd.DataFrame(np.dot(np.asarray(results).T ,np.kron(np.ones((10, 1)), np.eye(5)))).mean()
