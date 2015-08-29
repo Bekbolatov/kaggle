@@ -82,15 +82,17 @@ output_file = '../subm/Aug26_0.csv' if OUTPUT_LOCATION == '/Users/rbekbolatov/da
 # })
 params = pd.DataFrame({
     "objective": "reg:linear",
-    "eta": [0.04, 0.03, 0.03, 0.03, 0.02, 0.02],
-    "min_child_weight": 50,
-    "subsample": [1, 0.9, 0.95, 1, 0.8, 0.6],
-    "colsample_bytree": [0.7, 0.6, 0.65, 0.6, 0.6, 0.85],
-    "max_depth": [8, 7, 9, 10, 5, 10],
+    "eta": 0.05, # [0.05]*20, #np.array( [0.05,   0.04, 0.03, 0.03, 0.03, 0.02,      0.05, 0.04, 0.05, 0.04, 0.04,     0.005, 0.01,   0.02, 0.03, 0.04, 0.04 ]),
+    "min_child_weight": 5, # [[5,  50, 50, 50, 50, 50,            20, 20, 20, 10, 10,               6, 6,          10, 10, 10, 10],
+    "subsample": 0.8, #[0.8,   1, 0.9, 0.95, 1, 0.8,                 0.6,  1,  1, 1, 1,             0.7, 1,            1, 1, 1, 1],
+    "colsample_bytree": 0.25, #[0.25,   0.7, 0.6, 0.65, 0.6, 0.6,      0.85, 0.3, 0.3, 0.3, 0.3,      0.7, 0.4,         0.25, 0.25, 0.25, 0.25],
+    "max_depth": [5]*10, #[6,  8, 7, 9, 10, 5,                       10,   6,  7, 8, 7,             9, 8,            6, 6, 5, 6],
     "eval_metric": "auc",
     "scale_pos_weight": 1,
+    "seed": range(10),
     "silent": 1
 })
+
 
 def evaluate(true_y, pred_y, label):
     mse = sum(np.power( pred_y - true_y, 2 ))/true_y.shape[0]
@@ -101,7 +103,7 @@ def evaluate(true_y, pred_y, label):
 
 data = LibertyEncoder(loc=LOCATION)
 dat_x_orig, dat_y_orig, dat_y_raw_orig, lb_x_orig, lb_ind_orig = data.get_orig_data_copy()
-dat_x_orig, lb_x_orig = data.transform('renat', param_inter, param_drop, dat_y_orig, dat_x_orig, lb_x_orig)
+dat_x_orig, lb_x_orig = data.transform('renat', param_inter, param_drop, dat_y_raw_orig, dat_x_orig, lb_x_orig)
 
 
 dat_x = dat_x_orig
@@ -111,7 +113,7 @@ lb_x = lb_x_orig
 lb_ind = lb_ind_orig
 
 RUNS = 10
-MODELS = 5
+MODELS = 10
 FOLDS = 10
 TIMES=1
 ITERATIONS = (RUNS/FOLDS + 1)
@@ -126,6 +128,7 @@ for t in range(TIMES):
         kf = KFold(n=dat_x.shape[0], n_folds=FOLDS, shuffle=True, random_state=2187 + 87*iteration + EXTRA_SEED + t*101)
         for seen_index, cv_index in kf:
             run_number = run_number + 1
+            sys.stderr.write("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
             print("\n =================  run_number=%d  ================ [%s]\n" %(run_number, time.ctime()))
 
             train_x = dat_x[seen_index, :]
@@ -151,6 +154,8 @@ for t in range(TIMES):
             cv_errors = np.empty([1, 2])
 
             for model_number in range(MODELS):
+                seed = params.iloc[model_number].to_dict()['seed']
+                sys.stderr.write("\n seed: %d\n" %(seed))
                 model = xgb.train(params.iloc[model_number].to_dict(), xgb_train, num_boost_round = 3000,
                                   evals = watchlist,
                                   feval = gini_eval,
@@ -299,6 +304,8 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv Gini:  pre-blend=0.39233, post-blend=0.39622
 # LB:
 
+
+#  [Selected for submission]
 ## Aug 25 3:30am: 0:3,0:7,0:16,0:28,2:28,10:14,10:27,22:24,24:29,27:28;9,12,23,26,5,19  (add 5, 19 to Qinchen)
 # Avg cv Gini:  pre-blend=0.39270, post-blend=0.39656  *   <-------------------
 # Avg cv MSE:   pre-blend=20.321,  post-blend=20.261
@@ -342,4 +349,32 @@ print("\n =================  END  ================ [%s]\n" %(time.ctime()))
 # Avg cv Gini:  pre-blend=0.39052, post-blend=0.39470
 # Avg cv MSE:   pre-blend=20.343,  post-blend=20.268
 # LB:  0.388011
+
+
+
+
+# [Selected for submission]
+## Combined:
+# cv:  0.39686365054284511
+# LB: 0.389363
+
+## Combined 2  only the top CV
+# CV gini: 0.398715
+# cv MSE: 20.255143
+# LB: 0.389354
+
+## Combined 3 - only 4 models:
+# cv gini: 0.395833366016
+# LB: 0.390036
+
+# Combined 9
+# 0.3888
+
+# CV: pre-blend: 0.391671463806  blended: 0.398271361654
+# LB: 0.389636
+
+# CV: 0.392080634806  ->  0.399130582303
+# LB: 0.389789
+
+
 

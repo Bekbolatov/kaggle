@@ -89,6 +89,8 @@ class LibertyFeatures:
         for a, b in interactions_to_add:
             data = np.column_stack([data, np.multiply(data[:, a], data[:, b])])
 
+        data = np.column_stack([data, np.multiply(data[:, 0], np.multiply(data[:, 0], data[:, 7]))])
+
         return data
 
     def renat_drop_cols(self, data, cols_to_drop = []):

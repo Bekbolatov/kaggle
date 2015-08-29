@@ -7,10 +7,17 @@ LOC_TASKS = LOC_BASE + '/tasks'
 
 TASK_OFFSET=0
 
+task_idx = []
+# task_idx += range(0, 600)
+# task_idx += range(600, 1200)
+# task_idx += range(1200, 1800)
+# task_idx += range(1800, 2400)
+# task_idx += range(2400, 2500)
+task_idx += range(2500, 2600)
 # show
 finished_locs = [
     LOC_RESULTS + '/TASK_' + str(idx + TASK_OFFSET)
-    for idx in range(2400)
+    for idx in task_idx
     if os.path.isfile(LOC_RESULTS + '/TASK_' + str(idx+TASK_OFFSET) + '/task_done')
     ]
 

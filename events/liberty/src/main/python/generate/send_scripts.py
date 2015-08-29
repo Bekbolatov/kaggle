@@ -63,10 +63,6 @@ for idx, host in enumerate(hosts):
     results_reader.write('if [[ ! -e "' + location + '/task_done" ]]; then scp -r ' + host + ':/home/ec2-user/' + location + ' . ; fi\n')
 results_reader.close()
 
-# kill
-# for idx, host in enumerate(hosts):
-#     print('ssh ' + host + ' "ps aux | grep xgboost | grep -v grep | head -n 1 | awk  \'{print \$2}\' | xargs kill" ; sleep 1')
-
 
 
 # show results, when ready
