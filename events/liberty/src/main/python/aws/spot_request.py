@@ -35,3 +35,11 @@ class SpotInstances:
         for req in self.reqs:
             print(req.id)
 
+    def ggg(self):
+        reservations = self.conn.get_all_reservations(instance_ids = [req.instance_id for req in self.reqs])
+        for res in reservations:
+            for instance in res.instances:
+                print(instance.public_dns_name)
+
+
+
