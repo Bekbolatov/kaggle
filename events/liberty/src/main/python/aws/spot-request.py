@@ -8,10 +8,13 @@ class SpotInstances:
     si.request(1)
     si.get_public_dns_names()
     """
+    def __init__(self, image_id = "ami-d3c5d5e3"):
+        self.image_id = image_id
+
     def request(self, num_instances=1, max_price=0.05):
         self.conn = boto.ec2.connect_to_region("us-west-2")
         self.reqs = self.conn.request_spot_instances(price=str(max_price),
-                                                     image_id="ami-ff8395cf",
+                                                     image_id=self.image_id,
                                                      count=num_instances,
                                                      type="one-time",
                                                      key_name="panerapig",
