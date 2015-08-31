@@ -3,23 +3,32 @@ import boto.ec2
 
 
 class SpotInstances:
-
+    """
+    si = SpotInstances()
+    si.request(1)
+    si.get_public_dns_names()
+    """
     def request(self, num_instances=1, max_price=0.05):
-        conn = boto.ec2.connect_to_region("us-west-2")
-        self.reqs = conn.request_spot_instances(price=str(max_price), image_id="ami-ff8395cf",count=num_instances,type="one-time", key_name="panerapig",instance_type="c4.large", subnet_id="subnet-04299373")
+        self.conn = boto.ec2.connect_to_region("us-west-2")
+        self.reqs = self.conn.request_spot_instances(price=str(max_price),
+                                                     image_id="ami-ff8395cf",
+                                                     count=num_instances,
+                                                     type="one-time",
+                                                     key_name="panerapig",
+                                                     instance_type="c4.large",
+                                                     subnet_id="subnet-04299373")
         for req in self.reqs:
-            conn.create_tags(req.id, {'purpose': 'xgboost'})
+            self.conn.create_tags(req.id, {'purpose': 'xgboost'})
 
     def cancel(self):
         for req in self.reqs:
-            conn.cancel_spot_instance_requests(req.id)
+            self.conn.cancel_spot_instance_requests(req.id)
 
     def get_requests(self):
-        reqs = conn.get_all_spot_instance_requests()
-        return reqs
+        self.reqs = self.conn.get_all_spot_instance_requests()
+        return self.reqs
 
-    def print_requests(reqs):
-        for req in reqs:
+    def print_requests(self):
+        for req in self.reqs:
             print(req.id)
-
 

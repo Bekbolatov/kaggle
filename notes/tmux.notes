@@ -7,3 +7,9 @@ tmux ls
 ^b [    fn-up
 
 
+
+
+tmux new-session -d -s hello_session 'ls ; sleep 10; ls; sleep 10'  \;
+
+
+
