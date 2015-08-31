@@ -11,7 +11,14 @@ class SpotInstances:
     def __init__(self, image_id = "ami-d3c5d5e3"):
         self.image_id = image_id
 
-    def request(self, num_instances=1, max_price=0.05):
+    def request(self, num_instances=1, max_price=0.05, subnet='a'):
+        if subnet == 'a':
+            subnet_id = 'subnet-04299373'
+        elif subnet == 'b':
+            subnet_id = 'subnet-705a1915'
+        else:
+            subnet_id = 'subnet-04299373'
+
         self.conn = boto.ec2.connect_to_region("us-west-2")
         self.reqs = self.conn.request_spot_instances(price=str(max_price),
                                                      image_id=self.image_id,
@@ -19,7 +26,7 @@ class SpotInstances:
                                                      type="one-time",
                                                      key_name="panerapig",
                                                      instance_type="c4.large",
-                                                     subnet_id="subnet-04299373")
+                                                     subnet_id=subnet_id)
         for req in self.reqs:
             self.conn.create_tags(req.id, {'purpose': 'xgboost'})
 
