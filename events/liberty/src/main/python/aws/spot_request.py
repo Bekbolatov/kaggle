@@ -8,7 +8,7 @@ class SpotInstances:
     si.request(1)
     si.get_public_dns_names()
     """
-    def __init__(self, image_id = "ami-d3c5d5e3"):
+    def __init__(self, image_id = "ami-f38292c3"):  #<-XGBOOST5.1, XGBOOST5 -> ami-d3c5d5e3"):
         self.image_id = image_id
 
     def request(self, num_instances=1, max_price=0.05, subnet='a'):
