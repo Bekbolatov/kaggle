@@ -1,0 +1,9 @@
+
+
+packages:
+import site; site.getsitepackages()
+
+
+on OS X, one of paths: /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python
+
+
