@@ -14,5 +14,5 @@ class FileCache:
         return open(self.loc + filename)
 
     def download_file(self, filename):
-       transfer.download_file('sparkydotsdata', self.s3_key + filename , self.loc + filename) 
+       self.client.download_file('sparkydotsdata', self.s3_key + filename , self.loc + filename) 
 
