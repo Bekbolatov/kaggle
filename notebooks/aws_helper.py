@@ -1,4 +1,5 @@
 import boto.ec2
+import boto3
 
 class SpotInstances:
     """
@@ -51,9 +52,7 @@ class SpotInstances:
         for res in reservations:
             for instance in res.instances:
                 print(instance.public_dns_name)
-                
-                
-import boto3
+                          
 
 class ClusterTaskQueue():
     def add_task(self, task_string):
