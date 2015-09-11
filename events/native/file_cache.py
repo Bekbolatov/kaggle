@@ -29,4 +29,20 @@ class SoupReader:
         file_handle.close()
         return bs(file_content)
 
+class SoupIterator:
+    def __init__(self, filenames):
+        self.filenames = filenames
+        self.index = 0
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def next(self):
+        if self.index >= len(self.filenames):
+            raise StopIteration
+        else:
+            value = self.filenames[self.index]
+            self.index += 1
+            return value
 
