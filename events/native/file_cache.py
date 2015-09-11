@@ -33,6 +33,7 @@ class SoupIterator:
     def __init__(self, filenames):
         self.filenames = filenames
         self.index = 0
+        self.soup_reader = SoupReader()
 
     def __iter__(self):
         self.index = 0
@@ -44,5 +45,6 @@ class SoupIterator:
         else:
             value = self.filenames[self.index]
             self.index += 1
-            return value
+            return self.soup_reader.get_soup(value)
+
 
