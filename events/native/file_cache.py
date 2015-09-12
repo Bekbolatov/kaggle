@@ -20,8 +20,8 @@ class FileCache:
        self.client.download_file(self.bucket, self.s3_key_prefix + filename , self.local_cache_loc + filename) 
 
     def clean_cache(self):
-        num_items = len([name for name in os.listdir(self.local_cache_loc) if os.path.isfile(name)])
-        print ("There are %d items." % (num_items))
+        used_kb = sum([os.path.getsize(self.local_cache_loc + filename) for filename in os.listdir(self.local_cache_loc)]) // 1000
+        print ("Used space: %d KB." % (used_kb))
 
 class SoupReader:
 
