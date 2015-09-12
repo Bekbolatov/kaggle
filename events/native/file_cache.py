@@ -1,5 +1,5 @@
 import boto3
-import os.path
+import os, os.path
 from bs4 import BeautifulSoup as bs
 
 class FileCache:
@@ -17,6 +17,10 @@ class FileCache:
 
     def download_file(self, filename):
        self.client.download_file(self.bucket, self.s3_key_prefix + filename , self.local_cache_loc + filename) 
+
+    def clean_cache(self):
+        num_items = len([name for name in os.listdir(self.local_cache_loc) if os.path.isfile(name)])
+        print ("There are %d items." % (num_items))
 
 class SoupReader:
 
