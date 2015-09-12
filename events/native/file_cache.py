@@ -22,12 +22,13 @@ class FileCache:
        self.client.download_file(self.bucket, self.s3_key_prefix + filename , self.local_cache_loc + filename) 
 
     def clean_cache(self):
+        print("Used space: %d KB." % (used_kb))
         used_kb = self.current_cache_size()
         if used_kb > self.max_kb:
             print("Cache reached max_kb size - clearing cache")
             files = self.sorted_ls()
             earlier_files = files[:(len(files)//2)]
-            print("first trying to remove earlier half")
+            print("First trying to remove only earlier half")
             for filename in earlier_files:
                 os.remove(self.local_cache_loc + filename)
             if self.current_cache_size() > self.max_kb:
@@ -35,7 +36,6 @@ class FileCache:
                 print("... not enough, removing all")
                 for filename in later_files:
                     os.remove(self.local_cache_loc + filename)
-        print("Used space: %d KB." % (used_kb))
 
     def sorted_ls(self):
         path = self.local_cache_loc
