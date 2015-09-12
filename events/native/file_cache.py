@@ -16,6 +16,7 @@ class FileCache:
         return open(self.local_cache_loc + filename)
 
     def download_file(self, filename):
+       self.clean_cache()
        self.client.download_file(self.bucket, self.s3_key_prefix + filename , self.local_cache_loc + filename) 
 
     def clean_cache(self):
