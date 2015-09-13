@@ -77,7 +77,7 @@ class SoupIO:
         self.file_cache = FileCache(local_cache_loc=local_cache_loc, s3_key_prefix=s3_key_prefix,max_kb=max_kb)
 
     def get_soup(self, filename):
-        file_handle = self.file_cache.get_file(filename)
+        file_handle = self.file_cache.open_file(filename)
         file_content = file_handle.read()
         file_handle.close()
         if file_content:
