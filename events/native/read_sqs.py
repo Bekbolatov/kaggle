@@ -33,7 +33,7 @@ class Runner:
     def send_dns_to_queue(self, receiving_queue, msg):
         receiving_queue.send_message(MessageBody=msg, MessageAttributes={
             'Worker': {
-                'StringValue': dns_name,
+                'StringValue': self.dns_name,
                 'DataType': 'String'
                 }
             })
