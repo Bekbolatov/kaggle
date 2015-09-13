@@ -12,7 +12,7 @@ class FileCache:
             max_kb=3145728):
         """ max_kb 3145728 = 3 GB *1024 * 1024"""
         self.s3_key_prefix = s3_key_prefix + 'orig/'
-        self.s3_key_prefix_upload = s3_key_prefix + run_name + '/'
+        self.s3_key_prefix_upload = s3_key_prefix + 'docs/' + run_name + '/'
         self.client = boto3.client('s3')
         self.bucket = 'sparkydotsdata'
         self.download_cache = os.path.join(local_cache_loc, 'download/')
@@ -76,8 +76,8 @@ class FileCache:
 
 class SoupIO:
 
-    def __init__(self, local_cache_loc='/home/ec2-user/data/cache/', s3_key_prefix='kaggle/native/',max_kb=3145728):
-        self.file_cache = FileCache(local_cache_loc=local_cache_loc, s3_key_prefix=s3_key_prefix,max_kb=max_kb)
+    def __init__(self, run_name='01', local_cache_loc='/home/ec2-user/data/cache/', s3_key_prefix='kaggle/native/',max_kb=3145728):
+        self.file_cache = FileCache(local_cache_loc=local_cache_loc, s3_key_prefix=s3_key_prefix, run_name=run_name, max_kb=max_kb)
 
     def get_soup(self, filename):
         file_handle = self.file_cache.open_file(filename)
@@ -93,12 +93,18 @@ class SoupIO:
         self.file_cache.upload_file(filename, docs_array)
 
 class DocProcessor:
-    def __init__(self, filenames, log_dir='/home/ec2-user/logs/'):
+    def __init__(self, filenames, run_name, parse, part_id, log_dir='/home/ec2-user/logs/'):
         self.filenames = filenames
+        self.run_name = run_name
+        if type(part_id) is str:
+            self.part_id = part_id
+        else:
+            self.part_id = str(part_id).zfill(3)
+        self.parse = parse
         self.log_dir = log_dir
-        self.soup_io = SoupIO()
+        self.soup_io = SoupIO(run_name=run_name)
 
-    def process(self, parse, part_id):
+    def process(self):
         ferr = open(os.path.join(self.log_dir, "errors_in_scraping.log"),"w")
         ferr.write("Starting processing part_id: %s\n" % part_id)
         json_array = []  
@@ -106,7 +112,7 @@ class DocProcessor:
             soup = self.soup_io.get_soup(filename)
             if soup:
                 try:
-                    doc = parse(soup)
+                    doc = self.parse(soup)
                     json_array.append(doc)
                 except Exception as e:
                     ferr.write("parse error with reason : %s on file: %s\n" %(str(e), filename))
@@ -116,5 +122,9 @@ class DocProcessor:
         self.soup_io.put_docs(part_id, json_array)
         ferr.close()
 
+
+
+def test_parse(soup):
+    return {"id": 3, "hg": "df"}
 
 
