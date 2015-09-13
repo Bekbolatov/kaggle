@@ -3,74 +3,83 @@ import requests
 import parser_runner
 import git
 
-g = git.cmd.Git('/home/ec2-user/repos/bekbolatov/kaggle')
 
-def update_parser():
-    git.pull()
-    reload(parser_runner)
-    return parser_runner.ParserRunner()
-    
-parser = parser_runner.ParserRunner()
+class Runner:
 
-dns_name_req = requests.get('http://169.254.169.254/latest/meta-data/public-hostname')
-dns_name = dns_name_req.text
+    def __init__(self):
+        self.g = git.cmd.Git('/home/ec2-user/repos/bekbolatov/kaggle')
+        self.parser = parser_runner.ParserRunner()
 
-sqs = boto3.resource('sqs')
-queue = sqs.get_queue_by_name(QueueName='cluster_task_queue')
-new_member_queue = sqs.get_queue_by_name(QueueName='cluster_new_member')
-commitment_queue = sqs.get_queue_by_name(QueueName='cluster_task_commitment')
+        dns_name_req = requests.get('http://169.254.169.254/latest/meta-data/public-hostname')
+        self.dns_name = dns_name_req.text
 
-def send_dns_to_queue(receiving_queue, msg):
-    receiving_queue.send_message(MessageBody=msg, MessageAttributes={
-        'Worker': {
-            'StringValue': dns_name,
-            'DataType': 'String'
-            }
-        })
+        self.sqs = boto3.resource('sqs')
+        self.queue = sqs.get_queue_by_name(QueueName='cluster_task_queue')
+        self.new_member_queue = sqs.get_queue_by_name(QueueName='cluster_new_member')
+        self.commitment_queue = sqs.get_queue_by_name(QueueName='cluster_task_commitment')
 
-def send_to_member_queue(msg):
-    send_dns_to_queue(new_member_queue, msg)
+        self.send_to_member_queue('new_member')
 
-def send_to_commit_queue(msg):
-    send_dns_to_queue(commitment_queue, msg)
+        self.my_id = None
+        self.total_ids = None
 
-def log(msg):
-    with open('/home/ec2-user/logs/daemon.log', 'a') as f:
-        f.write(msg + '\n')
+    def update_parser(self):
+        self.git.pull()
+        reload(parser_runner)
+        self.parser = parser_runner.ParserRunner()
+        
 
 
-send_to_member_queue('new_member')
+    def send_dns_to_queue(self, receiving_queue, msg):
+        receiving_queue.send_message(MessageBody=msg, MessageAttributes={
+            'Worker': {
+                'StringValue': dns_name,
+                'DataType': 'String'
+                }
+            })
 
-my_id = None
-total_ids = None
+    def send_to_member_queue(self, msg):
+        self.send_dns_to_queue(self.new_member_queue, msg)
 
-keep_receiving = True
-while keep_receiving:
-    for message in queue.receive_messages():
-        msg = message.body
-        log('Received: {0}'.format(msg))
-        message.delete()
-        if msg == 'quit':
-            keep_receiving = False
-            log('Quitting')
-            send_to_member_queue('exit_member')
-            break
-        if msg.startswith('parse:'):
-            send_to_commit_queue(msg)
-            message.delete()
-            log('Processing parsing task: {0}'.format(msg))
-            input_data = msg[6:]
-            data = input_data.split(':')
-            if (len(data) == 1 and my_id and total_ids):
-                run_id = data[0]
-            else:
-                run_id, my_id, total_ids = data
-            parser.run(run_id, my_id, total_ids)
-        if msg.startswith('git:pull'):
-            message.delete()
-            log('git pull, reload parser')
-            parser = update_parser()
+    def send_to_commit_queue(self, msg):
+        self.send_dns_to_queue(self.commitment_queue, msg)
 
+    def log(self, msg):
+        with open('/home/ec2-user/logs/daemon.log', 'a') as f:
+            f.write(msg + '\n')
+
+    def process(self):
+        keep_receiving = True
+        while keep_receiving:
+            for message in self.queue.receive_messages():
+                msg = message.body
+                self.log('Received: {0}'.format(msg))
+                message.delete()
+                if msg == 'quit':
+                    keep_receiving = False
+                    self.log('Quitting')
+                    self.send_to_member_queue('exit_member')
+                    break
+                if msg.startswith('parse:'):
+                    self.send_to_commit_queue(msg)
+                    message.delete()
+                    self.log('Processing parsing task: {0}'.format(msg))
+                    input_data = msg[6:]
+                    data = input_data.split(':')
+                    if (len(data) == 1 and my_id and total_ids):
+                        run_id = data[0]
+                    else:
+                        run_id, self.my_id, self.total_ids = data
+                    self.parser.run(run_id, self.my_id, self.total_ids)
+                if msg.startswith('git:pull'):
+                    message.delete()
+                    self.log('git pull, reload parser')
+                    self.update_parser()
+
+
+if __name__ == '__main__':
+    runner = Runner()
+    runner.process()
 
 
 
