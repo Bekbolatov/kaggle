@@ -1,5 +1,8 @@
 import boto3
 import requests
+from parser_runner import ParserRunner
+
+parser = ParserRunner()
 
 dns_name_req = requests.get('http://169.254.169.254/latest/meta-data/public-hostname')
 dns_name = dns_name_req.text
@@ -15,6 +18,7 @@ new_member_queue.send_message(MessageBody='new_member', MessageAttributes={
         }
     })
 
+# Committing to tasks
 commitment_queue = sqs.get_queue_by_name(QueueName='cluster_task_commitment')
 
 keep_receiving = True
@@ -33,5 +37,8 @@ while keep_receiving:
         if msg == 'quit':
             keep_receiving = False
             break
+        if msg.startswith('run:')
+            f.write('Processing run: {0}\n'.format(msg))
+            parser.run(msg[4:])
 
 

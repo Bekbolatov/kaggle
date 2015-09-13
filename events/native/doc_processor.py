@@ -19,6 +19,7 @@ class FileCache:
         self.upload_cache = os.path.join(local_cache_loc, 'upload/')
         self.max_kb_download = int(max_kb*0.8)
         self.max_kb_upload = max_kb - self.max_kb_download
+        self.reset_upload_cache()
 
     def open_file(self, filename):
         if not os.path.isfile(os.path.join(self.download_cache, filename)):
@@ -50,6 +51,9 @@ class FileCache:
     def clean_upload_cache(self):
         self.clean_cache(self.upload_cache, self.max_kb_upload)
 
+    def reset_upload_cache(self):
+        self.clean_cache(self.upload_cache, 0)
+        
     def clean_cache(self, path, limit_kb):
         used_kb = self.current_cache_size(path)
         print("Used space: %d KB in path: %s" % (used_kb, path))
@@ -106,7 +110,7 @@ class DocProcessor:
 
     def process(self):
         ferr = open(os.path.join(self.log_dir, "errors_in_scraping.log"),"w")
-        ferr.write("Starting processing part_id: %s\n" % self.part_id)
+        ferr.write("Starting processing part_id: %s with %d files\n" % (self.part_id, len(self.filenames)))
         json_array = []  
         for i, filename in enumerate(self.filenames):
             soup = self.soup_io.get_soup(filename)
@@ -118,6 +122,8 @@ class DocProcessor:
                     ferr.write("parse error with reason : %s on file: %s\n" %(str(e), filename))
             if i % 100 == 0:
                 print("processed %d docs" % (i))
+            if i % 500 == 0:
+                ferr.write("Processed %d docs\n" % (i))
 
         self.soup_io.put_docs(self.part_id, json_array)
         ferr.close()
