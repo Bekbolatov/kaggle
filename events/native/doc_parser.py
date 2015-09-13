@@ -15,7 +15,7 @@ def get_title(soup):
 def get_links(soup):
     hrefs = []
     texts = []
-    links = soup.findAll('a')
+    links = soup.findAll('a', href=True)
     hrefs = [a.href for a in links]
     texts = [re.sub(r'[\'"|\n\t,.:;()\-\/]+', ' ', a.text.encode('ascii', 'ignore').strip()) for a in links]
     return hrefs, texts
