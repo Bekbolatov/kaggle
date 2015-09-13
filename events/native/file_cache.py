@@ -27,7 +27,10 @@ class FileCache:
 
     def download_file(self, filename):
        self.clean_download_cache()
-       self.client.download_file(self.bucket, self.s3_key_prefix + filename, os.path.join(self.download_cache, filename))
+       s3_location = self.s3_key_prefix + filename
+       local_location = os.path.join(self.download_cache, filename)
+       print("Downloading from %s to %s" % ( s3_location, local_location))
+       self.client.download_file(self.bucket, s3_location, local_location)
 
     def upload_file(self, filename, contents):
        self.clean_upload_cache()
