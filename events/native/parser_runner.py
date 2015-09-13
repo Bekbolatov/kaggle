@@ -7,19 +7,14 @@ import doc_parser
 
 class ParserRunner:
 
-    def run(self, input_data):
-        """ input_data = '01:1:40' """
+    def run(self, run_id, my_id, total_ids):
         reload(doc_processor)
         reload(doc_parser)
-        data = input_data.split(':')
-        if (len(data) == 1 and self.filenames and self.my_id and self.total_ids):
-            self.run_id = data[0]
-        else:
-            self.run_id, self.my_id, self.total_ids = data
-            self.filenames = self.get_filenames(self.my_id, self.total_ids)
-        processor = doc_processor.DocProcessor(self.filenames, self.run_id, doc_parser.parse, self.my_id) 
+        filenames = self.get_filenames(my_id, total_ids)
+        processor = doc_processor.DocProcessor(filenames, run_id, doc_parser.parse, my_id) 
         processor.process()
-        
+       
+
     def get_filenames(self, my_id, total_ids):
         my_id = int(my_id)
         total_ids = int(total_ids)

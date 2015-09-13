@@ -41,6 +41,9 @@ def log(msg):
 
 send_to_member_queue('new_member')
 
+my_id = None
+total_ids = None
+
 keep_receiving = True
 while keep_receiving:
     for message in queue.receive_messages():
@@ -56,7 +59,13 @@ while keep_receiving:
             send_to_commit_queue(msg)
             message.delete()
             log('Processing parsing task: {0}'.format(msg))
-            parser.run(msg[6:])
+            input_data = msg[6:]
+            data = input_data.split(':')
+            if (len(data) == 1 and my_id and total_ids):
+                run_id = data[0]
+            else:
+                run_id, my_id, total_ids = data
+            parser.run(run_id, my_id, total_ids)
         if msg.startswith('git:pull'):
             message.delete()
             log('git pull, reload parser')

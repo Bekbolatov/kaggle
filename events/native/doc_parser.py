@@ -1,5 +1,6 @@
 
 
 def parse(soup, filename):
-    return {"id": filename, "hello": "ge"} 
+    title = soup.title.text
+    return {"id": filename, "title": title} 
 
