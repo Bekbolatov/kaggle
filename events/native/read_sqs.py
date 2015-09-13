@@ -37,7 +37,7 @@ while keep_receiving:
         if msg == 'quit':
             keep_receiving = False
             break
-        if msg.startswith('run:')
+        if msg.startswith('run:'):
             f.write('Processing run: {0}\n'.format(msg))
             parser.run(msg[4:])
 
