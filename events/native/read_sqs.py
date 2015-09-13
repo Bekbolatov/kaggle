@@ -13,7 +13,7 @@ class Runner:
         dns_name_req = requests.get('http://169.254.169.254/latest/meta-data/public-hostname')
         self.dns_name = dns_name_req.text
 
-        self.sqs = boto3.resource('sqs')
+        sqs = boto3.resource('sqs')
         self.queue = sqs.get_queue_by_name(QueueName='cluster_task_queue')
         self.new_member_queue = sqs.get_queue_by_name(QueueName='cluster_new_member')
         self.commitment_queue = sqs.get_queue_by_name(QueueName='cluster_task_commitment')
