@@ -24,7 +24,7 @@ class Runner:
         self.total_ids = None
 
     def update_parser(self):
-        self.git.pull()
+        self.g.pull()
         reload(parser_runner)
         self.parser = parser_runner.ParserRunner()
         
