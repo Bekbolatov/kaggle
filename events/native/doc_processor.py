@@ -112,7 +112,7 @@ class DocProcessor:
             soup = self.soup_io.get_soup(filename)
             if soup:
                 try:
-                    doc = self.parse(soup)
+                    doc = self.parse(soup, filename)
                     json_array.append(doc)
                 except Exception as e:
                     ferr.write("parse error with reason : %s on file: %s\n" %(str(e), filename))
@@ -124,7 +124,7 @@ class DocProcessor:
 
 
 
-def test_parse(soup):
-    return {"id": 3, "hg": "df"}
+def test_parse(soup, filename):
+    return {"id": filename, "hg": "df"}
 
 
