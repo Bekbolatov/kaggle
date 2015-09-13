@@ -106,7 +106,7 @@ class DocProcessor:
 
     def process(self):
         ferr = open(os.path.join(self.log_dir, "errors_in_scraping.log"),"w")
-        ferr.write("Starting processing part_id: %s\n" % part_id)
+        ferr.write("Starting processing part_id: %s\n" % self.part_id)
         json_array = []  
         for i, filename in enumerate(self.filenames):
             soup = self.soup_io.get_soup(filename)
