@@ -7,7 +7,7 @@ g = git.cmd.Git('/home/ec2-user/repos/bekbolatov/kaggle')
 
 def update_parser():
     git.pull()
-    reload parser_runner
+    reload(parser_runner)
     return parser_runner.ParserRunner()
     
 parser = parser_runner.ParserRunner()
