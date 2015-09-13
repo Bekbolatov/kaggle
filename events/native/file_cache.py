@@ -100,6 +100,7 @@ class DocProcessor:
 
     def process(self, parse, part_id):
         ferr = open(os.path.join(self.log_dir, "errors_in_scraping.log"),"w")
+        ferr.write("Starting processing part_id: %s\n" % part_id)
         json_array = []  
         for i, filename in enumerate(self.filenames):
             soup = self.soup_io.get_soup(filename)
@@ -108,11 +109,11 @@ class DocProcessor:
                     doc = parse(soup)
                     json_array.append(doc)
                 except Exception as e:
-                    ferr.write("parse error with reason : "+str(e)+" on page "+urlId+"\n")
+                    ferr.write("parse error with reason : %s on file: %s\n" %(str(e), filename))
             if i % 100 == 0:
                 print("processed %d docs" % (i))
 
-        self.soup_io.put_doc(part_id, doc)
+        self.soup_io.put_docs(part_id, json_array)
         ferr.close()
 
 
