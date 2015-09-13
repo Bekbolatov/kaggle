@@ -66,7 +66,7 @@ class Runner:
                     self.log('Processing parsing task: {0}'.format(msg))
                     input_data = msg[6:]
                     data = input_data.split(':')
-                    if (len(data) == 1 and my_id and total_ids):
+                    if (len(data) == 1 and self.my_id and self.total_ids):
                         run_id = data[0]
                     else:
                         run_id, self.my_id, self.total_ids = data
