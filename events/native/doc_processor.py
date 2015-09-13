@@ -119,7 +119,7 @@ class DocProcessor:
             if i % 100 == 0:
                 print("processed %d docs" % (i))
 
-        self.soup_io.put_docs(part_id, json_array)
+        self.soup_io.put_docs(self.part_id, json_array)
         ferr.close()
 
 

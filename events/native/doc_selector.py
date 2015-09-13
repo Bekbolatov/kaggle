@@ -21,7 +21,7 @@ class ParserRunner:
         filenames = np.asarray(filenames['filename'])
         batch_size = int(math.ceil(len(filenames) / total_ids))
         start_idx = my_id * batch_size
-        stop_idx = start_id + batch_size
-        return filenames[start_id:stop_idx]
+        stop_idx = start_idx + batch_size
+        return filenames[start_idx:stop_idx]
 
 
