@@ -3,7 +3,7 @@ import re
 
 def get_paragraphs(soup):
     paragraphs = soup.findAll('p')
-    cleaned_texts = [re.sub(r'[\'"|\n\t,.:;()\-\/]+', ' ', p.text.encode('ascii', 'ignore').strip()) for p in paragraphs]
+    cleaned_texts = [re.sub(r'[\'"|\n\t,.:;()\-\/]+', ' ', p.text.encode('ascii', 'ignore').strip()).lower() for p in paragraphs]
     return cleaned_texts 
 
 def get_title(soup):
