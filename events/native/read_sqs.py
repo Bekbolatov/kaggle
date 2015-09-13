@@ -1,8 +1,16 @@
 import boto3
 import requests
-from parser_runner import ParserRunner
+import parser_runner
+import git
 
-parser = ParserRunner()
+g = git.cmd.Git('/home/ec2-user/repos/bekbolatov/kaggle')
+
+def update_parser():
+    git.pull()
+    reload parser_runner
+    return parser_runner.ParserRunner()
+    
+parser = parser_runner.ParserRunner()
 
 dns_name_req = requests.get('http://169.254.169.254/latest/meta-data/public-hostname')
 dns_name = dns_name_req.text
@@ -27,7 +35,7 @@ def send_to_commit_queue(msg):
     send_dns_to_queue(commitment_queue, msg)
 
 def log(msg):
-    with open('/var/log/renat_cluster/daemon.log', 'a') as f:
+    with open('/home/ec2-user/logs/daemon.log', 'a') as f:
         f.write(msg + '\n')
 
 
@@ -38,6 +46,7 @@ while keep_receiving:
     for message in queue.receive_messages():
         msg = message.body
         log('Received: {0}'.format(msg))
+        message.delete()
         if msg == 'quit':
             keep_receiving = False
             log('Quitting')
@@ -48,5 +57,15 @@ while keep_receiving:
             message.delete()
             log('Processing parsing task: {0}'.format(msg))
             parser.run(msg[6:])
+        if msg.startswith('git:pull'):
+            message.delete()
+            log('git pull, reload parser')
+            parser = update_parser()
+
+
+
+
+
+
 
 

@@ -2,16 +2,22 @@ from __future__ import division
 import numpy as np
 import pandas as pd
 import math
-from doc_processor import DocProcessor
-from doc_parser import parse
+import doc_processor
+import doc_parser
 
 class ParserRunner:
 
     def run(self, input_data):
         """ input_data = '01:1:40' """
-        run_id, my_id, total_ids = input_data.split(':')
-        filenames = self.get_filenames(my_id, total_ids)
-        processor = DocProcessor(filenames, run_id, parse, my_id) 
+        reload(doc_processor)
+        reload(doc_parser)
+        data = input_data.split(':')
+        if (len(data) == 1 and self.filenames and self.my_id and self.total_ids):
+            self.run_id = data[0]
+        else:
+            self.run_id, self.my_id, self.total_ids = data
+            self.filenames = self.get_filenames(self.my_id, self.total_ids)
+        processor = doc_processor.DocProcessor(self.filenames, self.run_id, doc_parser.parse, self.my_id) 
         processor.process()
         
     def get_filenames(self, my_id, total_ids):

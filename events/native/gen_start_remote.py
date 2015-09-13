@@ -58,10 +58,22 @@ hosts = [
     "ec2-52-88-254-162.us-west-2.compute.amazonaws.com"
     ]
 
-
 num_hosts = len(hosts)
 
-print(num_hosts)
-#ssh ec2-52-88-104-26.us-west-2.compute.amazonaws.com -t 'tmux new-session -d -s server-session "python /home/ec2-user/repos/bekbolatov/kaggle/events/native/read_sqs.py"'
+
+task_sender = open(LOC_BASE + '/start_tasks.sh', 'w')
+task_sender.write("#!/bin/bash\n")
+for host in hosts:
+    tasks_file_loc = LOC_BASE + '/tasks/' + host
+    task_sender.write('ssh ' + host + ' -t \'tmux new-session -d -s server-session "python /home/ec2-user/repos/bekbolatov/kaggle/events/native/read_sqs.py"\'\n')
+task_sender.close()
+
+
+task_sender = open(LOC_BASE + '/repo_pull.sh', 'w')
+task_sender.write("#!/bin/bash\n")
+for host in hosts:
+    tasks_file_loc = LOC_BASE + '/tasks/' + host
+    task_sender.write('ssh ' + host + ' \'cd /home/ec2-user/repos/bekbolatov/kaggle; git pull\'\n')
+task_sender.close()
 
 
