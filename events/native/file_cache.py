@@ -76,7 +76,7 @@ class FileCache:
 
 class SoupIO:
 
-    def __init__(self, local_cache_loc='/home/ec2-user/data/cache/', s3_key_prefix='kaggle/native/orig/',max_kb=3145728):
+    def __init__(self, local_cache_loc='/home/ec2-user/data/cache/', s3_key_prefix='kaggle/native/',max_kb=3145728):
         self.file_cache = FileCache(local_cache_loc=local_cache_loc, s3_key_prefix=s3_key_prefix,max_kb=max_kb)
 
     def get_soup(self, filename):
