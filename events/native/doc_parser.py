@@ -14,7 +14,7 @@ def clean_texts(items):
 # image source 
 def clean_image_source(src):
     """data:image/gif;base64,R0lGODdh"""
-    if src.startswith('data:image/'):
+    if src and src.startswith('data:image/'):
         src = src[:(src.find(';base64,'))]
     return src
 
@@ -32,9 +32,9 @@ def get_image_data(soup):
     return {
         "srcs": srcs, 
         "cnt": len(text_lengths),
-        "avg": sum(text_lengths)/len(text_length),
+        "avg": sum(text_lengths)/len(text_lengthis),
         "b_cnt": len(big_text_lengths),
-        "b_avg": sum(big_text_lengths)/len(big_text_length)
+        "b_avg": sum(big_text_lengths)/len(big_text_lengths)
         }
 
 def get_script_srcs(soup):
