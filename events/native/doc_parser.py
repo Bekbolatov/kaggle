@@ -8,17 +8,17 @@ def get_paragraphs(soup):
 
 def get_images(soup):
     images = soup.find_all('img')
-    srcs = [image['src'] for image in images]
+    srcs = [image.get('src') for image in images]
     return srcs 
 
 def get_scripts(soup):
     scripts = soup.find_all('script')
-    srcs = [script['src'] for script in scripts]
+    srcs = [script.get('src') for script in scripts]
     return srcs 
 
 def get_styles(soup):
     styles = soup.find_all('style')
-    srcs = [style['src'] for style in styles]
+    srcs = [style.get('src') for style in styles]
     return srcs 
 
 def get_title(soup):
