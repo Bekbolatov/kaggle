@@ -36,8 +36,12 @@ def text_stats(items):
 def get_div_data(soup):
     items = soup.find_all('div')
     cnt = len(items)
-    exists = 1 if cnt > 0 else 0
-    return { "cnt": cnt, "ex": exists }
+    return cnt
+
+def get_button_data(soup):
+    items = soup.find_all('button')
+    cnt = len(items)
+    return cnt
 
 def get_input_data(soup):
     items = soup.find_all('input')
@@ -112,18 +116,24 @@ def parse(soup, filename):
     style_data = get_style_data(soup)
 
     div_data = get_div_data(soup)
+    button_data = get_button_data(soup)
     input_data = get_input_data(soup)
 
     doc = {
         "id": filename, 
+
         "title": title,
         "par": pars,
+
         "ahref": ahrefs,
         "atext": atexts,
+
         "img": image_data,
         "script": script_data,
         "style": style_data,
+
         "div": div_data,
+        "button": button_data,
         "input": input_data
         }
     return doc
