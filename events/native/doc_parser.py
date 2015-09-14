@@ -1,3 +1,4 @@
+from __future__ import division
 import re
 
 # text
@@ -23,11 +24,18 @@ def get_paragraphs(soup):
     cleaned_texts = clean_texts([p.text for p in paragraphs])
     return cleaned_texts 
 
-def get_image_srcs(soup):
+def get_image_data(soup):
     items = soup.find_all('img')
     srcs = [clean_image_source(image.get('src')) for image in items]
-    src_text_lengths = [len(item.text) for item in items]
-    return srcs, src_text_lengths
+    text_lengths = [len(item.text) for item in items]
+    big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
+    return {
+        "srcs": srcs, 
+        "cnt": len(text_lengths),
+        "avg": sum(text_lengths)/len(text_length),
+        "b_cnt": len(big_text_lengths),
+        "b_avg": sum(big_text_lengths)/len(big_text_length)
+        }
 
 def get_script_srcs(soup):
     items = soup.find_all('script')
@@ -60,7 +68,7 @@ def parse(soup, filename):
     title = get_title(soup)
     pars = get_paragraphs(soup)
     ahrefs, atexts = get_links(soup)
-    images, image_text_lengths = get_image_srcs(soup)
+    image_data = get_image_data(soup)
     scripts, script_text_lengths = get_script_srcs(soup)
     styles, style_text_lengths = get_style_srcs(soup)
     doc = {
@@ -69,10 +77,9 @@ def parse(soup, filename):
         "pars": pars,
         "ahrefs": ahrefs,
         "atexts": atexts,
-        "images": images,
+        "img": image_data,
         "scripts": scripts,
         "styles": styles,
-        "images_textlen": image_text_lengths,
         "script_textlen": script_text_lengths,
         "style_textlen": style_text_lengths
         }
