@@ -33,21 +33,14 @@ def text_stats(items):
     return len(text_lengths), avg, len(big_text_lengths), b_avg
 
 # individual tags
-def get_div_data(soup):
-    items = soup.find_all('div')
-    cnt = len(items)
-    return cnt
-
-def get_button_data(soup):
-    items = soup.find_all('button')
-    cnt = len(items)
-    return cnt
-
-def get_input_data(soup):
-    items = soup.find_all('input')
-    cnt = len(items)
-    exists = 1 if cnt > 0 else 0
-    return { "cnt": cnt, "ex": exists }
+def get_misc_counts(soup):
+    return {
+        "div": len(soup.find_all('div')),
+        "input": len(soup.find_all('input')),
+        "button": len(soup.find_all('button')),
+        "meta": len(soup.find_all('meta')),
+        "link": len(soup.find_all('link'))
+        }
 
 def get_paragraphs(soup):
     paragraphs = soup.find_all('p')
@@ -115,9 +108,7 @@ def parse(soup, filename):
     script_data = get_script_data(soup)
     style_data = get_style_data(soup)
 
-    div_data = get_div_data(soup)
-    button_data = get_button_data(soup)
-    input_data = get_input_data(soup)
+    misc_counts = get_misc_counts(soup)
 
     doc = {
         "id": filename, 
@@ -132,9 +123,7 @@ def parse(soup, filename):
         "script": script_data,
         "style": style_data,
 
-        "div": div_data,
-        "button": button_data,
-        "input": input_data
+        "misc": misc_counts
         }
     return doc
 
