@@ -24,19 +24,22 @@ def get_paragraphs(soup):
     return cleaned_texts 
 
 def get_image_srcs(soup):
-    images = soup.find_all('img')
-    srcs = [clean_image_source(image.get('src')) for image in images]
-    return srcs 
+    items = soup.find_all('img')
+    srcs = [clean_image_source(image.get('src')) for image in items]
+    src_text_lengths = [len(item.text) for item in items]
+    return srcs, src_text_lengths
 
 def get_script_srcs(soup):
-    scripts = soup.find_all('script')
-    srcs = [script.get('src') for script in scripts]
-    return srcs 
+    items = soup.find_all('script')
+    srcs = [script.get('src') for script in items]
+    src_text_lengths = [len(item.text) for item in items]
+    return srcs, src_text_lengths 
 
 def get_style_srcs(soup):
-    styles = soup.find_all('style')
-    srcs = [style.get('src') for style in styles]
-    return srcs 
+    items = soup.find_all('style')
+    srcs = [style.get('src') for style in items]
+    src_text_lengths = [len(item.text) for item in items]
+    return srcs, src_text_lengths 
 
 def get_title(soup):
     title = soup.find('title')
@@ -57,9 +60,9 @@ def parse(soup, filename):
     title = get_title(soup)
     pars = get_paragraphs(soup)
     ahrefs, atexts = get_links(soup)
-    images = get_image_srcs(soup)
-    scripts = get_script_srcs(soup)
-    styles = get_style_srcs(soup)
+    images, image_text_lengths = get_image_srcs(soup)
+    scripts, script_text_lengths = get_script_srcs(soup)
+    styles, style_text_lengths = get_style_srcs(soup)
     doc = {
         "id": filename, 
         "title": title,
@@ -68,7 +71,10 @@ def parse(soup, filename):
         "atexts": atexts,
         "images": images,
         "scripts": scripts,
-        "styles": styles
+        "styles": styles,
+        "images_textlen": image_text_lengths,
+        "script_textlen": script_text_lengths,
+        "style_textlen": style_text_lengths
         }
     return doc
 
