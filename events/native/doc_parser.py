@@ -18,6 +18,20 @@ def clean_image_source(src):
         src = src[:(src.find(';base64,'))]
     return src
 
+# script/style/image text stats
+def text_stats(items):
+    text_lengths = [len(item) for item in items]
+    big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
+    if len(text_lengths) > 0:
+        avg = round(sum(text_lengths)/len(text_lengths), 1)
+    else:
+        avg = 0.0
+    if len(big_text_lengths) > 0:
+        b_avg = round(sum(big_text_lengths)/len(big_text_lengths), 1)
+    else:
+        b_avg = 0.0
+    return len(text_lengths), avg, len(big_text_lengths), b_avg
+
 # individual tags
 def get_paragraphs(soup):
     paragraphs = soup.find_all('p')
@@ -27,63 +41,36 @@ def get_paragraphs(soup):
 def get_image_data(soup):
     items = soup.find_all('img')
     srcs = [clean_image_source(image.get('src')) for image in items]
-    text_lengths = [len(item.text) for item in items]
-    big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
-    if len(text_lengths) > 0:
-        avg = sum(text_lengths)/len(text_lengths)
-    else:
-        avg = 0.0
-    if len(big_text_lengths) > 0:
-        b_avg = sum(big_text_lengths)/len(big_text_lengths)
-    else:
-        b_avg = 0.0
+    cnt, avg, b_cnt, b_avg = text_stats([item.text for item in items])
     return {
         "srcs": srcs, 
-        "cnt": len(text_lengths),
+        "cnt": cnt,
         "avg": avg,
-        "b_cnt": len(big_text_lengths),
+        "b_cnt": b_cnt,
         "b_avg": b_avg
         }
 
 def get_script_data(soup):
     items = soup.find_all('script')
     srcs = [script.get('src') for script in items]
-    text_lengths = [len(item.text) for item in items]
-    big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
-    if len(text_lengths) > 0:
-        avg = sum(text_lengths)/len(text_lengths)
-    else:
-        avg = 0.0
-    if len(big_text_lengths) > 0:
-        b_avg = sum(big_text_lengths)/len(big_text_lengths)
-    else:
-        b_avg = 0.0
+    cnt, avg, b_cnt, b_avg = text_stats([item.text for item in items])
     return {
         "srcs": srcs, 
-        "cnt": len(text_lengths),
+        "cnt": cnt,
         "avg": avg,
-        "b_cnt": len(big_text_lengths),
+        "b_cnt": b_cnt,
         "b_avg": b_avg
         }
 
 def get_style_data(soup):
     items = soup.find_all('style')
     srcs = [style.get('src') for style in items]
-    text_lengths = [len(item.text) for item in items]
-    big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
-    if len(text_lengths) > 0:
-        avg = sum(text_lengths)/len(text_lengths)
-    else:
-        avg = 0.0
-    if len(big_text_lengths) > 0:
-        b_avg = sum(big_text_lengths)/len(big_text_lengths)
-    else:
-        b_avg = 0.0
+    cnt, avg, b_cnt, b_avg = text_stats([item.text for item in items])
     return {
         "srcs": srcs, 
-        "cnt": len(text_lengths),
+        "cnt": cnt,
         "avg": avg,
-        "b_cnt": len(big_text_lengths),
+        "b_cnt": b_cnt,
         "b_avg": b_avg
         }
 
