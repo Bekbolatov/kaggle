@@ -33,6 +33,14 @@ def text_stats(items):
     return len(text_lengths), avg, len(big_text_lengths), b_avg
 
 # individual tags
+def get_div_count(soup):
+    divs = soup.find_all('div')
+    return len(divs)
+
+def get_input_count(soup):
+    inputs = soup.find_all('input')
+    return len(inputs)
+
 def get_paragraphs(soup):
     paragraphs = soup.find_all('p')
     cleaned_texts = clean_texts([p.text for p in paragraphs])
@@ -92,10 +100,16 @@ def get_links(soup):
 def parse(soup, filename):
     title = get_title(soup)
     pars = get_paragraphs(soup)
+
     ahrefs, atexts = get_links(soup)
+
     image_data = get_image_data(soup)
     script_data = get_script_data(soup)
     style_data = get_style_data(soup)
+
+    div_count = get_div_count(soup)
+    input_count = get_input_count(soup)
+
     doc = {
         "id": filename, 
         "title": title,
@@ -104,7 +118,9 @@ def parse(soup, filename):
         "atext": atexts,
         "img": image_data,
         "script": script_data,
-        "style": style_data
+        "style": style_data,
+        "div_cnt": div_count,
+        "input_cnt": input_count
         }
     return doc
 
