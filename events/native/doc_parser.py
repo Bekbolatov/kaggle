@@ -57,9 +57,9 @@ def parse(soup, filename):
     title = get_title(soup)
     pars = get_paragraphs(soup)
     ahrefs, atexts = get_links(soup)
-    images = get_images(soup)
-    scripts = get_scripts(soup)
-    styles = get_styles(soup)
+    images = get_image_srcs(soup)
+    scripts = get_script_srcs(soup)
+    styles = get_style_srcs(soup)
     doc = {
         "id": filename, 
         "title": title,
