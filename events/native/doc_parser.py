@@ -29,12 +29,20 @@ def get_image_data(soup):
     srcs = [clean_image_source(image.get('src')) for image in items]
     text_lengths = [len(item.text) for item in items]
     big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
+    if len(text_lengths) > 0:
+        avg = sum(text_lengths)/len(text_lengths)
+    else:
+        avg = 0.0
+    if len(big_text_lengths) > 0:
+        b_avg = sum(big_text_lengths)/len(big_text_lengths)
+    else:
+        b_avg = 0.0
     return {
         "srcs": srcs, 
         "cnt": len(text_lengths),
-        "avg": sum(text_lengths)/len(text_lengths),
+        "avg": avg,
         "b_cnt": len(big_text_lengths),
-        "b_avg": sum(big_text_lengths)/len(big_text_lengths)
+        "b_avg": b_avg
         }
 
 def get_script_srcs(soup):
