@@ -45,17 +45,47 @@ def get_image_data(soup):
         "b_avg": b_avg
         }
 
-def get_script_srcs(soup):
+def get_script_data(soup):
     items = soup.find_all('script')
     srcs = [script.get('src') for script in items]
-    src_text_lengths = [len(item.text) for item in items]
-    return srcs, src_text_lengths 
+    text_lengths = [len(item.text) for item in items]
+    big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
+    if len(text_lengths) > 0:
+        avg = sum(text_lengths)/len(text_lengths)
+    else:
+        avg = 0.0
+    if len(big_text_lengths) > 0:
+        b_avg = sum(big_text_lengths)/len(big_text_lengths)
+    else:
+        b_avg = 0.0
+    return {
+        "srcs": srcs, 
+        "cnt": len(text_lengths),
+        "avg": avg,
+        "b_cnt": len(big_text_lengths),
+        "b_avg": b_avg
+        }
 
-def get_style_srcs(soup):
+def get_style_data(soup):
     items = soup.find_all('style')
     srcs = [style.get('src') for style in items]
-    src_text_lengths = [len(item.text) for item in items]
-    return srcs, src_text_lengths 
+    text_lengths = [len(item.text) for item in items]
+    big_text_lengths = [text_len for text_len in text_lengths if text_len > 2]
+    if len(text_lengths) > 0:
+        avg = sum(text_lengths)/len(text_lengths)
+    else:
+        avg = 0.0
+    if len(big_text_lengths) > 0:
+        b_avg = sum(big_text_lengths)/len(big_text_lengths)
+    else:
+        b_avg = 0.0
+    return {
+        "srcs": srcs, 
+        "cnt": len(text_lengths),
+        "avg": avg,
+        "b_cnt": len(big_text_lengths),
+        "b_avg": b_avg
+        }
 
 def get_title(soup):
     title = soup.find('title')
@@ -77,19 +107,17 @@ def parse(soup, filename):
     pars = get_paragraphs(soup)
     ahrefs, atexts = get_links(soup)
     image_data = get_image_data(soup)
-    scripts, script_text_lengths = get_script_srcs(soup)
-    styles, style_text_lengths = get_style_srcs(soup)
+    script_data = get_script_data(soup)
+    style_data = get_style_data(soup)
     doc = {
         "id": filename, 
         "title": title,
-        "pars": pars,
-        "ahrefs": ahrefs,
-        "atexts": atexts,
+        "par": pars,
+        "ahref": ahrefs,
+        "atext": atexts,
         "img": image_data,
-        "scripts": scripts,
-        "styles": styles,
-        "script_textlen": script_text_lengths,
-        "style_textlen": style_text_lengths
+        "script": script_data,
+        "style": style_data
         }
     return doc
 
