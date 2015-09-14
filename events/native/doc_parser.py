@@ -32,7 +32,7 @@ def get_image_data(soup):
     return {
         "srcs": srcs, 
         "cnt": len(text_lengths),
-        "avg": sum(text_lengths)/len(text_lengthis),
+        "avg": sum(text_lengths)/len(text_lengths),
         "b_cnt": len(big_text_lengths),
         "b_avg": sum(big_text_lengths)/len(big_text_lengths)
         }
