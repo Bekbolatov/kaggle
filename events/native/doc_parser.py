@@ -1,5 +1,6 @@
 import re
 
+# text
 def clean_text(item):
     item = re.sub(r'[\'"|\n\t,.:;()\-\/]+', ' ', item.encode('ascii', 'ignore').strip()).lower()
     item = re.sub(r'\s+', ' ', item)
@@ -9,6 +10,14 @@ def clean_texts(items):
     items = [clean_text(item) for item in items]
     return items
 
+# image source 
+def clean_image_source(src):
+    """data:image/gif;base64,R0lGODdh"""
+    if src.startswith('data:image/'):
+        src = src[:(src.find(';base64,'))]
+    return src
+
+# individual tags
 def get_paragraphs(soup):
     paragraphs = soup.find_all('p')
     cleaned_texts = clean_texts([p.text for p in paragraphs])
@@ -16,7 +25,7 @@ def get_paragraphs(soup):
 
 def get_image_srcs(soup):
     images = soup.find_all('img')
-    srcs = [image.get('src') for image in images]
+    srcs = [clean_image_source(image.get('src')) for image in images]
     return srcs 
 
 def get_script_srcs(soup):
@@ -43,7 +52,7 @@ def get_links(soup):
     texts = clean_texts([a.text for a in links])
     return hrefs, texts
 
-
+# the whole document
 def parse(soup, filename):
     title = get_title(soup)
     pars = get_paragraphs(soup)
