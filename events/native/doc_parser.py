@@ -36,6 +36,7 @@ def text_stats(items):
 def get_misc_counts(soup):
     return {
         "div": len(soup.find_all('div')),
+        "li": len(soup.find_all('li')),
         "input": len(soup.find_all('input')),
         "button": len(soup.find_all('button')),
         "meta": len(soup.find_all('meta')),
