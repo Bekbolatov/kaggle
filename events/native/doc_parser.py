@@ -4,6 +4,7 @@ import re
 def get_paragraphs(soup):
     paragraphs = soup.find_all('p')
     cleaned_texts = [re.sub(r'[\'"|\n\t,.:;()\-\/]+', ' ', p.text.encode('ascii', 'ignore').strip()).lower() for p in paragraphs]
+    cleaned_texts = [re.sub(r'\s+', ' ', text) for text in clean_texts]
     return cleaned_texts 
 
 def get_images(soup):
