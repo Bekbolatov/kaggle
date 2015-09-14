@@ -33,13 +33,17 @@ def text_stats(items):
     return len(text_lengths), avg, len(big_text_lengths), b_avg
 
 # individual tags
-def get_div_count(soup):
-    divs = soup.find_all('div')
-    return len(divs)
+def get_div_data(soup):
+    items = soup.find_all('div')
+    cnt = len(items)
+    exists = 1 if cnt > 0 else 0
+    return { "cnt": cnt, "ex": exists }
 
-def get_input_count(soup):
-    inputs = soup.find_all('input')
-    return len(inputs)
+def get_input_data(soup):
+    items = soup.find_all('input')
+    cnt = len(items)
+    exists = 1 if cnt > 0 else 0
+    return { "cnt": cnt, "ex": exists }
 
 def get_paragraphs(soup):
     paragraphs = soup.find_all('p')
@@ -107,8 +111,8 @@ def parse(soup, filename):
     script_data = get_script_data(soup)
     style_data = get_style_data(soup)
 
-    div_count = get_div_count(soup)
-    input_count = get_input_count(soup)
+    div_data = get_div_data(soup)
+    input_data = get_input_data(soup)
 
     doc = {
         "id": filename, 
@@ -119,8 +123,8 @@ def parse(soup, filename):
         "img": image_data,
         "script": script_data,
         "style": style_data,
-        "div_cnt": div_count,
-        "input_cnt": input_count
+        "div": div_data,
+        "input": input_data
         }
     return doc
 
