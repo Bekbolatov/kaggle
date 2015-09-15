@@ -98,6 +98,16 @@ def get_links(soup):
     texts = clean_texts([a.text for a in links])
     return hrefs, texts
 
+def flatten_doc(doc):
+    new_doc = {}
+    for key, value in doc.items():
+        if type(value) == dict:
+            for kkey, vvalue in value.items():
+                new_doc[key + '_' + kkey] = vvalue
+        else:
+            new_doc[key] = value
+    return new_doc
+
 # the whole document
 def parse(soup, filename):
     title = get_title(soup)
@@ -126,5 +136,5 @@ def parse(soup, filename):
 
         "misc": misc_counts
         }
-    return doc
+    return flatten_doc(doc)
 
