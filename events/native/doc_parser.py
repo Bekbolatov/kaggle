@@ -67,7 +67,9 @@ def a2text(a):
         raw_path = parsed_url.path
         domain = clean_domain(raw_domain)
         text = raw_path + ' ' + atext
-        return domain + ' ' + clean_text(text)
+        text = domain + ' ' + clean_text(text)
+        text = re.sub(r'\s+', ' ', text)
+        return text
     except Exception as inst:
         print inst
         return 'bad_bad_domain'
