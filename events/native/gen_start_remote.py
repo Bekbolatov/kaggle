@@ -5,7 +5,7 @@ import numpy as np
 LOC_BASE = '/Users/rbekbolatov/tmp/runsep13'
 
 hosts = [
-"ec2-52-27-117-210.us-west-2.compute.amazonaws.com"
+    "ec2-52-27-130-165.us-west-2.compute.amazonaws.com"
     ]
 
 num_hosts = len(hosts)

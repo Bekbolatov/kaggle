@@ -7,6 +7,9 @@ class SpotInstances:
     si.request(1)
     si.get_public_dns_names()
     
+    c3.large 2	7	3.75	2 x 16 SSD	$0.105 per Hour
+    c4.large 2	8	3.75	EBS Only	$0.11 per Hour
+    
     XGBOOST 5   -> ami-d3c5d5e3
     XGBOOST 5.1 -> ami-f38292c3
     XGBOOST 5.2 -> ami-85beaeb5
@@ -37,7 +40,7 @@ class SpotInstances:
                                                      count=num_instances,
                                                      type="one-time",
                                                      key_name="panerapig",
-                                                     instance_type="c4.large",
+                                                     instance_type="c3.large",
                                                      subnet_id=subnet_id)
         for req in self.reqs:
             self.conn.create_tags(req.id, {'purpose': 'xgboost'})
