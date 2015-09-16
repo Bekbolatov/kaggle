@@ -2,6 +2,7 @@ from __future__ import division
 import re
 from urlparse import urlparse
 import collections
+from word_stemmer import stem
 
 foreign_domain_pattern = re.compile(r'^[^\.]{2,3}\.[^\.]{2}$')
 word_splitter = re.compile(r'[a-z]{4,}')
@@ -12,6 +13,7 @@ def clean_text(dirty_text):
     if type(dirty_text) != str:
         dirty_text = ' '.join(dirty_text)
     tokens = word_splitter.findall(dirty_text.lower())
+    tokens = [stem(token) for token in tokens]
     clean_text = ' '.join(tokens)
     return clean_text
 
@@ -60,7 +62,7 @@ def a2text(a):
         atext = a.text.encode('ascii', 'ignore')
         parsed_url = urlparse(ahref)
         raw_domain = parsed_url.netloc
-        if raw_domain in social_domain_names:
+        if raw_domain in social_domain_names or raw_domain == '':
             return ''
         raw_path = parsed_url.path
         domain = clean_domain(raw_domain)
