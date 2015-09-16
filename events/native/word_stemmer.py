@@ -4,8 +4,8 @@ def stem(word):
         return ''
     if len(word) < 4:
         return word
-    if word.endswith('s') or word.endswith('e'):
-        return stem(word[:-1]) # books -> book
+    if word.endswith('s') or word.endswith('e') or word.endswith('y'): 
+        return stem(word[:-1]) # books -> book, create -> creat, assembly -> assembl
     if word.endswith('ment'):
         return stem(word[:-4]) #establishment -> establish
     if word.endswith('tion'):
@@ -16,4 +16,6 @@ def stem(word):
         return stem(word[:-2]) # russia -> russ, asia -> as
     if word.endswith('ean') or word.endswith('ian'):
         return stem(word[:-3]) # russian -> russ, asian -> as
+    if word.endswith('ies'):
+        return stem(word[:-3]) # responsibilities -> responsibilit
     return word
