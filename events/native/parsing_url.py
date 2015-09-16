@@ -43,7 +43,7 @@ def clean_domain(host):
         print href
         return 'bad_bad_domain'
 
-def a2text(ahref, atext):
+def a2text(a):
     try:
         ahref = a['href']
         atext = a.text.encode('ascii', 'ignore')
