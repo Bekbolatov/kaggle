@@ -23,12 +23,22 @@ class SpotInstances:
     XGBOOST 6.3 -> ami-1bbda12b
     XGBOOST 6.4 -> ami-eb706fdb
     XGBOOST 6.5 -> ami-afe3fc9f
+    XGBOOST 6.6 -> ami-153b2525
     """
-    def __init__(self, image_id = "ami-afe3fc9f"):
+    def __init__(self, image_id = "ami-153b2525"):
         self.image_id = image_id
         self.conn = boto.ec2.connect_to_region("us-west-2")
+        """
+        
+        """
 
     def request(self, num_instances=1, max_price=0.05, subnet='a'):
+        with open ("aws_worker_start.sh", "r") as startup_script_file:
+            startup_script = startup_script_file.read()
+            
+        print ("The following script will be run on startup")
+        print startup_script    
+        
         if subnet == 'a':
             subnet_id = 'subnet-04299373'
         elif subnet == 'b':
@@ -42,6 +52,7 @@ class SpotInstances:
                                                      type="one-time",
                                                      key_name="panerapig",
                                                      instance_type="c3.large",
+                                                     user_data=startup_script,
                                                      subnet_id=subnet_id)
         for req in self.reqs:
             self.conn.create_tags(req.id, {'purpose': 'xgboost'})

@@ -3,3 +3,7 @@ aws s3 cp 0/ s3://sparkydotsdata/kaggle/native/orig/ --recursive --include "*.tx
 
 aws s3 ls s3://sparkydotsdata/kaggle/native/orig/ >  ins3
 
+
+aws s3 sync s3://.../ .
+
+

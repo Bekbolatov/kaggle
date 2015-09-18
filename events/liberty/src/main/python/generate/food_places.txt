@@ -7,3 +7,7 @@ Maharaja
 Kraken Congee
 Eastern Cafe
 
+
+
+ALTER TABLE srcmgd.weblog_pre_block DROP PARTITION (event_date = '2015-09-15');
+ALTER TABLE srcmgd.weblog_pre_block DROP PARTITION (event_date = '2015-09-16');

@@ -1,0 +1,17 @@
+author "Renat"
+
+description "Worker server"
+
+start on runlevel [2345]
+stop on runlevel [016]
+
+env HOME=/home/ec2-user
+env myvar="hello world"
+
+script
+  exec >>/var/log/worker_server.log 2>&1
+  echo "Starting"
+  date
+  exec su -s /bin/bash -c 'python /home/ec2-user/repos/bekbolatov/kaggle/events/native/read_sqs.py 1>/home/ec2-user/logs/worker-server-out.log 2>&1' ec2-user
+end script
+
