@@ -7,3 +7,7 @@ aws s3 ls s3://sparkydotsdata/kaggle/native/orig/ >  ins3
 aws s3 sync s3://.../ .
 
 
+function getfile() {
+    
+
+}

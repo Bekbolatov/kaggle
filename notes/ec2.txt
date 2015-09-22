@@ -3,8 +3,8 @@
 
 lsblk
 
-sudo mkfs -t ext4 /dev/xvdf
-sudo mkdir /mnt/my-data
+#sudo mkfs -t ext4 /dev/xvdf
+#sudo mkdir /mnt/my-data
 sudo mount /dev/xvdf /mnt/my-data
 
 df -h
