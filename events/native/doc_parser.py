@@ -96,12 +96,21 @@ def parse(soup, text, filename):
         tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
     except Exception as a:
         print a
-        print soup.find_all('meta')
+        for x in soup.find_all('meta'):
+            for k,v in x.attrs:
+                if k == 'content':
+                    print v
+                    try:
+                        print v.encode('ascii', 'ignore')
+                    except Exception as a:
+                        print a
+
+        
 
     return {
         "id": filename, 
         "text": text,
-        #"meta": tag_meta,
+        "meta": tag_meta,
         "shinn": values,
         }
 
