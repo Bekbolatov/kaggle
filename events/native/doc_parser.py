@@ -65,9 +65,9 @@ def a2text(a):
         if raw_domain in social_domain_names or raw_domain == '':
             return ''
         raw_path = parsed_url.path
-        domain = clean_domain(raw_domain)
+        #domain = clean_domain(raw_domain)
         text = raw_path + ' ' + atext
-        text = domain + ' ' + clean_text(text)
+        #text = domain + ' ' + clean_text(text)
         text = re.sub(r'\s+', ' ', text)
         return text
     except Exception as inst:
@@ -78,9 +78,10 @@ def a2text(a):
 def parse(soup, filename):
     tag_p = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('p')])
     tag_title = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('title')])
+    tag_meta = clean_text([item.description.encode('ascii', 'ignore') for item in soup.find_all('meta')])
     tag_a = ' '.join([a2text(item) for item in soup.find_all('a', href=True)])
 
-    text = ' '.join([tag_p, tag_title, tag_a])
+    text = ' '.join([tag_p, tag_title, tag_meta, tag_a])
 
     return {
         "id": filename, 
