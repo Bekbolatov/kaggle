@@ -1,3 +1,4 @@
+for i in {1..5}; do echo $i; done
 
 aws s3 cp 0/ s3://sparkydotsdata/kaggle/native/orig/ --recursive --include "*.txt"
 

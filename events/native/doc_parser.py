@@ -99,8 +99,7 @@ def parse(soup, text, filename):
             try:
                 tag_meta.append(item['content'].encode('ascii', 'ignore'))
             except Exception as e:
-                print(e)
-                print(item)
+                pass
     tag_meta = clean_text(tag_meta)
 
 
@@ -120,7 +119,7 @@ def parse(soup, text, filename):
     values['shop'] = text_p_lower.count('shop')
 
 
-    img_srcs = [img['src'] for img in soup.find_all('img')]
+    #img_srcs = [img['src'] for img in soup.find_all('img')]
 
     text = ' '.join([tag_p, tag_title, tag_meta, tag_a])
     return {
