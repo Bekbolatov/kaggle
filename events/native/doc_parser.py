@@ -85,6 +85,7 @@ def parse(soup, filename):
 
     return {
         "id": filename, 
-        "text": text
+        "text": text,
+        "meta": tag_meta,
         }
 
