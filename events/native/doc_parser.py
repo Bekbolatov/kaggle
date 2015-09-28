@@ -88,10 +88,11 @@ def parse(soup, text, filename):
 
     tag_p = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('p')])
     tag_title = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('title')])
-    #tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
     tag_a = ' '.join([a2text(item) for item in soup.find_all('a', href=True)])
 
-    text = ' '.join([tag_p, tag_title, tag_meta, tag_a])
+    text = ' '.join([tag_p, tag_title, tag_a])
+
+    #tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
 
     return {
         "id": filename, 
