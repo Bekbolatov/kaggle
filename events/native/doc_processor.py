@@ -91,7 +91,7 @@ class SoupIO:
             soup = bs(file_content, 'lxml')
         else:
             soup = None
-        return soup
+        return soup, file_content
 
     def put_docs(self, filename, docs_array):
         self.file_cache.upload_file(filename, docs_array)
@@ -113,10 +113,10 @@ class DocProcessor:
         ferr.write("Starting processing part_id: %s with %d files\n" % (self.part_id, len(self.filenames)))
         json_array = []  
         for i, filename in enumerate(self.filenames):
-            soup = self.soup_io.get_soup(filename)
+            soup, file_content = self.soup_io.get_soup(filename)
             if soup:
                 try:
-                    doc = self.parse(soup, filename)
+                    doc = self.parse(soup, file_content, filename)
                     json_array.append(doc)
                 except Exception as e:
                     ferr.write("parse error with reason : %s on file: %s\n" %(str(e), filename))

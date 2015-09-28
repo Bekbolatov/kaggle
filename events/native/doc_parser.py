@@ -67,6 +67,7 @@ def a2text(a):
         raw_path = parsed_url.path
         #domain = clean_domain(raw_domain)
         text = raw_path + ' ' + atext
+        text = clean_text(text)
         #text = domain + ' ' + clean_text(text)
         text = re.sub(r'\s+', ' ', text)
         return text
@@ -75,10 +76,19 @@ def a2text(a):
         return 'bad_bad_domain'
 
 
-def parse(soup, filename):
+def parse(soup, text, filename):
+    values = {}
+    values['lines'] = text.count('\n')
+    values['spaces'] = text.count(' ')
+    values['tabs'] = text.count('\t')
+    values['braces'] = text.count('{')
+    values['brackets'] = text.count('[')
+    values['words'] = len(re.split('\s+', text))
+    values['length'] = len(text)
+
     tag_p = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('p')])
     tag_title = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('title')])
-    tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
+    #tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
     tag_a = ' '.join([a2text(item) for item in soup.find_all('a', href=True)])
 
     text = ' '.join([tag_p, tag_title, tag_meta, tag_a])
@@ -86,6 +96,7 @@ def parse(soup, filename):
     return {
         "id": filename, 
         "text": text,
-        "meta": tag_meta,
+        #"meta": tag_meta,
+        "shinn": values,
         }
 
