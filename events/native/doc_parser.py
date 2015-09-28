@@ -103,10 +103,14 @@ def parse(soup, text, filename):
                 print(item)
     tag_meta = clean_text(tag_meta)
 
+
+    img_srcs = [img['src'] for img in soup.find_all('img')]
+    
     return {
         "id": filename, 
         "text": text,
         "meta": tag_meta,
         "shinn": values,
+        "img": img_srcs,
         }
 
