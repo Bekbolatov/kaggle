@@ -97,7 +97,7 @@ def parse(soup, text, filename):
     except Exception as a:
         print a
         for x in soup.find_all('meta'):
-            for k,v in x.attrs:
+            for k,v in x.attrs.items():
                 if k == 'content':
                     print v
                     try:
