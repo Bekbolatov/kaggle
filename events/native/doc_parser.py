@@ -92,21 +92,7 @@ def parse(soup, text, filename):
 
     text = ' '.join([tag_p, tag_title, tag_a])
 
-    tag_meta = ''
-    try:
-        tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
-    except Exception as a:
-        print a
-        for x in soup.find_all('meta'):
-            for k,v in x.attrs.items():
-                if k == 'content':
-                    print v
-                    try:
-                        print v.encode('ascii', 'ignore')
-                    except Exception as a:
-                        print a
-
-        
+    tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
 
     return {
         "id": filename, 
