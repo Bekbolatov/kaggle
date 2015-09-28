@@ -117,6 +117,7 @@ def parse(soup, text, filename):
     values['get'] = text_p_lower.count('get')
     values['sale'] = text_p_lower.count('sale')
     values['cheap'] = text_p_lower.count('cheap')
+    values['shop'] = text_p_lower.count('shop')
 
 
     img_srcs = [img['src'] for img in soup.find_all('img')]

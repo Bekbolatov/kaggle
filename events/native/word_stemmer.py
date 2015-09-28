@@ -6,6 +6,8 @@ def stem(word):
         return ''
     if len(word) < 4:
         return word
+    if len(word) > 17:
+        return ''
 
     word = stemmer.stem(word)
 
