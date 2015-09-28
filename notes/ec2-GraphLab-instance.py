@@ -17,7 +17,7 @@ image = 'ami-d3c3dae3'  # GraphLab-1.1
 older_image = 'ami-45afb075' # GRaphLab 1.1   //ami-bd6e718d'(GraphLab 1.0)
 
 conn = boto.ec2.connect_to_region("us-west-2")
-conn.request_spot_instances(price='1.50', 
+conn.request_spot_instances(price='4.50', 
         image_id=image,
         count=1, 
         type="one-time", 

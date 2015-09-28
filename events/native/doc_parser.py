@@ -86,11 +86,11 @@ def parse(soup, text, filename):
     values['words'] = len(re.split('\s+', text))
     values['length'] = len(text)
 
-    tag_p = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('p')])
+    text_p = ' '.join([item.text.encode('ascii', 'ignore') for item in soup.find_all('p')])
+    tag_p = clean_text(text_p)
     tag_title = clean_text([item.text.encode('ascii', 'ignore') for item in soup.find_all('title')])
     tag_a = ' '.join([a2text(item) for item in soup.find_all('a', href=True)])
 
-    text = ' '.join([tag_p, tag_title, tag_a])
 
     #tag_meta = clean_text([item['content'].encode('ascii', 'ignore') for item in soup.find_all('meta') if 'content' in item.attrs])
     tag_meta = []
@@ -104,13 +104,27 @@ def parse(soup, text, filename):
     tag_meta = clean_text(tag_meta)
 
 
+  
+    values['uppers'] = sum([1 for l in text_p if l.isupper()])
+    values['periods'] = text_p.count('.')
+    values['commas'] = text_p.count(',')
+    values['semi'] = text_p.count(';')
+    values['col'] = text_p.count(':')
+    values['parens'] = text_p.count('(')
+
+    text_p_lower = text_p.lower()
+    values['you'] = text_p_lower.count('you')
+    values['get'] = text_p_lower.count('get')
+    values['sale'] = text_p_lower.count('sale')
+    values['cheap'] = text_p_lower.count('cheap')
+
+
     img_srcs = [img['src'] for img in soup.find_all('img')]
-    
+
+    text = ' '.join([tag_p, tag_title, tag_meta, tag_a])
     return {
         "id": filename, 
         "text": text,
-        "meta": tag_meta,
         "shinn": values,
-        "img": img_srcs,
         }
 
