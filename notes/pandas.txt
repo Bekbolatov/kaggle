@@ -1,0 +1,21 @@
+
+Make index into a column: http://stackoverflow.com/questions/20461165/how-to-convert-pandas-index-in-a-dataframe-to-a-column
+
+df['index1'] = df.index
+df.reset_index(level=0, inplace=True)
+
+or
+
+For MultiIndex you can extract its subindex using
+
+df['si_name'] = R.index.get_level_values('si_name') 
+where si_name is the name of the subindex.
+
+
+
+Make columns back into index:
+
+ indexed_df = df.set_index(['A', 'B'])
+
+
+

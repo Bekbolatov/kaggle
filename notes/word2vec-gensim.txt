@@ -1,0 +1,11 @@
+
+
+pre-trained model: https://code.google.com/p/word2vec/ 
+
+
+import gensim
+
+model = gensim.models.Word2Vec.load_word2vec_format('/Users/rbekbolatov/data/Word2Vec/GoogleNews-vectors-negative300.bin.gz', binary=True)
+
+
+

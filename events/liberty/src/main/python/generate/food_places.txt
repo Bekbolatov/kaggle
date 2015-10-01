@@ -11,3 +11,9 @@ Eastern Cafe
 
 ALTER TABLE srcmgd.weblog_pre_block DROP PARTITION (event_date = '2015-09-15');
 ALTER TABLE srcmgd.weblog_pre_block DROP PARTITION (event_date = '2015-09-16');
+
+
+ns-1651.awsdns-14.co.uk.
+ns-337.awsdns-42.com.
+ns-1421.awsdns-49.org.
+ns-764.awsdns-31.net.
