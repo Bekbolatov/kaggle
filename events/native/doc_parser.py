@@ -86,7 +86,7 @@ def parse(soup, text, filename):
 
     values = {
         "words": words(text),
-        "word2vec": sentence2vec(text)
+        "word2vec": sentence2vec(text).tolist()
         } 
 
     return values
