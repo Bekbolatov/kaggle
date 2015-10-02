@@ -85,6 +85,7 @@ def parse(soup, text, filename):
     text = text_p + ' ' + tag_title
 
     values = {
+        "id": filename, 
         "words": words(text),
         "word2vec": sentence2vec(text).tolist()
         } 
