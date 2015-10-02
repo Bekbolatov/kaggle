@@ -7,8 +7,21 @@ class SpotInstances:
     si.request(1)
     si.get_public_dns_names()
     
+    name	vCPU	ECU	Memory (GiB)	Instance Storage (GB)	Linux/UNIX Usage
+
+    general purpose
+    m3.xlarge	4	13	15	2 x 40 SSD	$0.266 per Hour
+    
+    compute-optimized
     c3.large 2	7	3.75	2 x 16 SSD	$0.105 per Hour
     c4.large 2	8	3.75	EBS Only	$0.11 per Hour
+    
+    c3.xlarge	4	14	7.5	2 x 40 SSD	$0.21 per Hour
+    c4.xlarge	4	16	7.5	EBS Only	$0.22 per Hour
+
+    memory-optimized
+    r3.large	2	6.5	15	1 x 32 SSD	$0.175 per Hour
+
     
     XGBOOST 5   -> ami-d3c5d5e3
     XGBOOST 5.1 -> ami-f38292c3
@@ -25,15 +38,16 @@ class SpotInstances:
     XGBOOST 6.5 -> ami-afe3fc9f
     XGBOOST 6.6 -> ami-153b2525
     XGBOOST 6.7 -> ami-272b3017
+    XGBOOST 7.0 -> ami-85b7adb5  (16GB)
     """
-    def __init__(self, image_id = "ami-272b3017"):
+    def __init__(self, image_id = "ami-85b7adb5"):
         self.image_id = image_id
         self.conn = boto.ec2.connect_to_region("us-west-2")
         """
         
         """
 
-    def request(self, num_instances=1, max_price=0.05, subnet='a'):
+    def request(self, num_instances=1, max_price=0.15, subnet='a'):
         with open ("aws_worker_start.sh", "r") as startup_script_file:
             startup_script = startup_script_file.read()
             
@@ -52,7 +66,7 @@ class SpotInstances:
                                                      count=num_instances,
                                                      type="one-time",
                                                      key_name="panerapig",
-                                                     instance_type="c3.large",
+                                                     instance_type="m3.xlarge",
                                                      user_data=startup_script,
                                                      subnet_id=subnet_id)
         for req in self.reqs:
