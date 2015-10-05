@@ -39,8 +39,9 @@ class SpotInstances:
     XGBOOST 6.6 -> ami-153b2525
     XGBOOST 6.7 -> ami-272b3017
     XGBOOST 7.0 -> ami-85b7adb5  (16GB)
+    XGBOOST 7.1 -> ami-7fa6bc4f (Word2Vec/Lemmatiz)
     """
-    def __init__(self, image_id = "ami-85b7adb5"):
+    def __init__(self, image_id = "ami-7fa6bc4f"):
         self.image_id = image_id
         self.conn = boto.ec2.connect_to_region("us-west-2")
         """
