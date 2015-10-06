@@ -20,7 +20,7 @@ features = """
     +count of matches > 2
 """
 
-pattern_1 = re.compile("'set', 'forseSSL', true")
+pattern_1 = re.compile("'set', 'forseSSL'")
 pattern_2 = re.compile("'send', 'pageview'")
 pattern_3 = re.compile("WordPress")
 pattern_4 = re.compile("/wp-includes/js/jquery/")

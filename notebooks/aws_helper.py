@@ -48,7 +48,7 @@ class SpotInstances:
         
         """
 
-    def request(self, num_instances=1, max_price=0.15, subnet='a'):
+    def request(self, num_instances=1, max_price=0.05, subnet='a'):
         with open ("aws_worker_start.sh", "r") as startup_script_file:
             startup_script = startup_script_file.read()
             
@@ -67,7 +67,7 @@ class SpotInstances:
                                                      count=num_instances,
                                                      type="one-time",
                                                      key_name="panerapig",
-                                                     instance_type="m3.xlarge",
+                                                     instance_type="c3.large", #"m3.xlarge",
                                                      user_data=startup_script,
                                                      subnet_id=subnet_id)
         for req in self.reqs:
