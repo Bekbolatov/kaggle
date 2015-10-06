@@ -1,93 +1,74 @@
 from __future__ import division
 import re
-from urlparse import urlparse
-import collections
-from word_stemmer import stem
-import word_lemmatizer 
-from word_lemmatizer import sentence2vec, words
 
-foreign_domain_pattern = re.compile(r'^[^\.]{2,3}\.[^\.]{2}$')
-word_splitter = re.compile(r'[a-z]{4,}')
+features = """
+1) "'set', 'forseSSL', true"
+2) "'send', 'pageview'"
+3) "WordPress"
+4) "/wp-includes/js/jquery/"
+5) modernizr
+6) "sponsored" : lower()
 
-def clean_text(dirty_text):
-    if not dirty_text:
-        return ''
-    if type(dirty_text) != str:
-        dirty_text = ' '.join(dirty_text)
-    tokens = word_splitter.findall(dirty_text.lower())
-    tokens = [stem(token) for token in tokens]
-    clean_text = ' '.join(tokens)
-    return clean_text
+7) "facebook.+;appId=(\d+)" : default 0
 
-social_domain_names = [
-    'twitter.com',
-    'facebook.com',
-    'google.com',
-    'pinterest.com',
-    'linkedin.com',
-    'reddit.com',
-    'olark.com',
-    'disqus.com',
-    'apple.com',
-    'yelp.com',
-    'imgur.com',
-    'instagram.com',
-    'youtube.com',
-    'tumblr.com',
-    'feedburner.com',
-    ]
+8) ---  Google Analytics ---
+   "UA-(\d{5,10})-(\d+)"    :
+   first matching line: 
+        + id (0),
+        + length (1000), 
+        + number(total number of lines)
+    +count of matches > 2
+"""
 
-def clean_domain(host):
-    try:
-        num_pieces = host.count('.') + 1
-        if num_pieces <= 2:
-            return host
-        shortened_host = host[(host.find('.')+1):]
-        if num_pieces == 3: 
-            if foreign_domain_pattern.match(shortened_host):
-                return host
-            else:
-                return shortened_host
-        more_shortened_host = shortened_host[(shortened_host.find('.')+1):]
-        if foreign_domain_pattern.match(more_shortened_host):
-            return shortened_host
-        else:
-            return more_shortened_host        
-    except Exception as inst:
-        print inst
-        print href
-        return 'bad_bad_domain'
+pattern_1 = re.compile("'set', 'forseSSL', true")
+pattern_2 = re.compile("'send', 'pageview'")
+pattern_3 = re.compile("WordPress")
+pattern_4 = re.compile("/wp-includes/js/jquery/")
+pattern_5 = re.compile("modernizr")
+pattern_6 = re.compile("[sS]ponsored")
 
-def a2text(a):
-    try:
-        ahref = a['href']
-        atext = a.text.encode('ascii', 'ignore')
-        parsed_url = urlparse(ahref)
-        raw_domain = parsed_url.netloc
-        if raw_domain in social_domain_names or raw_domain == '':
-            return ''
-        raw_path = parsed_url.path
-        #domain = clean_domain(raw_domain)
-        text = raw_path + ' ' + atext
-        text = clean_text(text)
-        #text = domain + ' ' + clean_text(text)
-        text = re.sub(r'\s+', ' ', text)
-        return text
-    except Exception as inst:
-        print inst
-        return 'bad_bad_domain'
+pattern_1_6 = [pattern_1, pattern_2, pattern_3, pattern_4, pattern_5, pattern_6]
+
+pattern_fb = re.compile("facebook.+;appId=(\d+)")
+pattern_ga = re.compile("UA-(\d{5,10})-(\d+)")
+
+#tokens = word_splitter.findall(dirty_text.lower())
+#p.search(s)    # The result of this is referenced by variable name '_'
+#_.group(1)     # group(1) will return the 1st capture.
+
 
 
 def parse(soup, text, filename):
-    text_p = ' '.join([item.text for item in soup.find_all('p')])
-    tag_title = ' '.join([item.text for item in soup.find_all('title')])
+    p = [1 if p.search(text) else 0 for p in pattern_1_6]
 
-    text = text_p + ' ' + tag_title
+    fb_id = 0
+    m = pattern_fb.search(text)
+    if m:
+        fb_id = m.group(1)
+   
+    ga_id = 0
+    ms = pattern_ga.findall(text)
+    if len(ms) > 0:
+        ga_id = ms[0][0]
+        ga_subid = ms[0][1]
+
+    ga_lengh = 1000
+    ga_line = 5000
+
+    for n, line in enumerate(text):
+        if pattern_ga.search(line):
+            ga_length = len(line)
+            ga_line = n
+            break
 
     values = {
         "id": filename, 
-        "words": words(text),
-        "word2vec": sentence2vec(text).tolist()
+        "basic": p,
+        "fb_id": fb_id,
+        "ga_id": ga_id,
+        "ga_subid": ga_subid,
+        "ga_length": ga_lenth,
+        "ga_line": ga_line,
         } 
 
     return values
