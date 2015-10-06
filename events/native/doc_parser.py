@@ -52,12 +52,12 @@ def parse(soup, text, filename):
         ga_id = ms[0][0]
         ga_subid = ms[0][1]
 
-    ga_lengh = 1000
+    ga_len = 1000
     ga_line = 5000
 
     for n, line in enumerate(text):
         if pattern_ga.search(line):
-            ga_length = len(line)
+            ga_len = len(line)
             ga_line = n
             break
 
@@ -67,7 +67,7 @@ def parse(soup, text, filename):
         "fb_id": fb_id,
         "ga_id": ga_id,
         "ga_subid": ga_subid,
-        "ga_length": ga_lenth,
+        "ga_length": ga_len,
         "ga_line": ga_line,
         } 
 
