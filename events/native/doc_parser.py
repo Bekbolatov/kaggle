@@ -58,7 +58,7 @@ def parse(soup, text, filename):
     ga_len = 1000
     ga_line = 5000
 
-    for n, line in enumerate(text):
+    for n, line in enumerate(text.split('\n')):
         if pattern_ga.search(line):
             ga_len = len(line)
             ga_line = n
