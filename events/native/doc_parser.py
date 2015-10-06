@@ -47,10 +47,13 @@ def parse(soup, text, filename):
         fb_id = m.group(1)
    
     ga_id = 0
+    ga_subid = 0
     ms = pattern_ga.findall(text)
     if len(ms) > 0:
         ga_id = ms[0][0]
         ga_subid = ms[0][1]
+
+    ga_cnt = 1 if len(ms) > 2 else 0
 
     ga_len = 1000
     ga_line = 5000
@@ -67,8 +70,9 @@ def parse(soup, text, filename):
         "fb_id": fb_id,
         "ga_id": ga_id,
         "ga_subid": ga_subid,
-        "ga_length": ga_len,
+        "ga_len": ga_len,
         "ga_line": ga_line,
+        "ga_cnt": ga_cnt,
         } 
 
     return values
