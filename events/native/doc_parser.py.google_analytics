@@ -2,9 +2,7 @@ from __future__ import division
 import re
 
 features = """
-1) "content=\"width=device.+?\"viewport\""
-2) "\"viewport\""
-
+1) "'set', 'forseSSL', true"
 2) "'send', 'pageview'"
 3) "WordPress"
 4) "/wp-includes/js/jquery/"

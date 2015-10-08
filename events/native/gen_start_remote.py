@@ -53,4 +53,9 @@ for host in hosts:
     task_sender.write('ssh ' + host + ' \'cat /home/ec2-user/logs/daemon.log\'\n')
 task_sender.close()
 
+import xgboost
 
+xgboost.XGBModel
+
+
+xgboost.Booster

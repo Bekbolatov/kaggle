@@ -1,0 +1,16 @@
+[ec2-user@ip-10-0-2-198 upload]$
+#max depth [8], eta 0.2, colsample_bytree 0.5, subsample: 1.0
+param = {'max_depth': 16,
+         'eta': 0.1,
+         #'gamma': 1.0,
+         'colsample_bytree': 0.5,
+         'subsample': 1.0,
+         'min_child_weight': 5,
+         'silent':1,
+         'objective':'binary:logistic',
+         'eval_metric':'auc',
+         'early_stopping_rounds':20}
+num_round = 300
+
+~
+
