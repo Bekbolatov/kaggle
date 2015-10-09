@@ -41,8 +41,9 @@ class SpotInstances:
     XGBOOST 7.0 -> ami-85b7adb5  (16GB)
     XGBOOST 7.1 -> ami-7fa6bc4f (Word2Vec/Lemmatiz)
     XGBOOST 7.2 -> ami-78e2064b (Google Analytics, Facebook, WordPress features) commit 389dd51f7d66aa88cb674f45c28beee17b4adbb1
+    XGBOOST 7.3 -> ami-7ec6214d
     """
-    def __init__(self, image_id = "ami-78e2064b"):
+    def __init__(self, image_id = "ami-7ec6214d"):
         self.image_id = image_id
         self.conn = boto.ec2.connect_to_region("us-west-2")
         """

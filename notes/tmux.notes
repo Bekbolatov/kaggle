@@ -11,5 +11,6 @@ tmux ls
 
 tmux new-session -d -s hello_session 'ls ; sleep 10; ls; sleep 10'  \;
 
+set-option -g history-limit 3000
 
 
