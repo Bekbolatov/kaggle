@@ -22,7 +22,6 @@ def clean_domain(host):
         else:
             return more_shortened_host        
     except Exception as inst:
-        print inst
         return 'bad_domain'
 
 def ahref2text(ahref):
@@ -34,7 +33,6 @@ def ahref2text(ahref):
             return 'no_domain'
         return domain
     except Exception as inst:
-        print inst
         return 'bad_domain'
 
 def a2domain(a):
@@ -42,7 +40,6 @@ def a2domain(a):
         ahref = a['href']
         return ahref2text(ahref)
     except Exception as inst:
-        print inst
         return 'bad_domain'
 
 def soup2link_profile(soup):
