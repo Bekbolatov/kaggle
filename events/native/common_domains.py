@@ -23,7 +23,6 @@ def clean_domain(host):
             return more_shortened_host        
     except Exception as inst:
         print inst
-        print href
         return 'bad_domain'
 
 def ahref2text(ahref):
