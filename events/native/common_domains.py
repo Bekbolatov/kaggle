@@ -46,9 +46,11 @@ def a2domain(a):
         print inst
         return 'bad_domain'
 
-def soup2link_feature(soup):
+def soup2link_profile(soup):
     domains = Counter([a2domain(a) for a in soup.find_all('a')])
     profile = {}
+
+    profile['domain_set_size'] = len(domains)
     profile['no_domain'] = domains['no_domain']
     profile['bad_domain'] = domains['bad_domain']
     
