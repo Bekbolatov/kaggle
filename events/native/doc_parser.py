@@ -2,24 +2,9 @@ from __future__ import division
 import re
 
 features = """
-1) "content=\"width=device.+?\"viewport\""
-2) "\"viewport\""
-
-2) "'send', 'pageview'"
-3) "WordPress"
-4) "/wp-includes/js/jquery/"
-5) modernizr
-6) "sponsored" : lower()
-
-7) "facebook.+;appId=(\d+)" : default 0
-
-8) ---  Google Analytics ---
-   "UA-(\d{5,10})-(\d+)"    :
-   first matching line: 
-        + id (0),
-        + length (1000), 
-        + number(total number of lines)
-    +count of matches > 2
+1) 'content="width=device.+?"viewport"'
+2) '"viewport"'
+3) 'fonts.googleapis'
 """
 
 pattern_1 = re.compile("'set', 'forseSSL'")
