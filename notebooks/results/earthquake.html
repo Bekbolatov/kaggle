@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<head>
+   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+   <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+   <link rel="stylesheet" href="https://rawgit.com/lvoogdt/Leaflet.awesome-markers/2.0/develop/dist/leaflet.awesome-markers.css">
+   <script src="https://rawgithub.com/lvoogdt/Leaflet.awesome-markers/2.0/develop/dist/leaflet.awesome-markers.js"></script>
+
+
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.Default.css">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/MarkerCluster.css">
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster-src.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.4.0/leaflet.markercluster.js"></script>
+
+   <link rel="stylesheet" href="https://birdage.github.io/Leaflet.awesome-markers/dist/leaflet.awesome.rotate.css">
+
+   
+   
+   
+   
+
+   <style>
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        position:absolute;
+        top:0;
+        bottom:0;
+        right:0;
+        left:0;
+      }
+
+   </style>
+</head>
+
+<body>
+
+   <div class="folium-map" id="folium_59e4c1c054404f54a0232f88034ce9f9" style="width: 100%; height: 100%"></div>
+
+   <script>
+
+      
+
+      var base_tile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18,
+          minZoom: 1,
+          attribution: 'Map data (c) <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+      });
+
+      var baseLayer = {
+        "Base Layer": base_tile
+      };
+
+      /*
+      addition of the wms layers
+      */
+
+      
+
+      /*
+      addition of the tile layers
+      */
+      
+
+      /*
+      list of layers to be added
+      */
+      var layer_list = {
+      
+      };
+
+      /*
+      Bounding box.
+      */
+      var southWest = L.latLng(-90, -180),
+          northEast = L.latLng(90, 180),
+          bounds = L.latLngBounds(southWest, northEast);
+
+      /*
+      Creates the map and adds the selected layers
+      */
+      var map = L.map('folium_59e4c1c054404f54a0232f88034ce9f9', {
+                                       center:[48, -102],
+                                       zoom: 3,
+                                       maxBounds: bounds,
+                                       layers: [base_tile]
+                                     });
+
+      L.control.layers(baseLayer, layer_list).addTo(map);
+
+      //cluster group
+      var clusteredmarkers = L.markerClusterGroup();
+      //section for adding clustered markers
+      
+      //add the clustered markers to the group anyway
+      map.addLayer(clusteredmarkers);
+
+      
+
+      
+      var circle_1 = L.circle([64.6102, -148.0174], 32000.0, {
+                            color: '#fdc791',
+                            fillColor: '#fdc791',
+                            fillOpacity: 0.6
+                            });
+      circle_1.bindPopup("26km S of Ester, Alaska");
+      circle_1._popup.options.maxWidth = 300;
+      map.addLayer(circle_1)
+      
+      var circle_2 = L.circle([36.5406685, -121.0326691], 24600.0, {
+                            color: '#fdd49f',
+                            fillColor: '#fdd49f',
+                            fillOpacity: 0.6
+                            });
+      circle_2.bindPopup("29km ENE of Soledad, California");
+      circle_2._popup.options.maxWidth = 300;
+      map.addLayer(circle_2)
+      
+      var circle_3 = L.circle([36.5470009, -121.0361633], 64000.0, {
+                            color: '#f0694a',
+                            fillColor: '#f0694a',
+                            fillOpacity: 0.6
+                            });
+      circle_3.bindPopup("29km ENE of Soledad, California");
+      circle_3._popup.options.maxWidth = 300;
+      map.addLayer(circle_3)
+      
+      var circle_4 = L.circle([37.7835007, -121.9618301], 40600.0, {
+                            color: '#fdb57e',
+                            fillColor: '#fdb57e',
+                            fillOpacity: 0.6
+                            });
+      circle_4.bindPopup("1km ENE of San Ramon, California");
+      circle_4._popup.options.maxWidth = 300;
+      map.addLayer(circle_4)
+      
+      var circle_5 = L.circle([38.8023338, -122.7718353], 17000.0, {
+                            color: '#fee0b7',
+                            fillColor: '#fee0b7',
+                            fillOpacity: 0.6
+                            });
+      circle_5.bindPopup("3km NNW of The Geysers, California");
+      circle_5._popup.options.maxWidth = 300;
+      map.addLayer(circle_5)
+      
+      var circle_6 = L.circle([48.5755, -123.0928333], 5200.0, {
+                            color: '#feefd9',
+                            fillColor: '#feefd9',
+                            fillOpacity: 0.6
+                            });
+      circle_6.bindPopup("7km NW of Friday Harbor, Washington");
+      circle_6._popup.options.maxWidth = 300;
+      map.addLayer(circle_6)
+      
+      var circle_7 = L.circle([33.6781667, -117.2211667], 19800.0, {
+                            color: '#fddcaf',
+                            fillColor: '#fddcaf',
+                            fillOpacity: 0.6
+                            });
+      circle_7.bindPopup("9km SW of Menifee, California");
+      circle_7._popup.options.maxWidth = 300;
+      map.addLayer(circle_7)
+      
+      var circle_8 = L.circle([41.9094, -119.6553], 14000.0, {
+                            color: '#fee5c1',
+                            fillColor: '#fee5c1',
+                            fillOpacity: 0.6
+                            });
+      circle_8.bindPopup("65km ESE of Lakeview, Oregon");
+      circle_8._popup.options.maxWidth = 300;
+      map.addLayer(circle_8)
+      
+      var circle_9 = L.circle([41.8671, -119.6313], 28000.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_9.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_9._popup.options.maxWidth = 300;
+      map.addLayer(circle_9)
+      
+      var circle_10 = L.circle([35.3313333, -118.5856667], 25000.0, {
+                            color: '#fdd49e',
+                            fillColor: '#fdd49e',
+                            fillOpacity: 0.6
+                            });
+      circle_10.bindPopup("25km NNW of Tehachapi, California");
+      circle_10._popup.options.maxWidth = 300;
+      map.addLayer(circle_10)
+      
+      var circle_11 = L.circle([33.6378333, -116.6943333], 8600.0, {
+                            color: '#feebd0',
+                            fillColor: '#feebd0',
+                            fillOpacity: 0.6
+                            });
+      circle_11.bindPopup("9km NNW of Anza, California");
+      circle_11._popup.options.maxWidth = 300;
+      map.addLayer(circle_11)
+      
+      var circle_12 = L.circle([35.0483333, -118.3186667], 18400.0, {
+                            color: '#fddeb3',
+                            fillColor: '#fddeb3',
+                            fillOpacity: 0.6
+                            });
+      circle_12.bindPopup("13km W of Mojave, California");
+      circle_12._popup.options.maxWidth = 300;
+      map.addLayer(circle_12)
+      
+      var circle_13 = L.circle([-9.7835, 121.8372], 90000.0, {
+                            color: '#b90805',
+                            fillColor: '#b90805',
+                            fillOpacity: 0.6
+                            });
+      circle_13.bindPopup("101km S of Ngalupolo, Indonesia");
+      circle_13._popup.options.maxWidth = 300;
+      map.addLayer(circle_13)
+      
+      var circle_14 = L.circle([-48.8447, 121.0764], 88000.0, {
+                            color: '#be0f0a',
+                            fillColor: '#be0f0a',
+                            fillOpacity: 0.6
+                            });
+      circle_14.bindPopup("Western Indian-Antarctic Ridge");
+      circle_14._popup.options.maxWidth = 300;
+      map.addLayer(circle_14)
+      
+      var circle_15 = L.circle([38.8390007, -122.8284988], 8600.0, {
+                            color: '#feebd0',
+                            fillColor: '#feebd0',
+                            fillOpacity: 0.6
+                            });
+      circle_15.bindPopup("9km WNW of Cobb, California");
+      circle_15._popup.options.maxWidth = 300;
+      map.addLayer(circle_15)
+      
+      var circle_16 = L.circle([39.0827, -119.6323], 24000.0, {
+                            color: '#fdd6a2',
+                            fillColor: '#fdd6a2',
+                            fillOpacity: 0.6
+                            });
+      circle_16.bindPopup("8km ENE of Johnson Lane, Nevada");
+      circle_16._popup.options.maxWidth = 300;
+      map.addLayer(circle_16)
+      
+      var circle_17 = L.circle([32.8436667, -116.47], 32200.0, {
+                            color: '#fdc690',
+                            fillColor: '#fdc690',
+                            fillOpacity: 0.6
+                            });
+      circle_17.bindPopup("6km ENE of Pine Valley, California");
+      circle_17._popup.options.maxWidth = 300;
+      map.addLayer(circle_17)
+      
+      var circle_18 = L.circle([11.8956, 143.2957], 96000.0, {
+                            color: '#a50000',
+                            fillColor: '#a50000',
+                            fillOpacity: 0.6
+                            });
+      circle_18.bindPopup("212km SW of Merizo Village, Guam");
+      circle_18._popup.options.maxWidth = 300;
+      map.addLayer(circle_18)
+      
+      var circle_19 = L.circle([34.0941667, -118.2755], 29000.0, {
+                            color: '#fdcd96',
+                            fillColor: '#fdcd96',
+                            fillOpacity: 0.6
+                            });
+      circle_19.bindPopup("1km WNW of Silver Lake, California");
+      circle_19._popup.options.maxWidth = 300;
+      map.addLayer(circle_19)
+      
+      var circle_20 = L.circle([34.6391667, -117.3011667], 23200.0, {
+                            color: '#fdd7a4',
+                            fillColor: '#fdd7a4',
+                            fillOpacity: 0.6
+                            });
+      circle_20.bindPopup("12km N of Victorville, California");
+      circle_20._popup.options.maxWidth = 300;
+      map.addLayer(circle_20)
+      
+      var circle_21 = L.circle([39.4648, 143.3721], 100000.0, {
+                            color: '#960000',
+                            fillColor: '#960000',
+                            fillOpacity: 0.6
+                            });
+      circle_21.bindPopup("122km E of Yamada, Japan");
+      circle_21._popup.options.maxWidth = 300;
+      map.addLayer(circle_21)
+      
+      var circle_22 = L.circle([38.8198318, -122.7945023], 21800.0, {
+                            color: '#fdd9a8',
+                            fillColor: '#fdd9a8',
+                            fillOpacity: 0.6
+                            });
+      circle_22.bindPopup("5km NW of The Geysers, California");
+      circle_22._popup.options.maxWidth = 300;
+      map.addLayer(circle_22)
+      
+      var circle_23 = L.circle([43.5766, -110.4172], 50000.0, {
+                            color: '#fc935f',
+                            fillColor: '#fc935f',
+                            fillOpacity: 0.6
+                            });
+      circle_23.bindPopup("29km ENE of Jackson, Wyoming");
+      circle_23._popup.options.maxWidth = 300;
+      map.addLayer(circle_23)
+      
+      var circle_24 = L.circle([36.7025, -97.8893], 54000.0, {
+                            color: '#fa8757',
+                            fillColor: '#fa8757',
+                            fillOpacity: 0.6
+                            });
+      circle_24.bindPopup("18km SW of Medford, Oklahoma");
+      circle_24._popup.options.maxWidth = 300;
+      map.addLayer(circle_24)
+      
+      var circle_25 = L.circle([34.3388333, -116.8796667], 21800.0, {
+                            color: '#fdd9a8',
+                            fillColor: '#fdd9a8',
+                            fillOpacity: 0.6
+                            });
+      circle_25.bindPopup("9km NNW of Big Bear City, California");
+      circle_25._popup.options.maxWidth = 300;
+      map.addLayer(circle_25)
+      
+      var circle_26 = L.circle([34.0138333, -116.7916667], 26200.0, {
+                            color: '#fdd29c',
+                            fillColor: '#fdd29c',
+                            fillOpacity: 0.6
+                            });
+      circle_26.bindPopup("11km N of Cabazon, California");
+      circle_26._popup.options.maxWidth = 300;
+      map.addLayer(circle_26)
+      
+      var circle_27 = L.circle([36.5008316, -121.0828323], 43800.0, {
+                            color: '#fda973',
+                            fillColor: '#fda973',
+                            fillOpacity: 0.6
+                            });
+      circle_27.bindPopup("23km ENE of Soledad, California");
+      circle_27._popup.options.maxWidth = 300;
+      map.addLayer(circle_27)
+      
+      var circle_28 = L.circle([36.043, -117.8028333], 600.0, {
+                            color: '#fff4e5',
+                            fillColor: '#fff4e5',
+                            fillOpacity: 0.6
+                            });
+      circle_28.bindPopup("13km E of Coso Junction, California");
+      circle_28._popup.options.maxWidth = 300;
+      map.addLayer(circle_28)
+      
+      var circle_29 = L.circle([-30.6886, -71.8103], 88000.0, {
+                            color: '#be0f0a',
+                            fillColor: '#be0f0a',
+                            fillOpacity: 0.6
+                            });
+      circle_29.bindPopup("59km W of Ovalle, Chile");
+      circle_29._popup.options.maxWidth = 300;
+      map.addLayer(circle_29)
+      
+      var circle_30 = L.circle([35.4268341, -120.9938354], 24000.0, {
+                            color: '#fdd6a2',
+                            fillColor: '#fdd6a2',
+                            fillOpacity: 0.6
+                            });
+      circle_30.bindPopup("9km W of Cayucos, California");
+      circle_30._popup.options.maxWidth = 300;
+      map.addLayer(circle_30)
+      
+      var circle_31 = L.circle([38.8088341, -122.7724991], 22800.0, {
+                            color: '#fdd8a6',
+                            fillColor: '#fdd8a6',
+                            fillOpacity: 0.6
+                            });
+      circle_31.bindPopup("3km NNW of The Geysers, California");
+      circle_31._popup.options.maxWidth = 300;
+      map.addLayer(circle_31)
+      
+      var circle_32 = L.circle([-3.7062, 150.8862], 106000.0, {
+                            color: '#7f0000',
+                            fillColor: '#7f0000',
+                            fillOpacity: 0.6
+                            });
+      circle_32.bindPopup("125km S of Kavieng, Papua New Guinea");
+      circle_32._popup.options.maxWidth = 300;
+      map.addLayer(circle_32)
+      
+      var circle_33 = L.circle([36.5, -121.0818329], 34000.0, {
+                            color: '#fdc38d',
+                            fillColor: '#fdc38d',
+                            fillOpacity: 0.6
+                            });
+      circle_33.bindPopup("23km ENE of Soledad, California");
+      circle_33._popup.options.maxWidth = 300;
+      map.addLayer(circle_33)
+      
+      var circle_34 = L.circle([41.8644, -119.6286], 34000.0, {
+                            color: '#fdc38d',
+                            fillColor: '#fdc38d',
+                            fillOpacity: 0.6
+                            });
+      circle_34.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_34._popup.options.maxWidth = 300;
+      map.addLayer(circle_34)
+      
+      var circle_35 = L.circle([-8.2742, 124.7986], 100000.0, {
+                            color: '#960000',
+                            fillColor: '#960000',
+                            fillOpacity: 0.6
+                            });
+      circle_35.bindPopup("90km WNW of Dili, East Timor");
+      circle_35._popup.options.maxWidth = 300;
+      map.addLayer(circle_35)
+      
+      var circle_36 = L.circle([62.003, -149.4712], 30000.0, {
+                            color: '#fdcb95',
+                            fillColor: '#fdcb95',
+                            fillOpacity: 0.6
+                            });
+      circle_36.bindPopup("26km SE of Y, Alaska");
+      circle_36._popup.options.maxWidth = 300;
+      map.addLayer(circle_36)
+      
+      var circle_37 = L.circle([37.5258331, -118.8249969], 33800.0, {
+                            color: '#fdc48d',
+                            fillColor: '#fdc48d',
+                            fillOpacity: 0.6
+                            });
+      circle_37.bindPopup("18km SE of Mammoth Lakes, California");
+      circle_37._popup.options.maxWidth = 300;
+      map.addLayer(circle_37)
+      
+      var circle_38 = L.circle([33.966, -118.5896667], 40000.0, {
+                            color: '#fdb67f',
+                            fillColor: '#fdb67f',
+                            fillOpacity: 0.6
+                            });
+      circle_38.bindPopup("9km SSE of Las Flores, California");
+      circle_38._popup.options.maxWidth = 300;
+      map.addLayer(circle_38)
+      
+      var circle_39 = L.circle([60.629, -143.0744], 32000.0, {
+                            color: '#fdc791',
+                            fillColor: '#fdc791',
+                            fillOpacity: 0.6
+                            });
+      circle_39.bindPopup("72km NNW of Cape Yakataga, Alaska");
+      circle_39._popup.options.maxWidth = 300;
+      map.addLayer(circle_39)
+      
+      var circle_40 = L.circle([38.1051, -114.6113], 40000.0, {
+                            color: '#fdb67f',
+                            fillColor: '#fdb67f',
+                            fillOpacity: 0.6
+                            });
+      circle_40.bindPopup("23km NW of Pioche, Nevada");
+      circle_40._popup.options.maxWidth = 300;
+      map.addLayer(circle_40)
+      
+      var circle_41 = L.circle([33.4873333, -116.488], 16600.0, {
+                            color: '#fee0b8',
+                            fillColor: '#fee0b8',
+                            fillOpacity: 0.6
+                            });
+      circle_41.bindPopup("19km ESE of Anza, California");
+      circle_41._popup.options.maxWidth = 300;
+      map.addLayer(circle_41)
+      
+      var circle_42 = L.circle([38.8153343, -122.8041687], 29800.0, {
+                            color: '#fdcb95',
+                            fillColor: '#fdcb95',
+                            fillOpacity: 0.6
+                            });
+      circle_42.bindPopup("5km NW of The Geysers, California");
+      circle_42._popup.options.maxWidth = 300;
+      map.addLayer(circle_42)
+      
+      var circle_43 = L.circle([-18.1218, -177.8532], 94000.0, {
+                            color: '#ad0000',
+                            fillColor: '#ad0000',
+                            fillOpacity: 0.6
+                            });
+      circle_43.bindPopup("293km NNE of Ndoi Island, Fiji");
+      circle_43._popup.options.maxWidth = 300;
+      map.addLayer(circle_43)
+      
+      var circle_44 = L.circle([19.4296665, -155.6094971], 34800.0, {
+                            color: '#fdc28b',
+                            fillColor: '#fdc28b',
+                            fillOpacity: 0.6
+                            });
+      circle_44.bindPopup("26km E of Honaunau-Napoopoo, Hawaii");
+      circle_44._popup.options.maxWidth = 300;
+      map.addLayer(circle_44)
+      
+      var circle_45 = L.circle([41.8648, -119.6347], 46000.0, {
+                            color: '#fca26d',
+                            fillColor: '#fca26d',
+                            fillOpacity: 0.6
+                            });
+      circle_45.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_45._popup.options.maxWidth = 300;
+      map.addLayer(circle_45)
+      
+      var circle_46 = L.circle([62.767, -144.4105], 24000.0, {
+                            color: '#fdd6a2',
+                            fillColor: '#fdd6a2',
+                            fillOpacity: 0.6
+                            });
+      circle_46.bindPopup("93km NE of Glennallen, Alaska");
+      circle_46._popup.options.maxWidth = 300;
+      map.addLayer(circle_46)
+      
+      var circle_47 = L.circle([33.5248333, -116.4706667], 19000.0, {
+                            color: '#fdddb1',
+                            fillColor: '#fdddb1',
+                            fillOpacity: 0.6
+                            });
+      circle_47.bindPopup("19km E of Anza, California");
+      circle_47._popup.options.maxWidth = 300;
+      map.addLayer(circle_47)
+      
+      var circle_48 = L.circle([41.8864, -119.6395], 34000.0, {
+                            color: '#fdc38d',
+                            fillColor: '#fdc38d',
+                            fillOpacity: 0.6
+                            });
+      circle_48.bindPopup("67km ESE of Lakeview, Oregon");
+      circle_48._popup.options.maxWidth = 300;
+      map.addLayer(circle_48)
+      
+      var circle_49 = L.circle([41.895, -119.6336], 32000.0, {
+                            color: '#fdc791',
+                            fillColor: '#fdc791',
+                            fillOpacity: 0.6
+                            });
+      circle_49.bindPopup("67km ESE of Lakeview, Oregon");
+      circle_49._popup.options.maxWidth = 300;
+      map.addLayer(circle_49)
+      
+      var circle_50 = L.circle([38.9495, -118.1443], 64000.0, {
+                            color: '#f0694a',
+                            fillColor: '#f0694a',
+                            fillOpacity: 0.6
+                            });
+      circle_50.bindPopup("21km WNW of Gabbs, Nevada");
+      circle_50._popup.options.maxWidth = 300;
+      map.addLayer(circle_50)
+      
+      var circle_51 = L.circle([19.4298325, -155.6105042], 57400.0, {
+                            color: '#f77d52',
+                            fillColor: '#f77d52',
+                            fillOpacity: 0.6
+                            });
+      circle_51.bindPopup("26km E of Honaunau-Napoopoo, Hawaii");
+      circle_51._popup.options.maxWidth = 300;
+      map.addLayer(circle_51)
+      
+      var circle_52 = L.circle([19.4981, -66.1313], 68000.0, {
+                            color: '#eb5c41',
+                            fillColor: '#eb5c41',
+                            fillOpacity: 0.6
+                            });
+      circle_52.bindPopup("114km N of San Juan, Puerto Rico");
+      circle_52._popup.options.maxWidth = 300;
+      map.addLayer(circle_52)
+      
+      var circle_53 = L.circle([36.0196667, -117.779], 22800.0, {
+                            color: '#fdd8a6',
+                            fillColor: '#fdd8a6',
+                            fillOpacity: 0.6
+                            });
+      circle_53.bindPopup("15km NE of Little Lake, California");
+      circle_53._popup.options.maxWidth = 300;
+      map.addLayer(circle_53)
+      
+      var circle_54 = L.circle([19.7752, -66.016], 64000.0, {
+                            color: '#f0694a',
+                            fillColor: '#f0694a',
+                            fillOpacity: 0.6
+                            });
+      circle_54.bindPopup("145km N of San Juan, Puerto Rico");
+      circle_54._popup.options.maxWidth = 300;
+      map.addLayer(circle_54)
+      
+      var circle_55 = L.circle([1.6206, 89.5036], 92000.0, {
+                            color: '#b40201',
+                            fillColor: '#b40201',
+                            fillOpacity: 0.6
+                            });
+      circle_55.bindPopup("North Indian Ocean");
+      circle_55._popup.options.maxWidth = 300;
+      map.addLayer(circle_55)
+      
+      var circle_56 = L.circle([41.862, -119.615], 26000.0, {
+                            color: '#fdd29c',
+                            fillColor: '#fdd29c',
+                            fillOpacity: 0.6
+                            });
+      circle_56.bindPopup("70km ESE of Lakeview, Oregon");
+      circle_56._popup.options.maxWidth = 300;
+      map.addLayer(circle_56)
+      
+      var circle_57 = L.circle([48.6398333, -125.0626667], 42400.0, {
+                            color: '#fdad77',
+                            fillColor: '#fdad77',
+                            fillOpacity: 0.6
+                            });
+      circle_57.bindPopup("44km NW of Neah Bay, Washington");
+      circle_57._popup.options.maxWidth = 300;
+      map.addLayer(circle_57)
+      
+      var circle_58 = L.circle([33.296, -116.689], 9000.0, {
+                            color: '#feebcf',
+                            fillColor: '#feebcf',
+                            fillOpacity: 0.6
+                            });
+      circle_58.bindPopup("5km WNW of Warner Springs, California");
+      circle_58._popup.options.maxWidth = 300;
+      map.addLayer(circle_58)
+      
+      var circle_59 = L.circle([33.4731667, -116.4825], 8400.0, {
+                            color: '#feecd1',
+                            fillColor: '#feecd1',
+                            fillOpacity: 0.6
+                            });
+      circle_59.bindPopup("20km ESE of Anza, California");
+      circle_59._popup.options.maxWidth = 300;
+      map.addLayer(circle_59)
+      
+      var circle_60 = L.circle([41.8619, -119.5995], 28000.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_60.bindPopup("71km ESE of Lakeview, Oregon");
+      circle_60._popup.options.maxWidth = 300;
+      map.addLayer(circle_60)
+      
+      var circle_61 = L.circle([35.4978333, -118.3126667], 20400.0, {
+                            color: '#fddbac',
+                            fillColor: '#fddbac',
+                            fillOpacity: 0.6
+                            });
+      circle_61.bindPopup("19km ESE of Bodfish, California");
+      circle_61._popup.options.maxWidth = 300;
+      map.addLayer(circle_61)
+      
+      var circle_62 = L.circle([33.316, -116.3201667], 16600.0, {
+                            color: '#fee0b8',
+                            fillColor: '#fee0b8',
+                            fillOpacity: 0.6
+                            });
+      circle_62.bindPopup("8km NE of Borrego Springs, California");
+      circle_62._popup.options.maxWidth = 300;
+      map.addLayer(circle_62)
+      
+      var circle_63 = L.circle([37.2281, -115.0893], 22000.0, {
+                            color: '#fdd9a8',
+                            fillColor: '#fdd9a8',
+                            fillOpacity: 0.6
+                            });
+      circle_63.bindPopup("16km SSE of Alamo, Nevada");
+      circle_63._popup.options.maxWidth = 300;
+      map.addLayer(circle_63)
+      
+      var circle_64 = L.circle([33.7031667, -116.7293333], 27400.0, {
+                            color: '#fdd09a',
+                            fillColor: '#fdd09a',
+                            fillOpacity: 0.6
+                            });
+      circle_64.bindPopup("4km SSW of Idyllwild, California");
+      circle_64._popup.options.maxWidth = 300;
+      map.addLayer(circle_64)
+      
+      var circle_65 = L.circle([47.8023333, -113.672], 27400.0, {
+                            color: '#fdd09a',
+                            fillColor: '#fdd09a',
+                            fillOpacity: 0.6
+                            });
+      circle_65.bindPopup("38km ENE of Polson, Montana");
+      circle_65._popup.options.maxWidth = 300;
+      map.addLayer(circle_65)
+      
+      var circle_66 = L.circle([37.0697, -117.3032], -2000.0, {
+                            color: '#fff7ec',
+                            fillColor: '#fff7ec',
+                            fillOpacity: 0.6
+                            });
+      circle_66.bindPopup("51km WNW of Beatty, Nevada");
+      circle_66._popup.options.maxWidth = 300;
+      map.addLayer(circle_66)
+      
+      var circle_67 = L.circle([33.1833333, -116.0071667], 23800.0, {
+                            color: '#fdd6a2',
+                            fillColor: '#fdd6a2',
+                            fillOpacity: 0.6
+                            });
+      circle_67.bindPopup("12km ENE of Ocotillo Wells, California");
+      circle_67._popup.options.maxWidth = 300;
+      map.addLayer(circle_67)
+      
+      var circle_68 = L.circle([41.8769, -119.6224], 26000.0, {
+                            color: '#fdd29c',
+                            fillColor: '#fdd29c',
+                            fillOpacity: 0.6
+                            });
+      circle_68.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_68._popup.options.maxWidth = 300;
+      map.addLayer(circle_68)
+      
+      var circle_69 = L.circle([41.8768, -119.6193], 24000.0, {
+                            color: '#fdd6a2',
+                            fillColor: '#fdd6a2',
+                            fillOpacity: 0.6
+                            });
+      circle_69.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_69._popup.options.maxWidth = 300;
+      map.addLayer(circle_69)
+      
+      var circle_70 = L.circle([33.1806667, -116.0086667], 51200.0, {
+                            color: '#fc8f5b',
+                            fillColor: '#fc8f5b',
+                            fillOpacity: 0.6
+                            });
+      circle_70.bindPopup("12km ENE of Ocotillo Wells, California");
+      circle_70._popup.options.maxWidth = 300;
+      map.addLayer(circle_70)
+      
+      var circle_71 = L.circle([34.3356667, -118.481], 18000.0, {
+                            color: '#fedfb4',
+                            fillColor: '#fedfb4',
+                            fillOpacity: 0.6
+                            });
+      circle_71.bindPopup("7km NW of Pacoima, California");
+      circle_71._popup.options.maxWidth = 300;
+      map.addLayer(circle_71)
+      
+      var circle_72 = L.circle([61.5576, -146.4299], 28000.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_72.bindPopup("47km N of Valdez, Alaska");
+      circle_72._popup.options.maxWidth = 300;
+      map.addLayer(circle_72)
+      
+      var circle_73 = L.circle([38.8428333, -122.788], 14200.0, {
+                            color: '#fee4c0',
+                            fillColor: '#fee4c0',
+                            fillOpacity: 0.6
+                            });
+      circle_73.bindPopup("6km WNW of Cobb, California");
+      circle_73._popup.options.maxWidth = 300;
+      map.addLayer(circle_73)
+      
+      var circle_74 = L.circle([39.7721672, -124.0391693], 35800.0, {
+                            color: '#fdc089',
+                            fillColor: '#fdc089',
+                            fillOpacity: 0.6
+                            });
+      circle_74.bindPopup("41km NNW of Fort Bragg, California");
+      circle_74._popup.options.maxWidth = 300;
+      map.addLayer(circle_74)
+      
+      var circle_75 = L.circle([4.7998, 123.0314], 92000.0, {
+                            color: '#b40201',
+                            fillColor: '#b40201',
+                            fillOpacity: 0.6
+                            });
+      circle_75.bindPopup("185km SE of Tabiauan, Philippines");
+      circle_75._popup.options.maxWidth = 300;
+      map.addLayer(circle_75)
+      
+      var circle_76 = L.circle([33.5183333, -116.4348333], 12200.0, {
+                            color: '#fee7c7',
+                            fillColor: '#fee7c7',
+                            fillOpacity: 0.6
+                            });
+      circle_76.bindPopup("20km SW of La Quinta, California");
+      circle_76._popup.options.maxWidth = 300;
+      map.addLayer(circle_76)
+      
+      var circle_77 = L.circle([18.9057, -64.2997], 54000.0, {
+                            color: '#fa8757',
+                            fillColor: '#fa8757',
+                            fillOpacity: 0.6
+                            });
+      circle_77.bindPopup("63km NNE of Road Town, British Virgin Islands");
+      circle_77._popup.options.maxWidth = 300;
+      map.addLayer(circle_77)
+      
+      var circle_78 = L.circle([33.4788333, -116.4795], 16600.0, {
+                            color: '#fee0b8',
+                            fillColor: '#fee0b8',
+                            fillOpacity: 0.6
+                            });
+      circle_78.bindPopup("20km ESE of Anza, California");
+      circle_78._popup.options.maxWidth = 300;
+      map.addLayer(circle_78)
+      
+      var circle_79 = L.circle([46.2593333, -122.0608333], 19600.0, {
+                            color: '#fddcaf',
+                            fillColor: '#fddcaf',
+                            fillOpacity: 0.6
+                            });
+      circle_79.bindPopup("37km SSE of Morton, Washington");
+      circle_79._popup.options.maxWidth = 300;
+      map.addLayer(circle_79)
+      
+      var circle_80 = L.circle([34.3481667, -118.4838333], 21000.0, {
+                            color: '#fddaab',
+                            fillColor: '#fddaab',
+                            fillOpacity: 0.6
+                            });
+      circle_80.bindPopup("8km SSE of Santa Clarita, California");
+      circle_80._popup.options.maxWidth = 300;
+      map.addLayer(circle_80)
+      
+      var circle_81 = L.circle([34.3386667, -118.4728333], 24800.0, {
+                            color: '#fdd49f',
+                            fillColor: '#fdd49f',
+                            fillOpacity: 0.6
+                            });
+      circle_81.bindPopup("7km NNW of Pacoima, California");
+      circle_81._popup.options.maxWidth = 300;
+      map.addLayer(circle_81)
+      
+      var circle_82 = L.circle([33.2735, -116.7613333], 12600.0, {
+                            color: '#fee7c5',
+                            fillColor: '#fee7c5',
+                            fillOpacity: 0.6
+                            });
+      circle_82.bindPopup("4km N of Lake Henshaw, California");
+      circle_82._popup.options.maxWidth = 300;
+      map.addLayer(circle_82)
+      
+      var circle_83 = L.circle([19.3613338, -155.2940063], 47000.0, {
+                            color: '#fc9e69',
+                            fillColor: '#fc9e69',
+                            fillOpacity: 0.6
+                            });
+      circle_83.bindPopup("9km SW of Volcano, Hawaii");
+      circle_83._popup.options.maxWidth = 300;
+      map.addLayer(circle_83)
+      
+      var circle_84 = L.circle([17.9106, -66.2689], 30000.0, {
+                            color: '#fdcb95',
+                            fillColor: '#fdcb95',
+                            fillOpacity: 0.6
+                            });
+      circle_84.bindPopup("6km SW of Central Aguirre, Puerto Rico");
+      circle_84._popup.options.maxWidth = 300;
+      map.addLayer(circle_84)
+      
+      var circle_85 = L.circle([64.2102, -146.1686], 32000.0, {
+                            color: '#fdc791',
+                            fillColor: '#fdc791',
+                            fillOpacity: 0.6
+                            });
+      circle_85.bindPopup("28km NW of Delta Junction, Alaska");
+      circle_85._popup.options.maxWidth = 300;
+      map.addLayer(circle_85)
+      
+      var circle_86 = L.circle([34.3426667, -118.4641667], 25400.0, {
+                            color: '#fdd49e',
+                            fillColor: '#fdd49e',
+                            fillOpacity: 0.6
+                            });
+      circle_86.bindPopup("7km NNW of Pacoima, California");
+      circle_86._popup.options.maxWidth = 300;
+      map.addLayer(circle_86)
+      
+      var circle_87 = L.circle([34.3421667, -118.4661667], 69600.0, {
+                            color: '#e8553c',
+                            fillColor: '#e8553c',
+                            fillOpacity: 0.6
+                            });
+      circle_87.bindPopup("7km NNW of Pacoima, California");
+      circle_87._popup.options.maxWidth = 300;
+      map.addLayer(circle_87)
+      
+      var circle_88 = L.circle([33.6383333, -116.7001667], 6000.0, {
+                            color: '#feefd8',
+                            fillColor: '#feefd8',
+                            fillOpacity: 0.6
+                            });
+      circle_88.bindPopup("10km NNW of Anza, California");
+      circle_88._popup.options.maxWidth = 300;
+      map.addLayer(circle_88)
+      
+      var circle_89 = L.circle([18.8955, -67.6784], 56000.0, {
+                            color: '#f88154',
+                            fillColor: '#f88154',
+                            fillOpacity: 0.6
+                            });
+      circle_89.bindPopup("75km NW of Aguadilla, Puerto Rico");
+      circle_89._popup.options.maxWidth = 300;
+      map.addLayer(circle_89)
+      
+      var circle_90 = L.circle([46.134, -120.065], 28200.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_90.bindPopup("10km SSW of Mabton, Washington");
+      circle_90._popup.options.maxWidth = 300;
+      map.addLayer(circle_90)
+      
+      var circle_91 = L.circle([39.3165, -119.9849], 14000.0, {
+                            color: '#fee5c1',
+                            fillColor: '#fee5c1',
+                            fillOpacity: 0.6
+                            });
+      circle_91.bindPopup("7km N of Incline Village, Nevada");
+      circle_91._popup.options.maxWidth = 300;
+      map.addLayer(circle_91)
+      
+      var circle_92 = L.circle([38.8786, -116.1264], 30000.0, {
+                            color: '#fdcb95',
+                            fillColor: '#fdcb95',
+                            fillOpacity: 0.6
+                            });
+      circle_92.bindPopup("58km WNW of Currant, Nevada");
+      circle_92._popup.options.maxWidth = 300;
+      map.addLayer(circle_92)
+      
+      var circle_93 = L.circle([33.6606667, -116.7125], 12600.0, {
+                            color: '#fee7c5',
+                            fillColor: '#fee7c5',
+                            fillOpacity: 0.6
+                            });
+      circle_93.bindPopup("9km S of Idyllwild, California");
+      circle_93._popup.options.maxWidth = 300;
+      map.addLayer(circle_93)
+      
+      var circle_94 = L.circle([33.5971667, -116.8176667], 11800.0, {
+                            color: '#fee8c8',
+                            fillColor: '#fee8c8',
+                            fillOpacity: 0.6
+                            });
+      circle_94.bindPopup("14km WNW of Anza, California");
+      circle_94._popup.options.maxWidth = 300;
+      map.addLayer(circle_94)
+      
+      var circle_95 = L.circle([41.8597, -119.5931], 56000.0, {
+                            color: '#f88154',
+                            fillColor: '#f88154',
+                            fillOpacity: 0.6
+                            });
+      circle_95.bindPopup("72km ESE of Lakeview, Oregon");
+      circle_95._popup.options.maxWidth = 300;
+      map.addLayer(circle_95)
+      
+      var circle_96 = L.circle([33.4133333, -116.8666667], 19400.0, {
+                            color: '#fdddb0',
+                            fillColor: '#fdddb0',
+                            fillOpacity: 0.6
+                            });
+      circle_96.bindPopup("3km S of Aguanga, California");
+      circle_96._popup.options.maxWidth = 300;
+      map.addLayer(circle_96)
+      
+      var circle_97 = L.circle([63.2544, -151.9243], 24000.0, {
+                            color: '#fdd6a2',
+                            fillColor: '#fdd6a2',
+                            fillOpacity: 0.6
+                            });
+      circle_97.bindPopup("139km NW of Talkeetna, Alaska");
+      circle_97._popup.options.maxWidth = 300;
+      map.addLayer(circle_97)
+      
+      var circle_98 = L.circle([33.933, -116.789], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_98.bindPopup("2km N of Cabazon, California");
+      circle_98._popup.options.maxWidth = 300;
+      map.addLayer(circle_98)
+      
+      var circle_99 = L.circle([33.4715, -116.4818333], 7000.0, {
+                            color: '#feedd4',
+                            fillColor: '#feedd4',
+                            fillOpacity: 0.6
+                            });
+      circle_99.bindPopup("20km ESE of Anza, California");
+      circle_99._popup.options.maxWidth = 300;
+      map.addLayer(circle_99)
+      
+      var circle_100 = L.circle([60.1566, -141.4517], 28000.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_100.bindPopup("55km E of Cape Yakataga, Alaska");
+      circle_100._popup.options.maxWidth = 300;
+      map.addLayer(circle_100)
+      
+      var circle_101 = L.circle([66.4788, -155.6693], 50000.0, {
+                            color: '#fc935f',
+                            fillColor: '#fc935f',
+                            fillOpacity: 0.6
+                            });
+      circle_101.bindPopup("71km SE of Kobuk, Alaska");
+      circle_101._popup.options.maxWidth = 300;
+      map.addLayer(circle_101)
+      
+      var circle_102 = L.circle([60.0258, -140.7318], 28000.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_102.bindPopup("77km NW of Yakutat, Alaska");
+      circle_102._popup.options.maxWidth = 300;
+      map.addLayer(circle_102)
+      
+      var circle_103 = L.circle([39.1795, -119.1222], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_103.bindPopup("21km N of Yerington, Nevada");
+      circle_103._popup.options.maxWidth = 300;
+      map.addLayer(circle_103)
+      
+      var circle_104 = L.circle([34.2285, -117.0458333], 25800.0, {
+                            color: '#fdd39d',
+                            fillColor: '#fdd39d',
+                            fillOpacity: 0.6
+                            });
+      circle_104.bindPopup("6km ENE of Running Springs, California");
+      circle_104._popup.options.maxWidth = 300;
+      map.addLayer(circle_104)
+      
+      var circle_105 = L.circle([33.2716667, -116.1398333], 17600.0, {
+                            color: '#fedfb5',
+                            fillColor: '#fedfb5',
+                            fillOpacity: 0.6
+                            });
+      circle_105.bindPopup("14km N of Ocotillo Wells, California");
+      circle_105._popup.options.maxWidth = 300;
+      map.addLayer(circle_105)
+      
+      var circle_106 = L.circle([60.0381, -141.6529], 30000.0, {
+                            color: '#fdcb95',
+                            fillColor: '#fdcb95',
+                            fillOpacity: 0.6
+                            });
+      circle_106.bindPopup("43km E of Cape Yakataga, Alaska");
+      circle_106._popup.options.maxWidth = 300;
+      map.addLayer(circle_106)
+      
+      var circle_107 = L.circle([32.1354, 140.8998], 106000.0, {
+                            color: '#7f0000',
+                            fillColor: '#7f0000',
+                            fillOpacity: 0.6
+                            });
+      circle_107.bindPopup("147km SE of Hachijo-jima, Japan");
+      circle_107._popup.options.maxWidth = 300;
+      map.addLayer(circle_107)
+      
+      var circle_108 = L.circle([34.0323333, -117.2545], 23800.0, {
+                            color: '#fdd6a2',
+                            fillColor: '#fdd6a2',
+                            fillOpacity: 0.6
+                            });
+      circle_108.bindPopup("2km SSE of Loma Linda, California");
+      circle_108._popup.options.maxWidth = 300;
+      map.addLayer(circle_108)
+      
+      var circle_109 = L.circle([38.7890015, -122.8028336], 41200.0, {
+                            color: '#fdb27b',
+                            fillColor: '#fdb27b',
+                            fillOpacity: 0.6
+                            });
+      circle_109.bindPopup("4km WNW of The Geysers, California");
+      circle_109._popup.options.maxWidth = 300;
+      map.addLayer(circle_109)
+      
+      var circle_110 = L.circle([32.4666667, -115.5953333], 44200.0, {
+                            color: '#fda872',
+                            fillColor: '#fda872',
+                            fillOpacity: 0.6
+                            });
+      circle_110.bindPopup("13km S of Progreso, B.C., MX");
+      circle_110._popup.options.maxWidth = 300;
+      map.addLayer(circle_110)
+      
+      var circle_111 = L.circle([38.3199, -118.7175], 28000.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_111.bindPopup("24km SSW of Hawthorne, Nevada");
+      circle_111._popup.options.maxWidth = 300;
+      map.addLayer(circle_111)
+      
+      var circle_112 = L.circle([32.8645, -115.9915], 24200.0, {
+                            color: '#fdd5a0',
+                            fillColor: '#fdd5a0',
+                            fillOpacity: 0.6
+                            });
+      circle_112.bindPopup("14km N of Ocotillo, California");
+      circle_112._popup.options.maxWidth = 300;
+      map.addLayer(circle_112)
+      
+      var circle_113 = L.circle([38.8344994, -122.791832], 41200.0, {
+                            color: '#fdb27b',
+                            fillColor: '#fdb27b',
+                            fillOpacity: 0.6
+                            });
+      circle_113.bindPopup("6km WNW of Cobb, California");
+      circle_113._popup.options.maxWidth = 300;
+      map.addLayer(circle_113)
+      
+      var circle_114 = L.circle([39.088, -119.6342], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_114.bindPopup("8km ENE of Johnson Lane, Nevada");
+      circle_114._popup.options.maxWidth = 300;
+      map.addLayer(circle_114)
+      
+      var circle_115 = L.circle([61.3567, -146.9399], 32000.0, {
+                            color: '#fdc791',
+                            fillColor: '#fdc791',
+                            fillOpacity: 0.6
+                            });
+      circle_115.bindPopup("40km NW of Valdez, Alaska");
+      circle_115._popup.options.maxWidth = 300;
+      map.addLayer(circle_115)
+      
+      var circle_116 = L.circle([39.2189, -120.0796], -2000.0, {
+                            color: '#fff7ec',
+                            fillColor: '#fff7ec',
+                            fillOpacity: 0.6
+                            });
+      circle_116.bindPopup("3km SW of Tahoe Vista, California");
+      circle_116._popup.options.maxWidth = 300;
+      map.addLayer(circle_116)
+      
+      var circle_117 = L.circle([34.435, -118.6173333], 20600.0, {
+                            color: '#fddbac',
+                            fillColor: '#fddbac',
+                            fillOpacity: 0.6
+                            });
+      circle_117.bindPopup("5km WSW of Valencia, California");
+      circle_117._popup.options.maxWidth = 300;
+      map.addLayer(circle_117)
+      
+      var circle_118 = L.circle([39.4569, -118.4042], 26000.0, {
+                            color: '#fdd29c',
+                            fillColor: '#fdd29c',
+                            fillOpacity: 0.6
+                            });
+      circle_118.bindPopup("32km E of Fallon, Nevada");
+      circle_118._popup.options.maxWidth = 300;
+      map.addLayer(circle_118)
+      
+      var circle_119 = L.circle([41.8248333, -112.3556667], 16200.0, {
+                            color: '#fee1b9',
+                            fillColor: '#fee1b9',
+                            fillOpacity: 0.6
+                            });
+      circle_119.bindPopup("18km WNW of Garland, Utah");
+      circle_119._popup.options.maxWidth = 300;
+      map.addLayer(circle_119)
+      
+      var circle_120 = L.circle([38.6527, -118.7828], 14000.0, {
+                            color: '#fee5c1',
+                            fillColor: '#fee5c1',
+                            fillOpacity: 0.6
+                            });
+      circle_120.bindPopup("19km NW of Hawthorne, Nevada");
+      circle_120._popup.options.maxWidth = 300;
+      map.addLayer(circle_120)
+      
+      var circle_121 = L.circle([34.1015, -116.95], 18400.0, {
+                            color: '#fddeb3',
+                            fillColor: '#fddeb3',
+                            fillOpacity: 0.6
+                            });
+      circle_121.bindPopup("11km NE of Yucaipa, California");
+      circle_121._popup.options.maxWidth = 300;
+      map.addLayer(circle_121)
+      
+      var circle_122 = L.circle([38.2416649, -121.7958298], 49600.0, {
+                            color: '#fc9560',
+                            fillColor: '#fc9560',
+                            fillOpacity: 0.6
+                            });
+      circle_122.bindPopup("13km NW of Rio Vista, California");
+      circle_122._popup.options.maxWidth = 300;
+      map.addLayer(circle_122)
+      
+      var circle_123 = L.circle([33.7098333, -116.7275], 19600.0, {
+                            color: '#fddcaf',
+                            fillColor: '#fddcaf',
+                            fillOpacity: 0.6
+                            });
+      circle_123.bindPopup("3km SSW of Idyllwild, California");
+      circle_123._popup.options.maxWidth = 300;
+      map.addLayer(circle_123)
+      
+      var circle_124 = L.circle([46.9261667, -121.9883333], 14400.0, {
+                            color: '#fee4c0',
+                            fillColor: '#fee4c0',
+                            fillOpacity: 0.6
+                            });
+      circle_124.bindPopup("22km ENE of Eatonville, Washington");
+      circle_124._popup.options.maxWidth = 300;
+      map.addLayer(circle_124)
+      
+      var circle_125 = L.circle([46.2008333, -122.1815], 7800.0, {
+                            color: '#feecd2',
+                            fillColor: '#feecd2',
+                            fillOpacity: 0.6
+                            });
+      circle_125.bindPopup("38km NNE of Amboy, Washington");
+      circle_125._popup.options.maxWidth = 300;
+      map.addLayer(circle_125)
+      
+      var circle_126 = L.circle([36.3266667, -89.5016667], 24200.0, {
+                            color: '#fdd5a0',
+                            fillColor: '#fdd5a0',
+                            fillOpacity: 0.6
+                            });
+      circle_126.bindPopup("6km SSW of Tiptonville, Tennessee");
+      circle_126._popup.options.maxWidth = 300;
+      map.addLayer(circle_126)
+      
+      var circle_127 = L.circle([33.2831667, -116.8125], 14000.0, {
+                            color: '#fee5c1',
+                            fillColor: '#fee5c1',
+                            fillOpacity: 0.6
+                            });
+      circle_127.bindPopup("6km NW of Lake Henshaw, California");
+      circle_127._popup.options.maxWidth = 300;
+      map.addLayer(circle_127)
+      
+      var circle_128 = L.circle([46.9211667, -121.9941667], 17000.0, {
+                            color: '#fee0b7',
+                            fillColor: '#fee0b7',
+                            fillOpacity: 0.6
+                            });
+      circle_128.bindPopup("21km ENE of Eatonville, Washington");
+      circle_128._popup.options.maxWidth = 300;
+      map.addLayer(circle_128)
+      
+      var circle_129 = L.circle([61.2744, -146.6023], 50000.0, {
+                            color: '#fc935f',
+                            fillColor: '#fc935f',
+                            fillOpacity: 0.6
+                            });
+      circle_129.bindPopup("21km NW of Valdez, Alaska");
+      circle_129._popup.options.maxWidth = 300;
+      map.addLayer(circle_129)
+      
+      var circle_130 = L.circle([63.079, -151.5125], 44000.0, {
+                            color: '#fda872',
+                            fillColor: '#fda872',
+                            fillOpacity: 0.6
+                            });
+      circle_130.bindPopup("110km NW of Talkeetna, Alaska");
+      circle_130._popup.options.maxWidth = 300;
+      map.addLayer(circle_130)
+      
+      var circle_131 = L.circle([39.2383333, -123.2083333], 29800.0, {
+                            color: '#fdcb95',
+                            fillColor: '#fdcb95',
+                            fillOpacity: 0.6
+                            });
+      circle_131.bindPopup("3km S of Redwood Valley, California");
+      circle_131._popup.options.maxWidth = 300;
+      map.addLayer(circle_131)
+      
+      var circle_132 = L.circle([38.758, -122.7273333], 21400.0, {
+                            color: '#fdd9aa',
+                            fillColor: '#fdd9aa',
+                            fillOpacity: 0.6
+                            });
+      circle_132.bindPopup("3km SE of The Geysers, California");
+      circle_132._popup.options.maxWidth = 300;
+      map.addLayer(circle_132)
+      
+      var circle_133 = L.circle([41.8659, -119.621], 18000.0, {
+                            color: '#fedfb4',
+                            fillColor: '#fedfb4',
+                            fillOpacity: 0.6
+                            });
+      circle_133.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_133._popup.options.maxWidth = 300;
+      map.addLayer(circle_133)
+      
+      var circle_134 = L.circle([64.9359, -150.388], 30000.0, {
+                            color: '#fdcb95',
+                            fillColor: '#fdcb95',
+                            fillOpacity: 0.6
+                            });
+      circle_134.bindPopup("13km ESE of Manley Hot Springs, Alaska");
+      circle_134._popup.options.maxWidth = 300;
+      map.addLayer(circle_134)
+      
+      var circle_135 = L.circle([38.8228333, -122.7835], 14400.0, {
+                            color: '#fee4c0',
+                            fillColor: '#fee4c0',
+                            fillOpacity: 0.6
+                            });
+      circle_135.bindPopup("5km W of Cobb, California");
+      circle_135._popup.options.maxWidth = 300;
+      map.addLayer(circle_135)
+      
+      var circle_136 = L.circle([39.6684, -119.3906], 2000.0, {
+                            color: '#fff3e2',
+                            fillColor: '#fff3e2',
+                            fillOpacity: 0.6
+                            });
+      circle_136.bindPopup("13km WNW of Fernley, Nevada");
+      circle_136._popup.options.maxWidth = 300;
+      map.addLayer(circle_136)
+      
+      var circle_137 = L.circle([39.1899, -119.6386], 2000.0, {
+                            color: '#fff3e2',
+                            fillColor: '#fff3e2',
+                            fillOpacity: 0.6
+                            });
+      circle_137.bindPopup("6km SW of Dayton, Nevada");
+      circle_137._popup.options.maxWidth = 300;
+      map.addLayer(circle_137)
+      
+      var circle_138 = L.circle([38.2613, -118.4866], 4000.0, {
+                            color: '#fff0dc',
+                            fillColor: '#fff0dc',
+                            fillOpacity: 0.6
+                            });
+      circle_138.bindPopup("31km SSE of Hawthorne, Nevada");
+      circle_138._popup.options.maxWidth = 300;
+      map.addLayer(circle_138)
+      
+      var circle_139 = L.circle([41.0676, -117.398], 48000.0, {
+                            color: '#fc9b66',
+                            fillColor: '#fc9b66',
+                            fillOpacity: 0.6
+                            });
+      circle_139.bindPopup("30km ENE of Winnemucca, Nevada");
+      circle_139._popup.options.maxWidth = 300;
+      map.addLayer(circle_139)
+      
+      var circle_140 = L.circle([64.8965, -150.3378], 50000.0, {
+                            color: '#fc935f',
+                            fillColor: '#fc935f',
+                            fillOpacity: 0.6
+                            });
+      circle_140.bindPopup("18km SE of Manley Hot Springs, Alaska");
+      circle_140._popup.options.maxWidth = 300;
+      map.addLayer(circle_140)
+      
+      var circle_141 = L.circle([37.4056667, -118.5611667], 11200.0, {
+                            color: '#fee8c9',
+                            fillColor: '#fee8c9',
+                            fillOpacity: 0.6
+                            });
+      circle_141.bindPopup("10km WNW of West Bishop, California");
+      circle_141._popup.options.maxWidth = 300;
+      map.addLayer(circle_141)
+      
+      var circle_142 = L.circle([38.2641, -118.4947], 0.0, {
+                            color: '#fff5e7',
+                            fillColor: '#fff5e7',
+                            fillOpacity: 0.6
+                            });
+      circle_142.bindPopup("31km SSE of Hawthorne, Nevada");
+      circle_142._popup.options.maxWidth = 300;
+      map.addLayer(circle_142)
+      
+      var circle_143 = L.circle([38.2684, -118.4848], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_143.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_143._popup.options.maxWidth = 300;
+      map.addLayer(circle_143)
+      
+      var circle_144 = L.circle([38.2696, -118.4888], 20000.0, {
+                            color: '#fddbad',
+                            fillColor: '#fddbad',
+                            fillOpacity: 0.6
+                            });
+      circle_144.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_144._popup.options.maxWidth = 300;
+      map.addLayer(circle_144)
+      
+      var circle_145 = L.circle([38.2727, -118.4914], 18000.0, {
+                            color: '#fedfb4',
+                            fillColor: '#fedfb4',
+                            fillOpacity: 0.6
+                            });
+      circle_145.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_145._popup.options.maxWidth = 300;
+      map.addLayer(circle_145)
+      
+      var circle_146 = L.circle([38.2687, -118.486], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_146.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_146._popup.options.maxWidth = 300;
+      map.addLayer(circle_146)
+      
+      var circle_147 = L.circle([38.27, -118.4881], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_147.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_147._popup.options.maxWidth = 300;
+      map.addLayer(circle_147)
+      
+      var circle_148 = L.circle([38.2695, -118.4887], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_148.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_148._popup.options.maxWidth = 300;
+      map.addLayer(circle_148)
+      
+      var circle_149 = L.circle([41.8741, -119.6242], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_149.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_149._popup.options.maxWidth = 300;
+      map.addLayer(circle_149)
+      
+      var circle_150 = L.circle([38.2626, -118.4921], 6000.0, {
+                            color: '#feefd8',
+                            fillColor: '#feefd8',
+                            fillOpacity: 0.6
+                            });
+      circle_150.bindPopup("31km SSE of Hawthorne, Nevada");
+      circle_150._popup.options.maxWidth = 300;
+      map.addLayer(circle_150)
+      
+      var circle_151 = L.circle([38.2722, -118.4821], 10000.0, {
+                            color: '#feeacc',
+                            fillColor: '#feeacc',
+                            fillOpacity: 0.6
+                            });
+      circle_151.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_151._popup.options.maxWidth = 300;
+      map.addLayer(circle_151)
+      
+      var circle_152 = L.circle([36.023, -117.7695], 3800.0, {
+                            color: '#fff1dd',
+                            fillColor: '#fff1dd',
+                            fillOpacity: 0.6
+                            });
+      circle_152.bindPopup("16km NE of Little Lake, California");
+      circle_152._popup.options.maxWidth = 300;
+      map.addLayer(circle_152)
+      
+      var circle_153 = L.circle([38.2711, -118.4847], 16000.0, {
+                            color: '#fee2bb',
+                            fillColor: '#fee2bb',
+                            fillOpacity: 0.6
+                            });
+      circle_153.bindPopup("30km SSE of Hawthorne, Nevada");
+      circle_153._popup.options.maxWidth = 300;
+      map.addLayer(circle_153)
+      
+      var circle_154 = L.circle([59.59, -152.8739], 38000.0, {
+                            color: '#fdbc85',
+                            fillColor: '#fdbc85',
+                            fillOpacity: 0.6
+                            });
+      circle_154.bindPopup("62km WSW of Anchor Point, Alaska");
+      circle_154._popup.options.maxWidth = 300;
+      map.addLayer(circle_154)
+      
+      var circle_155 = L.circle([56.1771, 162.3176], 104000.0, {
+                            color: '#860000',
+                            fillColor: '#860000',
+                            fillOpacity: 0.6
+                            });
+      circle_155.bindPopup("11km WSW of Ust'-Kamchatsk Staryy, Russia");
+      circle_155._popup.options.maxWidth = 300;
+      map.addLayer(circle_155)
+      
+      var circle_156 = L.circle([34.0931667, -117.4551667], 46800.0, {
+                            color: '#fc9f6a',
+                            fillColor: '#fc9f6a',
+                            fillOpacity: 0.6
+                            });
+      circle_156.bindPopup("1km SSE of Fontana, California");
+      circle_156._popup.options.maxWidth = 300;
+      map.addLayer(circle_156)
+      
+      var circle_157 = L.circle([-30.7354, -71.502], 82000.0, {
+                            color: '#ce2417',
+                            fillColor: '#ce2417',
+                            fillOpacity: 0.6
+                            });
+      circle_157.bindPopup("32km WSW of Ovalle, Chile");
+      circle_157._popup.options.maxWidth = 300;
+      map.addLayer(circle_157)
+      
+      var circle_158 = L.circle([36.834, -115.3552], 38000.0, {
+                            color: '#fdbc85',
+                            fillColor: '#fdbc85',
+                            fillOpacity: 0.6
+                            });
+      circle_158.bindPopup("61km SSW of Alamo, Nevada");
+      circle_158._popup.options.maxWidth = 300;
+      map.addLayer(circle_158)
+      
+      var circle_159 = L.circle([41.8806, -119.6149], 26000.0, {
+                            color: '#fdd29c',
+                            fillColor: '#fdd29c',
+                            fillOpacity: 0.6
+                            });
+      circle_159.bindPopup("69km ESE of Lakeview, Oregon");
+      circle_159._popup.options.maxWidth = 300;
+      map.addLayer(circle_159)
+      
+      var circle_160 = L.circle([19.2208, -67.1285], 58000.0, {
+                            color: '#f67b51',
+                            fillColor: '#f67b51',
+                            fillOpacity: 0.6
+                            });
+      circle_160.bindPopup("80km N of Isabela, Puerto Rico");
+      circle_160._popup.options.maxWidth = 300;
+      map.addLayer(circle_160)
+      
+      var circle_161 = L.circle([37.5705, -118.851], 11600.0, {
+                            color: '#fee8c8',
+                            fillColor: '#fee8c8',
+                            fillOpacity: 0.6
+                            });
+      circle_161.bindPopup("13km SE of Mammoth Lakes, California");
+      circle_161._popup.options.maxWidth = 300;
+      map.addLayer(circle_161)
+      
+      var circle_162 = L.circle([38.8264999, -122.8059998], 41400.0, {
+                            color: '#fdb27b',
+                            fillColor: '#fdb27b',
+                            fillOpacity: 0.6
+                            });
+      circle_162.bindPopup("6km NW of The Geysers, California");
+      circle_162._popup.options.maxWidth = 300;
+      map.addLayer(circle_162)
+      
+      var circle_163 = L.circle([38.8386667, -122.8315], 11000.0, {
+                            color: '#fee9ca',
+                            fillColor: '#fee9ca',
+                            fillOpacity: 0.6
+                            });
+      circle_163.bindPopup("9km W of Cobb, California");
+      circle_163._popup.options.maxWidth = 300;
+      map.addLayer(circle_163)
+      
+      var circle_164 = L.circle([37.5661659, -118.8533325], 39400.0, {
+                            color: '#fdb881',
+                            fillColor: '#fdb881',
+                            fillOpacity: 0.6
+                            });
+      circle_164.bindPopup("13km SE of Mammoth Lakes, California");
+      circle_164._popup.options.maxWidth = 300;
+      map.addLayer(circle_164)
+      
+      var circle_165 = L.circle([38.6502, -118.7929], 12000.0, {
+                            color: '#fee7c7',
+                            fillColor: '#fee7c7',
+                            fillOpacity: 0.6
+                            });
+      circle_165.bindPopup("20km NW of Hawthorne, Nevada");
+      circle_165._popup.options.maxWidth = 300;
+      map.addLayer(circle_165)
+      
+      var circle_166 = L.circle([46.6056667, -119.8511667], 33800.0, {
+                            color: '#fdc48d',
+                            fillColor: '#fdc48d',
+                            fillOpacity: 0.6
+                            });
+      circle_166.bindPopup("9km SSE of Desert Aire, Washington");
+      circle_166._popup.options.maxWidth = 300;
+      map.addLayer(circle_166)
+      
+      var circle_167 = L.circle([19.0368, -67.9383], 62000.0, {
+                            color: '#f2704c',
+                            fillColor: '#f2704c',
+                            fillOpacity: 0.6
+                            });
+      circle_167.bindPopup("70km NE of Punta Cana, Dominican Republic");
+      circle_167._popup.options.maxWidth = 300;
+      map.addLayer(circle_167)
+      
+      var circle_168 = L.circle([62.2861, -148.9448], 34000.0, {
+                            color: '#fdc38d',
+                            fillColor: '#fdc38d',
+                            fillOpacity: 0.6
+                            });
+      circle_168.bindPopup("49km ENE of Y, Alaska");
+      circle_168._popup.options.maxWidth = 300;
+      map.addLayer(circle_168)
+      
+      var circle_169 = L.circle([63.0936, -151.4871], 54000.0, {
+                            color: '#fa8757',
+                            fillColor: '#fa8757',
+                            fillOpacity: 0.6
+                            });
+      circle_169.bindPopup("111km NW of Talkeetna, Alaska");
+      circle_169._popup.options.maxWidth = 300;
+      map.addLayer(circle_169)
+      
+      var circle_170 = L.circle([36.5163, 70.3132], 80000.0, {
+                            color: '#d42c1c',
+                            fillColor: '#d42c1c',
+                            fillOpacity: 0.6
+                            });
+      circle_170.bindPopup("41km E of Farkhar, Afghanistan");
+      circle_170._popup.options.maxWidth = 300;
+      map.addLayer(circle_170)
+      
+      var circle_171 = L.circle([18.995, -67.7561], 60000.0, {
+                            color: '#f4764f',
+                            fillColor: '#f4764f',
+                            fillOpacity: 0.6
+                            });
+      circle_171.bindPopup("82km NE of Punta Cana, Dominican Republic");
+      circle_171._popup.options.maxWidth = 300;
+      map.addLayer(circle_171)
+      
+      var circle_172 = L.circle([63.2564, -151.2443], 36000.0, {
+                            color: '#fdbf89',
+                            fillColor: '#fdbf89',
+                            fillOpacity: 0.6
+                            });
+      circle_172.bindPopup("115km W of Cantwell, Alaska");
+      circle_172._popup.options.maxWidth = 300;
+      map.addLayer(circle_172)
+      
+      var circle_173 = L.circle([37.2535, -119.4998333], 37200.0, {
+                            color: '#fdbe87',
+                            fillColor: '#fdbe87',
+                            fillOpacity: 0.6
+                            });
+      circle_173.bindPopup("15km ESE of Oakhurst, California");
+      circle_173._popup.options.maxWidth = 300;
+      map.addLayer(circle_173)
+      
+      var circle_174 = L.circle([19.1819, -67.7975], 66000.0, {
+                            color: '#ee6246',
+                            fillColor: '#ee6246',
+                            fillOpacity: 0.6
+                            });
+      circle_174.bindPopup("92km NE of Punta Cana, Dominican Republic");
+      circle_174._popup.options.maxWidth = 300;
+      map.addLayer(circle_174)
+      
+      var circle_175 = L.circle([33.5966667, -116.8128333], 14200.0, {
+                            color: '#fee4c0',
+                            fillColor: '#fee4c0',
+                            fillOpacity: 0.6
+                            });
+      circle_175.bindPopup("14km WNW of Anza, California");
+      circle_175._popup.options.maxWidth = 300;
+      map.addLayer(circle_175)
+      
+      var circle_176 = L.circle([35.0016667, -118.2175], 25400.0, {
+                            color: '#fdd49e',
+                            fillColor: '#fdd49e',
+                            fillOpacity: 0.6
+                            });
+      circle_176.bindPopup("7km SW of Mojave, California");
+      circle_176._popup.options.maxWidth = 300;
+      map.addLayer(circle_176)
+      
+      var circle_177 = L.circle([35.8818, -97.3732], 50000.0, {
+                            color: '#fc935f',
+                            fillColor: '#fc935f',
+                            fillOpacity: 0.6
+                            });
+      circle_177.bindPopup("4km E of Guthrie, Oklahoma");
+      circle_177._popup.options.maxWidth = 300;
+      map.addLayer(circle_177)
+      
+      var circle_178 = L.circle([37.776165, -121.9583359], 24400.0, {
+                            color: '#fdd5a0',
+                            fillColor: '#fdd5a0',
+                            fillOpacity: 0.6
+                            });
+      circle_178.bindPopup("1km ESE of San Ramon, California");
+      circle_178._popup.options.maxWidth = 300;
+      map.addLayer(circle_178)
+      
+      var circle_179 = L.circle([33.473, -116.4831667], 26800.0, {
+                            color: '#fdd19b',
+                            fillColor: '#fdd19b',
+                            fillOpacity: 0.6
+                            });
+      circle_179.bindPopup("20km ESE of Anza, California");
+      circle_179._popup.options.maxWidth = 300;
+      map.addLayer(circle_179)
+      
+      var circle_180 = L.circle([32.1178333, -115.058], 68000.0, {
+                            color: '#eb5c41',
+                            fillColor: '#eb5c41',
+                            fillOpacity: 0.6
+                            });
+      circle_180.bindPopup("10km SSW of Estacion Coahuila, B.C., MX");
+      circle_180._popup.options.maxWidth = 300;
+      map.addLayer(circle_180)
+      
+      var circle_181 = L.circle([37.7781667, -121.9638333], 62000.0, {
+                            color: '#f2704c',
+                            fillColor: '#f2704c',
+                            fillOpacity: 0.6
+                            });
+      circle_181.bindPopup("1km E of San Ramon, California");
+      circle_181._popup.options.maxWidth = 300;
+      map.addLayer(circle_181)
+      
+      var circle_182 = L.circle([33.322, -117.1623333], 20000.0, {
+                            color: '#fddbad',
+                            fillColor: '#fddbad',
+                            fillOpacity: 0.6
+                            });
+      circle_182.bindPopup("9km WSW of Pala, California");
+      circle_182._popup.options.maxWidth = 300;
+      map.addLayer(circle_182)
+      
+      var circle_183 = L.circle([60.3687, -151.9965], 38000.0, {
+                            color: '#fdbc85',
+                            fillColor: '#fdbc85',
+                            fillOpacity: 0.6
+                            });
+      circle_183.bindPopup("38km W of Cohoe, Alaska");
+      circle_183._popup.options.maxWidth = 300;
+      map.addLayer(circle_183)
+      
+      var circle_184 = L.circle([37.3788333, -119.4483333], 33600.0, {
+                            color: '#fdc48d',
+                            fillColor: '#fdc48d',
+                            fillOpacity: 0.6
+                            });
+      circle_184.bindPopup("18km ENE of Oakhurst, California");
+      circle_184._popup.options.maxWidth = 300;
+      map.addLayer(circle_184)
+      
+      var circle_185 = L.circle([37.6495, -118.8761667], 7000.0, {
+                            color: '#feedd4',
+                            fillColor: '#feedd4',
+                            fillOpacity: 0.6
+                            });
+      circle_185.bindPopup("8km E of Mammoth Lakes, California");
+      circle_185._popup.options.maxWidth = 300;
+      map.addLayer(circle_185)
+      
+      var circle_186 = L.circle([38.7706667, -122.7231667], 21200.0, {
+                            color: '#fddaab',
+                            fillColor: '#fddaab',
+                            fillOpacity: 0.6
+                            });
+      circle_186.bindPopup("2km ESE of The Geysers, California");
+      circle_186._popup.options.maxWidth = 300;
+      map.addLayer(circle_186)
+      
+      var circle_187 = L.circle([59.9616, -141.5837], 32000.0, {
+                            color: '#fdc791',
+                            fillColor: '#fdc791',
+                            fillOpacity: 0.6
+                            });
+      circle_187.bindPopup("48km ESE of Cape Yakataga, Alaska");
+      circle_187._popup.options.maxWidth = 300;
+      map.addLayer(circle_187)
+      
+      var circle_188 = L.circle([33.8738333, -117.5096667], 14600.0, {
+                            color: '#fee4bf',
+                            fillColor: '#fee4bf',
+                            fillOpacity: 0.6
+                            });
+      circle_188.bindPopup("1km ESE of Home Gardens, California");
+      circle_188._popup.options.maxWidth = 300;
+      map.addLayer(circle_188)
+      
+      var circle_189 = L.circle([63.1694, -151.3451], 28000.0, {
+                            color: '#fdce98',
+                            fillColor: '#fdce98',
+                            fillOpacity: 0.6
+                            });
+      circle_189.bindPopup("113km NNW of Talkeetna, Alaska");
+      circle_189._popup.options.maxWidth = 300;
+      map.addLayer(circle_189)
+      
+      var circle_190 = L.circle([35.8551, -97.353], 52000.0, {
+                            color: '#fc8c59',
+                            fillColor: '#fc8c59',
+                            fillOpacity: 0.6
+                            });
+      circle_190.bindPopup("7km ESE of Guthrie, Oklahoma");
+      circle_190._popup.options.maxWidth = 300;
+      map.addLayer(circle_190)
+      
+
+      
+
+      
+
+      
+
+      
+
+
+
+   </script>
+
+</body>

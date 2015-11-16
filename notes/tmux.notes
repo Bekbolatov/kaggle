@@ -13,4 +13,21 @@ tmux new-session -d -s hello_session 'ls ; sleep 10; ls; sleep 10'  \;
 
 set-option -g history-limit 3000
 
+----------------------------------------------------------------------------------------------
 
+http://unix.stackexchange.com/questions/21742/renumbering-windows-in-tmux
+
+tmux 1.7 has a couple of features that can help establish and maintain gapless/packed window numbers:
+
+The move-window command learned a new -r option that will renumber all the windows in a session (either the current session, or one specified with the -t option).
+
+If you have a set of windows like { 1:A, 4:B, 15:C }, then you can run move-window -r to renumber them to { 1:A, 2:B, 3:C } (they will start with your base-index; 1 in this example).
+
+When the renumber-windows session option is enabled, tmux will automatically renumber the windows of a session (as with move-window -r) after any window is closed.
+
+If you like this behavior, you can turn it on in the global value so that all sessions that to not override it will automatically have it enabled:
+
+set-option -g renumber-windows on
+
+
+----------------------------------------------------------------------------------------------
