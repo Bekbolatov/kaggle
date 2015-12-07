@@ -1,2 +1,11 @@
 ssh-keygen -t rsa -b 4096 -C "my this key"
 
+From: https://kb.iu.edu/d/aumh
+ktutil 
+ktutil:  addent -password -p username@ADS.IU.EDU -k 1 -e rc4-hmac
+Password for username@ADS.IU.EDU: [enter your password]
+ktutil:  addent -password -p username@ADS.IU.EDU -k 1 -e aes256-cts
+Password for username@ADS.IU.EDU: [enter your password]
+ktutil:  wkt username.keytab
+ktutil:  quit 
+
