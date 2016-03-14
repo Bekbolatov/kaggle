@@ -1,0 +1,9 @@
+One of the biggest issues is mispellings.
+Can't just blindly apply dictionary, since sometimes brand names.
+
+1. Create a dictionary of valid names from descriptions and attributes.
+2. Use that as a soft whitelist when applying typo-correction
+3. Bring everything into a singular nouns 
+4. Consider stemming completely - but probably not a good idea - since most queries are nouns anyway.
+5. Proceed with cleaned queries.
+
