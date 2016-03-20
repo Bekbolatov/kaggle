@@ -1,5 +1,6 @@
 package com.sparkydots.kaggle.hd.load
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.types.{DoubleType, IntegerType}
 
@@ -9,15 +10,21 @@ import org.apache.spark.sql.types.{DoubleType, IntegerType}
 
 object Loader {
 
+  val BASE: String = s"s3n://sparkydotsdata/kaggle/hd/orig"
+
   case class OrigTrain(id: Int, product_uid: Int, product_title: String, search_term: String, relevance: Double)
+
   case class OrigTest(id: Int, product_uid: Int, product_title: String, search_term: String)
+
   case class OrigDescr(product_uid: Int, product_description: String)
+
   case class OrigAttr(product_uid: Int, name: String, value: String)
 
   case class Queries(uid: Int, title: String, desc: String, attrs: Seq[(String, String)], queries: Seq[(Int, String)])
 
   def load(filename: String, base: String = s"s3n://sparkydotsdata/kaggle/hd/orig")(implicit sqlContext: SQLContext) =
     sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"$base/$filename")
+
   //.select($"id".cast(IntegerType), $"product_uid".cast(IntegerType), $"product_title", $"search_term", $"relevance".cast(DoubleType)).as[OrigTrain]
 
   def loadHD(base: String = s"s3n://sparkydotsdata/kaggle/hd/orig")(implicit sqlContext: SQLContext) = {
@@ -30,7 +37,6 @@ object Loader {
 
     (trainFile, testFile, descrFile, attrFile)
   }
-
 
 
   def doit()(implicit sqlContext: SQLContext) = {
@@ -60,9 +66,9 @@ object Loader {
       (t1, q1 ++ q2)
     }
 
-    val descriptions = descr_df.rdd.map { case OrigDescr(product_uid, product_description) =>  (product_uid, product_description) }
+    val descriptions = descr_df.rdd.map { case OrigDescr(product_uid, product_description) => (product_uid, product_description) }
 
-    val base_queries2 = base_queries.leftOuterJoin(descriptions).map { case (id: Int, ((title: String, queries: Seq[(Int, String)]) , product_description: Option[String])) =>
+    val base_queries2 = base_queries.leftOuterJoin(descriptions).map { case (id: Int, ((title: String, queries: Seq[(Int, String)]), product_description: Option[String])) =>
       (id, (title, product_description.getOrElse(""), queries))
     }
 
@@ -72,12 +78,24 @@ object Loader {
       a1 ++ a2
     }
 
-    val base_queries3 = base_queries2.leftOuterJoin(attributes).map { case (id: Int, ((title: String, product_description: String, queries: Seq[(Int, String)]) , attrs: Option[Seq[(String, String)]])) =>
+    val base_queries3 = base_queries2.leftOuterJoin(attributes).map { case (id: Int, ((title: String, product_description: String, queries: Seq[(Int, String)]), attrs: Option[Seq[(String, String)]])) =>
       Queries(id, title, product_description, attrs.getOrElse(Seq()), queries)
     }
 
     base_queries3
 
+  }
+
+
+  def saveQueries(bq: RDD[Queries])(implicit sqlContext: SQLContext) = {
+    import sqlContext.implicits._
+    val bqdf = bq.map(q => Queries.unapply(q).get).toDF("uid", "title", "descr", "attrs", "qs")
+    bqdf.write.save(s"$BASE/reorg.parquet")
+  }
+
+  def loadQueries()(implicit sqlContext: SQLContext) = {
+    val bqdf = sqlContext.read.load(s"$BASE/reorg.parquet")
+    bqdf
   }
 }
 
