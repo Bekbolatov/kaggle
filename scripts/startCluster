@@ -9,3 +9,10 @@ noglob aws emr create-cluster --name Liberty  --release-label emr-4.0.0  --appli
 
 8x r3.2xlarge[8]
 noglob aws emr create-cluster --name Liberty8x8  --release-label emr-4.0.0  --applications  Name=Spark --bootstrap-action Path=s3://support.elasticmapreduce/bootstrap-actions/ami/3.3.1/ridetherocket-workaround.bash --instance-type r3.2xlarge --instance-count 9 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373
+
+
+
+With spot prices
+noglob aws emr create-cluster --name Liberty  --release-label emr-4.0.0  --applications  Name=Spark --bootstrap-action Path=s3://support.elasticmapreduce/bootstrap-actions/ami/3.3.1/ridetherocket-workaround.bash --instance-type r3.xlarge --instance-count 3 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373
+
+

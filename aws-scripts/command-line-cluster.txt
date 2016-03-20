@@ -1,0 +1,27 @@
+
+noglob aws emr create-cluster --name Homedepot --release-label emr-4.4.0 --applications Name=Spark Name=Ganglia Name=Hive --configurations file://./myConfig.json --instance-type m3.xlarge --instance-count 2 --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373
+
+
+#noglob aws emr create-cluster --name Liberty  --release-label emr-4.0.0  --applications  Name=Spark --bootstrap-action Path=s3://support.elasticmapreduce/bootstrap-actions/ami/3.3.1/ridetherocket-workaround.bash --instance-type r3.xlarge --instance-count 3 --service-r    ole EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373
+
+
+
+
+
+
+# Start Homedepot cluster
+noglob aws emr create-cluster --name Homedepot --release-label emr-4.4.0 --applications Name=Spark Name=Ganglia Name=Hive --configurations file://./myConfig.json --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --instance-groups InstanceGroupType=MASTER,InstanceType=m3.xlarge,InstanceCount=1,BidPrice=0.10 InstanceGroupType=CORE,BidPrice=0.10,InstanceType=m3.xlarge,InstanceCount=2
+
+
+# Tunneling
+aws emr socks --cluster-id j-34LWKMMXPX7H4  --key-pair-file  ~/.ssh/panerapig.pem
+
+
+# Spot pricing
+--instance-groups InstanceGroupType=MASTER,InstanceType=m3.xlarge,InstanceCount=1,BidPrice=0.25 \
+InstanceGroupType=CORE,BidPrice=0.03,InstanceType=m3.xlarge,InstanceCount=2 \ 
+InstanceGroupType=TASK,BidPrice=0.10,InstanceType=m3.xlarge,InstanceCount=3 
+
+
+
+
