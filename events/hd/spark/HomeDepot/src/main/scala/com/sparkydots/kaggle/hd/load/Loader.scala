@@ -12,7 +12,7 @@ case class OrigDescr(product_uid: Int, product_description: String)
 
 case class OrigAttr(product_uid: Int, name: String, value: String)
 
-case class Queries(uid: Int, title: String, desc: String, attrs: Seq[(String, String)], queries: Seq[(Int, String)])
+case class Product(uid: Int, title: String, desc: String, attrs: Seq[(String, String)], queries: Seq[(Int, String)])
 
 object Loader {
 
@@ -73,7 +73,7 @@ object Loader {
     }
 
     val base_queries3 = base_queries2.leftOuterJoin(attributes).map { case (id: Int, ((title: String, product_description: String, queries: Seq[(Int, String)]), attrs: Option[Seq[(String, String)]])) =>
-      Queries(id, title, product_description, attrs.getOrElse(Seq()), queries)
+      Product(id, title, product_description, attrs.getOrElse(Seq()), queries)
     }
 
     base_queries3
@@ -81,9 +81,9 @@ object Loader {
   }
 
 
-  def saveQueries(bq: RDD[Queries], filename: String = "reorg.parquet")(implicit sqlContext: SQLContext) = {
+  def saveQueries(bq: RDD[Product], filename: String = "reorg.parquet")(implicit sqlContext: SQLContext) = {
     import sqlContext.implicits._
-    val bqdf = bq.map(q => Queries.unapply(q).get).toDF("uid", "title", "descr", "attrs", "qs")
+    val bqdf = bq.map(q => Product.unapply(q).get).toDF("uid", "title", "descr", "attrs", "qs")
     bqdf.write.save(s"$BASE/$filename")
   }
 
@@ -92,7 +92,7 @@ object Loader {
       .rdd
       .map {
       case r: Row =>
-        Queries(
+        Product(
           r.getInt(0),
           r.getString(1),
           r.getString(2),
@@ -104,13 +104,13 @@ object Loader {
   }
 
   // result in "rawclean.parquet"
-  def cleanRawText(bq: RDD[Queries])(implicit sqlContext: SQLContext): RDD[Queries] = {
+  def cleanRawText(bq: RDD[Product])(implicit sqlContext: SQLContext): RDD[Product] = {
     // org.apache.spark.sql.DataFrame =
     // [uid: int, title: string, descr: string, attrs: array<struct<_1:string,_2:string>>, qs: array<struct<_1:int,_2:string>>]
-    val bqc = bq.map { case Queries(uid: Int, title: String, descr: String, attrs: Seq[(String, String)], qs: Seq[(Int, String)]) =>
+    val bqc = bq.map { case Product(uid: Int, title: String, descr: String, attrs: Seq[(String, String)], qs: Seq[(Int, String)]) =>
       val attr_clean = attrs.map { case (k: String, v: String) => (CleanText.clean(k), CleanText.clean(v)) }
       val qs_clean = qs.map { case (id: Int, q: String) => (id, CleanText.clean(q)) }
-      Queries(uid, CleanText.clean(title), CleanText.clean(descr), attr_clean, qs_clean)
+      Product(uid, CleanText.clean(title), CleanText.clean(descr), attr_clean, qs_clean)
     }
 
     bqc

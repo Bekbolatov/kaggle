@@ -3,7 +3,7 @@ package com.sparkydots.kaggle.hd.load
 import org.scalatest.{FlatSpec, Matchers}
 
 
-class TestCleanText  extends FlatSpec with Matchers {
+class TestCleanText extends FlatSpec with Matchers {
 
   val ts = Seq(
 
