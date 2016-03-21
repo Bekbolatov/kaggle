@@ -20,12 +20,17 @@ object Script extends Serializable {
     implicit val sqlimp = sqlContext
     import com.sparkydots.kaggle.hd.load._
     import com.sparkydots.kaggle.hd.features._
+    import com.sparkydots.kaggle.hd.spell._
 
     val bq = Loader.loadQueries("rawclean.parquet")
 
     val features = bq.flatMap { case product =>
-        Features.testFeatures(product)
+      PromiscuousSpelling(product).matches()
+        //Features.testFeatures(product)
     }
+
+
+
   }
 
 

@@ -12,7 +12,9 @@ case class OrigDescr(product_uid: Int, product_description: String)
 
 case class OrigAttr(product_uid: Int, name: String, value: String)
 
-case class Product(uid: Int, title: String, desc: String, attrs: Seq[(String, String)], queries: Seq[(Int, String)])
+case class Product(uid: Int, title: String, desc: String, attrs: Seq[(String, String)], queries: Seq[(Int, String)]) {
+  lazy val brand: Option[String] = attrs.find(_._1 == "mfg brand name").map(_._2)
+}
 
 object Loader {
 
