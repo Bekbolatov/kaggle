@@ -12,6 +12,9 @@ noglob aws emr create-cluster --name Homedepot --release-label emr-4.4.0 --appli
 # Start Homedepot cluster
 noglob aws emr create-cluster --name Homedepot --release-label emr-4.4.0 --applications Name=Spark Name=Ganglia Name=Hive --configurations file://./myConfig.json --service-role EMR_DefaultRole --ec2-attributes KeyName=panerapig,InstanceProfile=EMR_EC2_DefaultRole,SubnetId=subnet-04299373 --instance-groups InstanceGroupType=MASTER,InstanceType=m3.xlarge,InstanceCount=1,BidPrice=0.10 InstanceGroupType=CORE,BidPrice=0.10,InstanceType=m3.xlarge,InstanceCount=2
 
+# If want m4.large:
+4x m4.large
+
 
 # Tunneling
 aws emr socks --cluster-id j-34LWKMMXPX7H4  --key-pair-file  ~/.ssh/panerapig.pem

@@ -1,27 +1,8 @@
 package com.sparkydots.kaggle.hd.load
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SQLContext}
-import org.apache.spark.sql.types.{DoubleType, IntegerType}
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.Row
-
-// implicit val sqlimp = sqlContext
-// import org.apache.spark.sql.functions._
-// import sqlContext.implicits._
-// spark-shell --packages com.databricks:spark-csv_2.10:1.4.0 --jars homedepot_2.10-1.0.jar
-
-
-// Create HDFS DIR
-// sudo su - hdfs
-// hdfs dfs -mkdir /user/ec2-user
-// hdfs dfs -chmod -R 777 /user/ec2-user
-
-
-// Logging
-// import org.apache.log4j.{Level, Logger}
-// Logger.getLogger("org").setLevel(Level.WARN)
-// Logger.getLogger("akka").setLevel(Level.WARN)
-//
 
 case class OrigTrain(id: Int, product_uid: Int, product_title: String, search_term: String, relevance: Double)
 
@@ -39,8 +20,6 @@ object Loader {
 
   def load(filename: String, base: String = s"s3n://sparkydotsdata/kaggle/hd/orig")(implicit sqlContext: SQLContext) =
     sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"$base/$filename")
-
-  //.select($"id".cast(IntegerType), $"product_uid".cast(IntegerType), $"product_title", $"search_term", $"relevance".cast(DoubleType)).as[OrigTrain]
 
   def loadHD(base: String = s"s3n://sparkydotsdata/kaggle/hd/orig")(implicit sqlContext: SQLContext) = {
     import sqlContext.implicits._
