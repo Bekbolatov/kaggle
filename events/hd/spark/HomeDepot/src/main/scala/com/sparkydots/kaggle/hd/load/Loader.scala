@@ -1,26 +1,41 @@
 package com.sparkydots.kaggle.hd.load
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.types.{DoubleType, IntegerType}
+import org.apache.spark.sql.Row
 
 // implicit val sqlimp = sqlContext
 // import org.apache.spark.sql.functions._
 // import sqlContext.implicits._
+// spark-shell --packages com.databricks:spark-csv_2.10:1.4.0 --jars homedepot_2.10-1.0.jar
+
+
+// Create HDFS DIR
+// sudo su - hdfs
+// hdfs dfs -mkdir /user/ec2-user
+// hdfs dfs -chmod -R 777 /user/ec2-user
+
+
+// Logging
+// import org.apache.log4j.{Level, Logger}
+// Logger.getLogger("org").setLevel(Level.WARN)
+// Logger.getLogger("akka").setLevel(Level.WARN)
+//
+
+case class OrigTrain(id: Int, product_uid: Int, product_title: String, search_term: String, relevance: Double)
+
+case class OrigTest(id: Int, product_uid: Int, product_title: String, search_term: String)
+
+case class OrigDescr(product_uid: Int, product_description: String)
+
+case class OrigAttr(product_uid: Int, name: String, value: String)
+
+case class Queries(uid: Int, title: String, desc: String, attrs: Seq[(String, String)], queries: Seq[(Int, String)])
 
 object Loader {
 
   val BASE: String = s"s3n://sparkydotsdata/kaggle/hd/orig"
-
-  case class OrigTrain(id: Int, product_uid: Int, product_title: String, search_term: String, relevance: Double)
-
-  case class OrigTest(id: Int, product_uid: Int, product_title: String, search_term: String)
-
-  case class OrigDescr(product_uid: Int, product_description: String)
-
-  case class OrigAttr(product_uid: Int, name: String, value: String)
-
-  case class Queries(uid: Int, title: String, desc: String, attrs: Seq[(String, String)], queries: Seq[(Int, String)])
 
   def load(filename: String, base: String = s"s3n://sparkydotsdata/kaggle/hd/orig")(implicit sqlContext: SQLContext) =
     sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"$base/$filename")
@@ -87,16 +102,41 @@ object Loader {
   }
 
 
-  def saveQueries(bq: RDD[Queries])(implicit sqlContext: SQLContext) = {
+  def saveQueries(bq: RDD[Queries], filename: String = "reorg.parquet")(implicit sqlContext: SQLContext) = {
     import sqlContext.implicits._
     val bqdf = bq.map(q => Queries.unapply(q).get).toDF("uid", "title", "descr", "attrs", "qs")
-    bqdf.write.save(s"$BASE/reorg.parquet")
+    bqdf.write.save(s"$BASE/$filename")
   }
 
-  def loadQueries()(implicit sqlContext: SQLContext) = {
-    val bqdf = sqlContext.read.load(s"$BASE/reorg.parquet")
+  def loadQueries(filename: String = "reorg.parquet")(implicit sqlContext: SQLContext) = {
+    val bqdf = sqlContext.read.load(s"$BASE/$filename")
+      .rdd
+      .map {
+      case r: Row =>
+        Queries(
+          r.getInt(0),
+          r.getString(1),
+          r.getString(2),
+          r.getAs[Seq[Row]](3).map { case Row(k: String, v: String) => (k, v) },
+          r.getAs[Seq[Row]](4).map { case Row(k: Int, v: String) => (k, v) }
+        )
+    }
     bqdf
   }
+
+  // result in "rawclean.parquet"
+  def cleanRawText(bq: RDD[Queries])(implicit sqlContext: SQLContext): RDD[Queries] = {
+    // org.apache.spark.sql.DataFrame =
+    // [uid: int, title: string, descr: string, attrs: array<struct<_1:string,_2:string>>, qs: array<struct<_1:int,_2:string>>]
+    val bqc = bq.map { case Queries(uid: Int, title: String, descr: String, attrs: Seq[(String, String)], qs: Seq[(Int, String)]) =>
+      val attr_clean = attrs.map { case (k: String, v: String) => (CleanText.clean(k), CleanText.clean(v)) }
+      val qs_clean = qs.map { case (id: Int, q: String) => (id, CleanText.clean(q)) }
+      Queries(uid, CleanText.clean(title), CleanText.clean(descr), attr_clean, qs_clean)
+    }
+
+    bqc
+  }
+
 }
 
 
