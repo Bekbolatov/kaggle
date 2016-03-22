@@ -105,6 +105,22 @@ object Loader {
     bqdf
   }
 
+  def loadMatches(filename: String = "matches.parquet")(implicit sqlContext: SQLContext) = {
+    val bqdf = sqlContext.read.load(s"$BASE/$filename")
+      .rdd
+      .map {
+      case r: Row =>
+        Product(
+          r.getInt(0),
+          r.getString(1),
+          r.getString(2),
+          r.getAs[Seq[Row]](3).map { case Row(k: String, v: String) => (k, v) },
+          r.getAs[Seq[Row]](4).map { case Row(k: Int, v: String) => (k, v) }
+        )
+    }
+    bqdf
+  }
+
   // result in "rawclean.parquet"
   def cleanRawText(bq: RDD[Product])(implicit sqlContext: SQLContext): RDD[Product] = {
     // org.apache.spark.sql.DataFrame =

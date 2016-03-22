@@ -38,6 +38,7 @@ object Script extends Serializable {
     features_df.write.save("s3n://sparkydotsdata/kaggle/hd/orig/matches.parquet")
 
 
+    val fs = sqlContext.read.load("s3n://sparkydotsdata/kaggle/hd/orig/matches.parquet")
 
 //    val a = features.sample(false, 1.0/ 50000, 101)
 //    a.cache.count()
