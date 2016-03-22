@@ -4,6 +4,8 @@ object CleanText extends Serializable {
 
   // camelCase-like  (sometimes sentences end without a periodThen new sentences start)
   val pattern_camel = raw"([a-z]+)([0-9A]|([A-Z][^ ]+))".r
+  val pattern_lcase_number = raw"([a-z])([0-9])".r
+  val pattern_digit_lcase = raw"([0-9])([a-z])".r
   val pattern_s = raw"([a-z])'s".r
   val pattern_number_commas = raw"([0-9]),([0-9])".r
 
@@ -37,7 +39,7 @@ object CleanText extends Serializable {
     "be", "is", "are", "been",
     "have", "has", "had",
     "can", "could", "will", "would",
-    "go", "gone",
+    "go", "gone", "see", "seen",
     "all", "some", "any", "most", "several", "no", "none", "nothing",
     "as", "of", "in", "on", "at", "over", "from", "to",
     "with", "through", "for", "when", "then",
@@ -50,6 +52,9 @@ object CleanText extends Serializable {
     var ss = s
 
     ss = pattern_camel.replaceAllIn(ss, "$1 $2")
+    ss = pattern_lcase_number.replaceAllIn(ss, "$1 $2")
+    ss = pattern_digit_lcase.replaceAllIn(ss, "$1 $2")
+
     ss = pattern_number_commas.replaceAllIn(ss, "$1$2")
     ss = pattern_s.replaceAllIn(ss, "$1")
 

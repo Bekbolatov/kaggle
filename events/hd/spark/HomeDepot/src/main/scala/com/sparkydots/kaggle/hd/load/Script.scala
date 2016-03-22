@@ -22,13 +22,40 @@ object Script extends Serializable {
     import com.sparkydots.kaggle.hd.features._
     import com.sparkydots.kaggle.hd.spell._
 
-    val bq = Loader.loadQueries("rawclean.parquet")
+    val bq = Loader.loadQueries("rawclean2.parquet")
+
+//    val bq = Loader.loadQueries("reorg.parquet")
+//    val bqq = Loader.cleanRawText(bq)
+//    Loader.saveQueries(bqq, "rawclean2.parquet")
+
+    import sqlContext.implicits._
 
     val features = bq.flatMap { case product =>
       PromiscuousSpelling(product).matches()
-        //Features.testFeatures(product)
     }
 
+    val features_df = features.cache().toDF("id", "title", "descr", "attr", "brand")
+    features_df.write.save("s3n://sparkydotsdata/kaggle/hd/orig/matches.parquet")
+
+
+
+//    val a = features.sample(false, 1.0/ 50000, 101)
+//    a.cache.count()
+//    val a_df = a.toDF("id", "title", "descr", "attr", "brand")
+//    a_df.write.save("s3n://sparkydotsdata/kaggle/hd/orig/example_save.parquet")
+
+
+
+
+
+//    val bq = Loader.loadQueries("rawclean.parquet")
+
+//    val features = bq.flatMap { case product =>
+//      PromiscuousSpelling(product).matches()
+//        //Features.testFeatures(product)
+//    }
+//
+//    features.cache().count()
 
 
   }
