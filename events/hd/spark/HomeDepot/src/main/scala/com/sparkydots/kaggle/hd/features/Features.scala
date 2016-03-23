@@ -21,6 +21,16 @@ object Features extends Serializable {
     words.map { case (id, ws) => (id, Seq(true))}
   }
 
+  def loadLocalMatches() = {
+    val pattern = raw"\[([0-9]+),WrappedArray\((.*)\),WrappedArray\((.*)\),WrappedArray\((.*)\),WrappedArray\((.*)\),WrappedArray\((.*)\),WrappedArray\((.*)\),WrappedArray\((.*)\)\]".r
+    //[102853,WrappedArray(popcorn, paint),WrappedArray(),WrappedArray(paint),WrappedArray(),WrappedArray(),WrappedArray(),WrappedArray()]
+    val testit = "[102853,WrappedArray(popcorn, paint),WrappedArray(),WrappedArray(paint),WrappedArray(),WrappedArray(),WrappedArray(),WrappedArray()]"
+
+    testit match {
+      case pattern(id, a1, a2, a3, a4, a5, a6, a7) =>
+        println(id)
+    }
+  }
 
 
 }

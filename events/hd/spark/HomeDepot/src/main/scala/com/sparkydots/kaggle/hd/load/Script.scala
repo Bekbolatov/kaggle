@@ -1,6 +1,6 @@
 package com.sparkydots.kaggle.hd.load
 
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{Row, SQLContext}
 
 object Script extends Serializable {
 
@@ -38,9 +38,21 @@ object Script extends Serializable {
     features_df.write.save("s3n://sparkydotsdata/kaggle/hd/orig/matches.parquet")
 
 
+    val fdf = features_df.select($"id", $"title._1", $"title._2", $"descr._1", $"descr._2", $"attr", $"brand._1", $"brand._2")
+
+    val frdd = features_df.select($"id", $"title._1", $"title._2", $"descr._1", $"descr._2", $"attr", $"brand._1", $"brand._2").rdd
+    frdd.coalesce(1, true).saveAsTextFile("s3n://sparkydotsdata/kaggle/hd/features/matched_strings.csv")
+
     val fs = sqlContext.read.load("s3n://sparkydotsdata/kaggle/hd/orig/matches.parquet")
 
-//    val a = features.sample(false, 1.0/ 50000, 101)
+
+      val aa = fs.map { case r:Row =>
+        (r.getInt(0), r.getAs[Seq[Row]](1).map { case Row(k: Seq[Row], v: Seq[Row]) => (k.map { case Row(kk) => kk}, v.map { case Row(kk) => kk}) })
+      }
+
+//      [112899,[WrappedArray(purell),WrappedArray()],[WrappedArray(),WrappedArray()],WrappedArray(),[WrappedArray(),WrappedArray()]]
+
+    //    val a = features.sample(false, 1.0/ 50000, 101)
 //    a.cache.count()
 //    val a_df = a.toDF("id", "title", "descr", "attr", "brand")
 //    a_df.write.save("s3n://sparkydotsdata/kaggle/hd/orig/example_save.parquet")
