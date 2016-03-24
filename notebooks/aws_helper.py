@@ -21,6 +21,7 @@ class SpotInstances:
 
     memory-optimized
     r3.large	2	6.5	15	1 x 32 SSD	$0.175 per Hour
+    r3.xlarge  < 0.15
 
     
     XGBOOST 5   -> ami-d3c5d5e3
@@ -50,7 +51,7 @@ class SpotInstances:
         
         """
 
-    def request(self, num_instances=1, max_price=0.05, subnet='a'):
+    def request(self, num_instances=1, max_price=0.15, subnet='a'):
         with open ("aws_worker_start.sh", "r") as startup_script_file:
             startup_script = startup_script_file.read()
             
@@ -69,7 +70,7 @@ class SpotInstances:
                                                      count=num_instances,
                                                      type="one-time",
                                                      key_name="panerapig",
-                                                     instance_type="r3.4xlarge", #"c3.large", #"m3.xlarge",
+                                                     instance_type="r3.xlarge", #"c3.large", #"m3.xlarge",
                                                      user_data=startup_script,
                                                      subnet_id=subnet_id)
         for req in self.reqs:
