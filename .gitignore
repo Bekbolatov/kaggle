@@ -11,3 +11,7 @@ metafeatures
 *.csv
 *.model
 
+*.npy
+*.gz
+*.buffer
+

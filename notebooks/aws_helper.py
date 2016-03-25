@@ -43,16 +43,17 @@ class SpotInstances:
     XGBOOST 7.1 -> ami-7fa6bc4f (Word2Vec/Lemmatiz)
     XGBOOST 7.2 -> ami-78e2064b (Google Analytics, Facebook, WordPress features) commit 389dd51f7d66aa88cb674f45c28beee17b4adbb1
     XGBOOST 7.3 -> ami-7ec6214d
+    XGBOOST 8.0 -> ami-83cd26e3
     """
-    def __init__(self, image_id = "ami-7ec6214d"):
+    def __init__(self, image_id = "ami-83cd26e3"):
         self.image_id = image_id
         self.conn = boto.ec2.connect_to_region("us-west-2")
         """
         
         """
 
-    def request(self, num_instances=1, max_price=0.15, subnet='a'):
-        with open ("aws_worker_start.sh", "r") as startup_script_file:
+    def request(self, num_instances=1, max_price=0.15, subnet='a', script_name = "aws_worker_start.sh"):
+        with open (script_name, "r") as startup_script_file:
             startup_script = startup_script_file.read()
             
         print ("The following script will be run on startup")

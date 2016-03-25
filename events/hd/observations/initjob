@@ -1,0 +1,26 @@
+author "Renat"
+
+description "Worker server"
+
+
+start on runlevel [2345]
+stop on runlevel [016]
+
+
+#setuid ec2-user
+#setgid ec2-user
+
+#env PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/usr/local/bin/spark-1.3.1-bin-hadoop2.6/bin
+env HOME=/home/ec2-user
+env myvar="hello world"
+
+script
+  exec >>/var/log/worker_server.log 2>&1
+  echo "Starting"
+  date
+  exec su -s /bin/bash -c 'python /home/ec2-user/repos/bekbolatov/kaggle/events/native/read_sqs.py 1>/home/ec2-user/logs/worker-server-out.log 2>&1' ec2-user
+end script
+
+
+#/etc/init/worker-server.conf
+
