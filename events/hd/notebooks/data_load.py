@@ -21,3 +21,20 @@ def get_combined(loc=LOC):
     df_products = pd.read_pickle(data_loc % 'COMBINED_PRODUCT')
     return df_products
 
+
+def clean_tokenize_text():
+    df_products =  get_combined()
+    import text_parsing
+    reload(text_parsing)
+    from text_parsing import str_stem
+
+    df_products['product_title'] = df_products['product_title'].apply(str_stem)
+    df_products['product_description'] = df_products['product_description'].apply(str_stem)
+    df_products['attributes'] = df_products['attributes'].apply( lambda d: {str_stem(k): str_stem(v) for k,v in d.items()} )
+    df_products['queries'] = df_products['queries'].apply( lambda d: {k: str_stem(v) for k,v in d.items()} )
+    df_products.to_pickle(data_loc % 'COMBINED_PRODUCT_TOKENIZED')
+
+def get_combined_clean_tokenized(loc=LOC):
+    df_products = pd.read_pickle(data_loc % 'COMBINED_PRODUCT_TOKENIZED')
+    return df_products
+
