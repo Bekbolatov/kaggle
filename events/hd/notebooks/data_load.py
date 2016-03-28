@@ -22,7 +22,7 @@ def get_combined(loc=LOC):
     return df_products
 
 
-def clean_tokenize_text():
+def re_clean_tokenize_text():
     df_products =  get_combined()
     import text_parsing
     reload(text_parsing)
