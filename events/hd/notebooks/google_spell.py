@@ -3374,3 +3374,10 @@ def correct_spelling(q):
         return spell_check_dict[q]
     else:
         return q
+
+# what about:
+# paving paver pavers
+# concentrate concentrated
+# disposal disposer
+# rustoleum rust-oleum
+# ???
