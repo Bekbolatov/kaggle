@@ -34,7 +34,7 @@ pattern_kamp = re.compile(r"([0-9])( *-?)(kiloamperes|kiloampere|kamps|kamp|ka)\
 # rust-oleum => rust oleum, rustoleum
 pattern_hyphen = re.compile(r"([a-z]+)-([a-z]+)")
 
-pattern_ending_al_er_ing = re.compile(r"([a-z]+)(al|er|ing)s?([^a-z0-9])")
+#pattern_ending_al_er_ing = re.compile(r"([a-z]+)(al|er|ing)s?([^a-z0-9])")
 # pattern_ending_al = re.compile(r"([a-z]+)als?([^a-z0-9])")
 # pattern_ending_er = re.compile(r"([a-z]+)ers?([^a-z0-9])")
 # pattern_ending_ing = re.compile(r"([a-z]+)ings?([^a-z0-9])")
@@ -53,7 +53,7 @@ known_words = set(["the", "a", "an",
     "go", "gone", "see", "seen",
     "not",
     "all", "some", "any", "most", "several", "no", "none", "nothing",
-    "as", "of", "in", "on", "at", "over", "from", "to",
+    "as", "of", "in", "on", "at", "from", "to",
     "with", "through", "for", "when", "then",
     "new", "old",
     "you", "your", "yours", "me", "i", "my", "mine", "it", "its"])
@@ -103,10 +103,12 @@ def str_stem(s):
         s = s.replace("whirlpoolga", "whirlpool")
         s = s.replace("whirlpoolstainless","whirlpool stainless")
         s = s.replace("pressure-treated","pressure-treated pt")
+        s = s.replace("disposer", "disposal")
+        s = s.replace("paving", "paver")
 
         # rust-oleum => rust oleum, rustoleum
         s = pattern_hyphen.sub(r"\1 \2 \1\2", s)
-        s = pattern_ending_al_er_ing.sub(r"\1er \1ing \1al \1\2\3", s)
+        #s = pattern_ending_al_er_ing.sub(r"\1er \1ing \1al \1\2\3", s)
         # s = pattern_ending_al.sub(r"\1er \1ing \1al \2", s)
         # s = pattern_ending_er.sub(r"\1al \1ing \1er \2", s)
         # s = pattern_ending_ing.sub(r"\1al \1er \1ing \2", s)
