@@ -34,9 +34,10 @@ pattern_kamp = re.compile(r"([0-9])( *-?)(kiloamperes|kiloampere|kamps|kamp|ka)\
 # rust-oleum => rust oleum, rustoleum
 pattern_hyphen = re.compile(r"([a-z]+)-([a-z]+)")
 
-pattern_ending_al = re.compile(r"([a-z]+)als?([^a-z0-9])")
-pattern_ending_er = re.compile(r"([a-z]+)ers?([^a-z0-9])")
-pattern_ending_ing = re.compile(r"([a-z]+)ings?([^a-z0-9])")
+pattern_ending_al_er_ing = re.compile(r"([a-z]+)(al|er|ing)s?([^a-z0-9])")
+# pattern_ending_al = re.compile(r"([a-z]+)als?([^a-z0-9])")
+# pattern_ending_er = re.compile(r"([a-z]+)ers?([^a-z0-9])")
+# pattern_ending_ing = re.compile(r"([a-z]+)ings?([^a-z0-9])")
 pattern_ending_ted = re.compile(r"([a-z]+)ted([^a-z0-9])")
 
 # split
@@ -105,9 +106,10 @@ def str_stem(s):
 
         # rust-oleum => rust oleum, rustoleum
         s = pattern_hyphen.sub(r"\1 \2 \1\2", s)
-        s = pattern_ending_al.sub(r"\1er \1ing \1al \2", s)
-        s = pattern_ending_er.sub(r"\1al \1ing \1er \2", s)
-        s = pattern_ending_ing.sub(r"\1al \1er \1ing \2", s)
+        s = pattern_ending_al_er_ing.sub(r"\1er \1ing \1al \1\2\3", s)
+        # s = pattern_ending_al.sub(r"\1er \1ing \1al \2", s)
+        # s = pattern_ending_er.sub(r"\1al \1ing \1er \2", s)
+        # s = pattern_ending_ing.sub(r"\1al \1er \1ing \2", s)
         s = pattern_ending_ted.sub(r"\1te \1ted \2", s)
 
         s = ' '.join([x for x in pattern_split.split(s) if x and x not in known_words])

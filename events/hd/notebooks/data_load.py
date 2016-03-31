@@ -3,7 +3,7 @@ import pandas as pd
 
 #LOC = '/home/ec2-user/data/hd/unpacked/'
 LOC = '/Users/rbekbolatov/data/kaggle/homedepot/'
-data_loc = 'data/%s.df'
+data_loc = LOC + 'data/%s.df'
 
 
 def create_combined():
@@ -45,7 +45,7 @@ from google_spell import correct_spelling
 
 def correct_spell(w):
     v = correct_spelling(w)
-    if w == v:
+    if w != v:
         return v + " sxdli"
     else:
         return v
