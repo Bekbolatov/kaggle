@@ -31,8 +31,16 @@ pattern_watt = re.compile(r"([0-9])( *-?)(watts|watt)\.?")
 pattern_amp = re.compile(r"([0-9])( *-?)(amperes|ampere|amps|amp)\.?")
 pattern_kamp = re.compile(r"([0-9])( *-?)(kiloamperes|kiloampere|kamps|kamp|ka)\.?")
 
+# rust-oleum => rust oleum, rustoleum
+pattern_hyphen = re.compile(r"([a-z]+)-([a-z]+)")
+
+pattern_ending_al = re.compile(r"([a-z]+)als?([^a-z0-9])")
+pattern_ending_er = re.compile(r"([a-z]+)ers?([^a-z0-9])")
+pattern_ending_ing = re.compile(r"([a-z]+)ings?([^a-z0-9])")
+pattern_ending_ted = re.compile(r"([a-z]+)ted([^a-z0-9])")
+
 # split
-pattern_split = re.compile('[^0-9a-z-]')
+pattern_split = re.compile('[^0-9a-z]')
 
 known_words = set(["the", "a", "an",
     "this", "that", "which", "whose",
@@ -94,6 +102,13 @@ def str_stem(s):
         s = s.replace("whirlpoolga", "whirlpool")
         s = s.replace("whirlpoolstainless","whirlpool stainless")
         s = s.replace("pressure-treated","pressure-treated pt")
+
+        # rust-oleum => rust oleum, rustoleum
+        s = pattern_hyphen.sub(r"\1 \2 \1\2", s)
+        s = pattern_ending_al.sub(r"\1er \1ing \1al \2", s)
+        s = pattern_ending_er.sub(r"\1al \1ing \1er \2", s)
+        s = pattern_ending_ing.sub(r"\1al \1er \1ing \2", s)
+        s = pattern_ending_ted.sub(r"\1te \1ted \2", s)
 
         s = ' '.join([x for x in pattern_split.split(s) if x and x not in known_words])
         return s

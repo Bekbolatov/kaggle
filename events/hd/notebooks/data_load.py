@@ -38,20 +38,29 @@ def get_combined_clean_tokenized(loc=LOC):
     df_products = pd.read_pickle(data_loc % 'COMBINED_PRODUCT_TOKENIZED')
     return df_products
 
+
+import google_spell
+reload(google_spell)
+from google_spell import correct_spelling
+
+def correct_spell(w):
+    v = correct_spelling(w)
+    if w == v:
+        return v + " sxdli"
+    else:
+        return v
+
 def clean_text():
     df_products =  get_combined()
     import text_parsing
     reload(text_parsing)
     from text_parsing import str_stem
 
-    import google_spell
-    reload(google_spell)
-    from google_spell import correct_spelling
 
     df_products['product_title'] = df_products['product_title'].apply(str_stem)
     df_products['product_description'] = df_products['product_description'].apply(str_stem)
     df_products['attributes'] = df_products['attributes'].apply( lambda d: {str_stem(k): str_stem(v) for k,v in d.items()} )
-    df_products['queries'] = df_products['queries'].apply( lambda d: {k: str_stem(correct_spelling(v)) for k,v in d.items()} )
+    df_products['queries'] = df_products['queries'].apply( lambda d: {k: str_stem(correct_spell(v)) for k,v in d.items()} )
     df_products.to_pickle(data_loc % 'CLEAN_DATA')
 
 def get_clean_text(loc=LOC):
