@@ -15,4 +15,6 @@ metafeatures
 *.gz
 *.buffer
 *.df
+*.data
+
 
