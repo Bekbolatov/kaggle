@@ -79,7 +79,7 @@ object CleanText extends Serializable {
     ss = pattern_deg.replaceAllIn(ss, "$1 deg ")
     ss = pattern_volt.replaceAllIn(ss, "$1 volt ")
     ss = pattern_watt.replaceAllIn(ss, "$1 watt ")
-    ss = pattern_amp.replaceAllIn(ss, "$1 amp "):
+    ss = pattern_amp.replaceAllIn(ss, "$1 amp ")
     ss = pattern_kiloamp.replaceAllIn(ss, "$1 ka ")
 
 
