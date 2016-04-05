@@ -73,7 +73,8 @@ class SpotInstances:
                                                      count=num_instances,
                                                      type="one-time",
                                                      key_name="panerapig",
-                                                     instance_type="c3.8xlarge", #"r3.xlarge", #"c3.large", #"m3.xlarge",
+                                                     #instance_type="c3.8xlarge", #"r3.xlarge", #"c3.large", #"m3.xlarge",
+                                                     instance_type="c3.xlarge", #"r3.xlarge", #"c3.large", #"m3.xlarge",
                                                      user_data=startup_script,
                                                      subnet_id=subnet_id)
         for req in self.reqs:
