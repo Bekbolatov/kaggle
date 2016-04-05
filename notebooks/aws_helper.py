@@ -46,8 +46,9 @@ class SpotInstances:
     XGBOOST 8.0 -> ami-83cd26e3
     XGBOOST 8.1 -> ami-3c9b6e5c
     XGBOOST 8.2 -> ami-6910e509
+    XGBOOST 8.3 -> ami-1000f570
     """
-    def __init__(self, image_id = "ami-6910e509"):
+    def __init__(self, image_id = "ami-1000f570"):
         self.image_id = image_id
         self.conn = boto.ec2.connect_to_region("us-west-2")
         """
@@ -74,7 +75,7 @@ class SpotInstances:
                                                      type="one-time",
                                                      key_name="panerapig",
                                                      #instance_type="c3.8xlarge", #"r3.xlarge", #"c3.large", #"m3.xlarge",
-                                                     instance_type="c3.xlarge", #"r3.xlarge", #"c3.large", #"m3.xlarge",
+                                                     instance_type="r3.large", #"r3.xlarge", #"c3.large", #"m3.xlarge",
                                                      user_data=startup_script,
                                                      subnet_id=subnet_id)
         for req in self.reqs:
