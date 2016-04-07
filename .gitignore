@@ -12,6 +12,7 @@ metafeatures
 *.model
 
 *.npy
+*.npz
 *.gz
 *.buffer
 *.df

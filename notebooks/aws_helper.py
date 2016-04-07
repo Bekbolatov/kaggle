@@ -47,8 +47,9 @@ class SpotInstances:
     XGBOOST 8.1 -> ami-3c9b6e5c
     XGBOOST 8.2 -> ami-6910e509
     XGBOOST 8.3 -> ami-1000f570
+    XGBOOST 8.5 -> ami-869f6be6
     """
-    def __init__(self, image_id = "ami-1000f570"):
+    def __init__(self, image_id = "ami-869f6be6"):
         self.image_id = image_id
         self.conn = boto.ec2.connect_to_region("us-west-2")
         """
