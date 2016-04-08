@@ -1,17 +1,15 @@
 import os
 import pandas as pd
 import re
-
-from sklearn.decomposition import TruncatedSVD
-from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances
-
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 base_loc = package_directory
 loc = '../../%s'
-feat_path = 'FEAT_TFIDF.df'
+path_feat_tfidf = 'FEAT_TFIDF.df'
+
+simple_word = re.compile('([0-9]|units|xby)')
 
 def create_features():
     import logging as log
@@ -19,15 +17,15 @@ def create_features():
     log.info("TF-IDF features generation")
 
     queries = pd.read_pickle(base_loc + '/' + loc % 'FEATURES_WITH_TEXT_1.data')
-    log.info('read "queries", shape: %s' + str(queries.shape))
+    log.info('read "queries", shape: %s' % str(queries.shape))
 
     # vectorizers for similarities
     log.info('\t fit vectorizers')
 
-    tfv_title = TfidfVectorizer(ngram_range=(1,2), min_df=2)
-    tfv_title_desc = TfidfVectorizer(ngram_range=(1,2), min_df=2)
-    tfv_desc = TfidfVectorizer(ngram_range=(1,2), min_df=2)
-    tfv_all = TfidfVectorizer(ngram_range=(1,2), min_df=2)
+    tfv_title = TfidfVectorizer(ngram_range=(1,2), min_df=4)
+    tfv_title_desc = TfidfVectorizer(ngram_range=(1,2), min_df=4)
+    tfv_desc = TfidfVectorizer(ngram_range=(1,2), min_df=4)
+    tfv_all = TfidfVectorizer(ngram_range=(1,2), min_df=4)
 
     log.info('\t ... query - title')
     tfv_title.fit(
@@ -63,6 +61,8 @@ def create_features():
     set_desc = []
     set_attr = []
     for i, row in queries.iterrows():
+        if i%1000 == 0:
+            log.info("... %d" % i)
         cosine_title.append(calc_cosine_dist(row['query'], row['product_title'], tfv_title))
         cosine_desc.append(calc_cosine_dist(row['query'], row['product_description'], tfv_desc))
         cosine_title_desc.append(calc_cosine_dist(row['query'], row['product_title'] + ' ' + row['product_description'], tfv_title_desc))
@@ -84,16 +84,13 @@ def create_features():
     feats_df['set_attr'] = set_attr
 
     feats_df.drop('query', axis=1)
-    pd.to_pickle(feats_df, base_loc + '/' + 'feat_path')
-
-
+    pd.to_pickle(feats_df, base_loc + '/' + path_feat_tfidf)
 
 
 def calc_cosine_dist(text_a ,text_b, vect):
     return pairwise_distances(vect.transform([text_a]), vect.transform([text_b]), metric='cosine')[0][0]
 
 
-simple_word = re.compile('([0-9]|units|xby)')
 def calc_set_intersection(text_a, text_b):
     a = set([x for x in text_a.split() if not simple_word.search(x)])
     b = set(text_b.split())

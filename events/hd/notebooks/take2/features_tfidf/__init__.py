@@ -1,2 +1,2 @@
-""" Features: TF-IDF """
+""" Features derived from TF-IDF """
 
