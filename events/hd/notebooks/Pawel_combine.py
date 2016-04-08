@@ -148,3 +148,20 @@ fmean_squared_error(y_hat, y_test)
 
 
 
+
+
+
+######
+
+from sklearn.ensemble import ExtraTreesRegressor
+
+etr = ExtraTreesRegressor(n_estimators=500, criterion='mse', max_depth=20, min_samples_split=2,
+                          min_samples_leaf=1, max_features='auto', bootstrap=False,
+                          n_jobs=32, random_state=157, verbose=1)
+etr.fit(X_train, y_train)
+y_hat = etr.predict(X_test)
+y_hat = np.minimum(np.maximum(y_hat, 1.0), 3.0)
+fmean_squared_error(y_hat, y_test)
+
+
+
