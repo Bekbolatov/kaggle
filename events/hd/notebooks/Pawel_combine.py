@@ -159,11 +159,11 @@ X_tra = X_train[:,:-690]
 X_tes = X_test[:,:-690]
 
 f = []
-for n in [1000]:
-    for mf in [330, 345, 360]: #'sqrt', 'log2', 100]:
-        for m in [16, 17, 18]:
-            etr = ExtraTreesRegressor(n_estimators=n, criterion='mse', max_depth=m, min_samples_split=2,
-                                      min_samples_leaf=1, max_features=mf, bootstrap=False,
+for n in [1200]:
+    for mf in [345]: #'sqrt', 'log2', 100]:
+        for m in [17]:
+            etr = ExtraTreesRegressor(n_estimators=n, criterion='mse', max_depth=m, min_samples_split=5,
+                                      min_samples_leaf=5, max_features=mf, bootstrap=False,
                                       n_jobs=32, random_state=157, verbose=1)
             etr.fit(X_tra, y_train)
             y_hat = etr.predict(X_tes)
@@ -174,4 +174,17 @@ for n in [1000]:
             print ee
 
 
+a_fu = a_full[:,:-690]
+b_fu = b_full[:,:-690]
+etr = ExtraTreesRegressor(n_estimators=1200, criterion='mse', max_depth=17, min_samples_split=5,
+                          min_samples_leaf=5, max_features=mf, bootstrap=False,
+                          n_jobs=32, random_state=151, verbose=1)
+
+etr.fit(a_fu, dtrain.get_label())
+y_hat = etr.predict(b_fu)
+y_hat = np.minimum(np.maximum(y_hat, 1.0), 3.0)
+
+idx_test = pd.read_pickle(loc % 'LABELS_TEST.df')
+idx_test['relevance'] = y_hat
+idx_test.to_csv('submission_RenatPawel_combined_features_extratrees_0408_1705.csv')
 
