@@ -2,17 +2,17 @@ library(readr)
 library(xgboost)
 ######### 
 cat("Reading data\n")
-train <- read_csv('C:\\HDP\\Data\\train.csv')
+train <- read_csv('~/data/kaggle/homedepot/train.csv')
 y0<-train$relevance
 rm(train)
-train <- read_csv('C:\\HDP\\Data\\train_al_data1804.csv')
-train2 <- read_csv('C:\\HDP\\Data\\X_train54spel.csv')
+train <- read_csv('~/repos/gh/bekbolatov/kaggle/events/hd/notebooks/from_alex/al_data1804/train_al_data1804.csv')
+train2 <- read_csv('~/repos/gh/bekbolatov/kaggle/events/hd/notebooks/from_alex/al_data1804/X_train54spel.csv')
 train<-cbind(train,train2)
 rm(train2)
 ######
 set.seed(123)
-ind_v<-read.csv('C:\\HDP\\Data\\valid_ind.csv')
-ind_tr<-read.csv('C:\\HDP\\Data\\train_ind.csv')
+ind_v<-read.csv('~/repos/gh/bekbolatov/kaggle/events/hd/notebooks/from_alex/al_data1804/valid_set.csv')
+ind_tr<-read.csv('~/repos/gh/bekbolatov/kaggle/events/hd/notebooks/from_alex/al_data1804/train_set.csv')
 h<-ind_v[,2]+1
 test<-train[h,]
 y_t<-y0[h]
@@ -80,6 +80,9 @@ clf <- xgb.train(   params              = param,
 ### 7 0.7
 #[1517]  val-rmse:0.439175       train-rmse:0.320359 ezaNewrpNew 
 
+
+
+#[1260]  val-rmse:0.439719       train-rmse:0.331880
 
 
 
