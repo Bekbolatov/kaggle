@@ -56,7 +56,9 @@ known_words = set(["the", "a", "an",
     "as", "of", "in", "on", "at", "from", "to",
     "with", "through", "for", "when", "then",
     "new", "old",
-    "you", "your", "yours", "me", "i", "my", "mine", "it", "its"])
+    "you", "your", "yours", "me", "i", "my", "mine", "it", "its",
+    "white", "black", "brown", "gray", "grey", "chrome", "red", "nickel", "beige", "blue", "green", "silver", "black"
+                  ])
 
 def str_stem(s):
     if isinstance(s, str) or isinstance(s, unicode):
