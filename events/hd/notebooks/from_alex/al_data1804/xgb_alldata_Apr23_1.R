@@ -1,6 +1,6 @@
 library(readr)
 library(xgboost)
-runname <- "Apr23_1"
+runname <- "Apr23_xgb1"
 ############################################################
 set.seed(123)
 ############################################################
@@ -27,11 +27,11 @@ dtest_all <-xgb.DMatrix(data=data.matrix(test_all), missing=NA)
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
                 eval_metric = "rmse",
-                eta                 = 0.01,
-                min_child_weight    =3,    
                 max_depth           = 7, 
-                subsample           = 0.7,
-                colsample_bytree    = 1.0                
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 5    
 )
 ############################################################
 ############################################################
@@ -41,7 +41,7 @@ param <- list(  objective = "reg:linear",
 # local validation
 cat(paste(Sys.time()), "Starting local validation", "\n")
 
-NROUNDS <- 5000
+NROUNDS <- 10000
 
 set.seed(123)
 clf <- xgb.train(   params              = param, 
@@ -57,7 +57,7 @@ cat(paste(Sys.time()), "Finished local validation", "\n")
 # final model
 cat(paste(Sys.time()), "Starting generating submission", "\n")
 
-NROUNDS <- 5000
+NROUNDS <- clf.best_iteration
 
 set.seed(123)
 clf <- xgb.train(   params              = param, 
@@ -82,16 +82,15 @@ cat(paste(Sys.time()), "Finished generating submission", "\n")
 # generate for stacking
 cat(paste(Sys.time()), "Starting stacking", "\n")
 
-NROUNDS <- 30
-
 num_fold<-10
 k<-sample(c(1:num_fold),nrow(train_all),replace=TRUE)
 indxFile<-data.frame(k = k,TestIndex=c(1:nrow(train_all)))
-
 indxK <- unique(indxFile[,"k"])
+
 prt <- 0
 pr <- orig_label
 fono <- 1
+
 for (K in indxK) {
   cat(paste(Sys.time()), "Starting fold #: ", fono, "\n")
   fono <- fono + 1
@@ -124,3 +123,10 @@ write.table(results,
 cat(paste(Sys.time()), "Finished stacking", "\n")
 ############################################################
 ############################################################
+
+
+  
+
+
+
+

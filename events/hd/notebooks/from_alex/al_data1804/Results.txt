@@ -1,0 +1,147 @@
+
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 1.0,     
+                subsample           = 0.7,
+                min_child_weight    = 3    
+
+1266 [1300]  val-rmse:0.439498       train-rmse:0.330055  :   
+16 min
+###########################################################################
+
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.7,     
+                subsample           = 0.9,
+                min_child_weight    = 5    
+
+[1500]  val-rmse:0.439333       train-rmse:0.325203
+Stopping. Best iteration: 1467
+13.5 min
+
+2016-04-23 22:08:49 Starting local validation
+[1500]  val-rmse:0.439333       train-rmse:0.325203
+Stopping. Best iteration: 1467
+2016-04-23 22:22:34 Finished local validation
+###########################################################################
+on 01
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 5   
+                
+2016-04-23 22:26:41 Starting local validation
+[1640]  val-rmse:0.439243       train-rmse:0.320143
+Stopping. Best iteration: 1601
+2016-04-23 22:39:32 Finished local validation
+###########################################################################
+on 01
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 8, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 5    
+)
+
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.9,
+                min_child_weight    = 5    
+)
+
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.7,                
+                subsample           = 0.9,
+                min_child_weight    = 5    
+)
+
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 8    
+)
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 8    
+)
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 8    
+)
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 8    
+)
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 8    
+)
+
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.8,
+                min_child_weight    = 8    
+)
+
+
+###########################################################################
+###########################################################################
+
+
+
+
