@@ -24,11 +24,14 @@ runname <- "forstack_Apr24_et01"
 XGB_SEED <- 111
 ############################################################
 
-ntree <-200
-numRandomCuts <- 4
+XGB_SEED <- XGB_SEED + 26
+runname <- paste(runname, 'b', sep="")
+
+ntree <-600
+numRandomCuts <- 5
 NCOL <- 3183
-mtry <- NCOL/3
-nodesize <- 4
+mtry <- NCOL/3.5
+nodesize <- 3
 
 rmse <- function(dact, dpred) { sqrt(mean((dact - dpred)^2)) }
 cat(paste(Sys.time()), "Starting stacking", "\n")
@@ -45,7 +48,6 @@ fono <- 1
 lasttime <- Sys.time()
 for (K in indxK) {
   cat(paste(Sys.time()), "Starting fold #: ", fono, "\n")
-  fono <- fono + 1
   currentIdx <- indxFile[indxFile[,"k"] == K,"TestIndex"]
   xtrain_B <-  train_all[-currentIdx,]
   xtrain_S <-  train_all[currentIdx,]
@@ -63,6 +65,7 @@ for (K in indxK) {
   units(thistime) <- 'mins'
   lasttime <- Sys.time()
   cat('{ "elapsed":', thistime,', "fold":', fono,'},\n')
+  fono <- fono + 1
 }
 
 results <- data.frame("alldata" = pr)
