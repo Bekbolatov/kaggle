@@ -1,6 +1,8 @@
 library(readr)
 library(xgboost)
-runname <- "Apr23_xgb1"
+runname <- "forstack_Apr23_xgb02"
+XGB_SEED <- 247
+NROUNDS <- 1761
 ############################################################
 set.seed(123)
 ############################################################
@@ -29,9 +31,9 @@ param <- list(  objective = "reg:linear",
                 eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
-                colsample_bytree    = 0.6,                
-                subsample           = 0.8,
-                min_child_weight    = 5    
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 3    
 )
 ############################################################
 ############################################################
@@ -57,7 +59,7 @@ cat(paste(Sys.time()), "Finished local validation", "\n")
 # final model
 cat(paste(Sys.time()), "Starting generating submission", "\n")
 
-NROUNDS <- clf.best_iteration
+NROUNDS <- clf$bestInd
 
 set.seed(123)
 clf <- xgb.train(   params              = param, 
@@ -83,6 +85,7 @@ cat(paste(Sys.time()), "Finished generating submission", "\n")
 cat(paste(Sys.time()), "Starting stacking", "\n")
 
 num_fold<-10
+set.seed(123)
 k<-sample(c(1:num_fold),nrow(train_all),replace=TRUE)
 indxFile<-data.frame(k = k,TestIndex=c(1:nrow(train_all)))
 indxK <- unique(indxFile[,"k"])
@@ -101,7 +104,7 @@ for (K in indxK) {
   xgtrain = xgb.DMatrix(as.matrix(xtrain_B), label = orig_label[-currentIdx], missing = NA)
   xgtest = xgb.DMatrix(as.matrix(xtrain_S), missing = NA)
   
-  set.seed(123)
+  set.seed(XGB_SEED)
   x.mod.t  <- xgb.train(params=param, data=xgtrain, nrounds=NROUNDS, watchlist=list(val=dval), print.every.n=200)
   
   pr[currentIdx]<- predict(x.mod.t, xgtest)

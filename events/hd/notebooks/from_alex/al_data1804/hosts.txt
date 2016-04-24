@@ -13,3 +13,8 @@ big07: ec2-52-36-48-220.us-west-2.compute.amazonaws.com
 big08: ec2-52-35-146-114.us-west-2.compute.amazonaws.com
 big09: ec2-52-38-13-0.us-west-2.compute.amazonaws.com
 big10: ec2-52-10-108-163.us-west-2.compute.amazonaws.com
+
+
+:/home/ec2-user/moredata/al_data1804/
+
+

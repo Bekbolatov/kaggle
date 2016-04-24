@@ -1,19 +1,26 @@
-
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
                 colsample_bytree    = 1.0,     
                 subsample           = 0.7,
                 min_child_weight    = 3    
+)
 
 1266 [1300]  val-rmse:0.439498       train-rmse:0.330055  :   
 16 min
 ###########################################################################
 
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
                 colsample_bytree    = 0.7,     
                 subsample           = 0.9,
                 min_child_weight    = 5    
+)
 
 [1500]  val-rmse:0.439333       train-rmse:0.325203
 Stopping. Best iteration: 1467
@@ -24,19 +31,22 @@ Stopping. Best iteration: 1467
 Stopping. Best iteration: 1467
 2016-04-23 22:22:34 Finished local validation
 ###########################################################################
-on 01
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
                 colsample_bytree    = 0.6,                
                 subsample           = 0.8,
                 min_child_weight    = 5   
-                
+)
+
+on 01:
 2016-04-23 22:26:41 Starting local validation
-[1640]  val-rmse:0.439243       train-rmse:0.320143
+[1640]  val-rmse:0.439243       train-rmse:0.320143   Apr23_xgb1    LB:  0.44335  [oldbest]   
 Stopping. Best iteration: 1601
 2016-04-23 22:39:32 Finished local validation
 ###########################################################################
-on 01
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
                 eval_metric = "rmse",
@@ -47,7 +57,27 @@ param <- list(  objective = "reg:linear",
                 min_child_weight    = 5    
 )
 
+on 01:
+2016-04-23 22:40:27 Starting local validation
+[1100]  val-rmse:0.439610       train-rmse:0.302626
+Stopping. Best iteration: 1059
+2016-04-23 22:50:27 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.6,                
+                subsample           = 0.7,
+                min_child_weight    = 5   
+)
 
+on 04:
+2016-04-23 23:07:05 Starting local validation
+[1540]  val-rmse:0.439228       train-rmse:0.324494
+Stopping. Best iteration: 1507
+2016-04-23 23:19:08 Finished local validation
 ###########################################################################
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
@@ -59,19 +89,74 @@ param <- list(  objective = "reg:linear",
                 min_child_weight    = 5    
 )
 
-
+on 01:
+2016-04-23 22:51:13 Starting local validation
+[1420]  val-rmse:0.439297       train-rmse:0.329434
+Stopping. Best iteration: 1379
+2016-04-23 23:02:25 Finished local validation
 ###########################################################################
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
                 eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
-                colsample_bytree    = 0.7,                
+                colsample_bytree    = 0.6,                
+                subsample           = 0.85,
+                min_child_weight    = 5    
+)
+on 01:
+2016-04-23 23:03:43 Starting local validation
+[1400]  val-rmse:0.439154       train-rmse:0.328640
+Stopping. Best iteration: 1365
+2016-04-23 23:14:49 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.5,                
                 subsample           = 0.9,
                 min_child_weight    = 5    
 )
 
+on 02:
+2016-04-23 22:57:21 Starting local validation
+[1320]  val-rmse:0.439105       train-rmse:0.333506   Apr23_xgb2  LB: 0.44331  [best prev]
+Stopping. Best iteration: 1285
+2016-04-23 23:06:16 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.5,                
+                subsample           = 0.8,
+                min_child_weight    = 5    
+)
 
+on 05:
+2016-04-23 23:10:35 Starting local validation
+[1700]  val-rmse:0.439294       train-rmse:0.319391
+Stopping. Best iteration: 1658
+2016-04-23 23:21:55 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.5,                
+                subsample           = 0.9,
+                min_child_weight    = 9    
+)
+
+on 06:
+2016-04-23 23:11:33 Starting local validation
+[1780]  val-rmse:0.439120       train-rmse:0.320425
+Stopping. Best iteration: 1732
+2016-04-23 23:23:23 Finished local validation
 ###########################################################################
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
@@ -79,8 +164,8 @@ param <- list(  objective = "reg:linear",
                 max_depth           = 7, 
                 eta                 = 0.01,
                 colsample_bytree    = 0.6,                
-                subsample           = 0.8,
-                min_child_weight    = 8    
+                subsample           = 0.7,
+                min_child_weight    = 5    
 )
 
 ###########################################################################
@@ -89,11 +174,79 @@ param <- list(  objective = "reg:linear",
                 eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
-                colsample_bytree    = 0.6,                
-                subsample           = 0.8,
-                min_child_weight    = 8    
+                colsample_bytree    = 0.4,                
+                subsample           = 0.9,
+                min_child_weight    = 5    
 )
 
+On 07:
+2016-04-23 23:12:17 Starting local validation
+[1500]  val-rmse:0.439470       train-rmse:0.327978
+Stopping. Best iteration: 1468
+2016-04-23 23:20:41 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 8    
+)
+On 08:
+2016-04-23 23:13:05 Starting local validation
+[1520]  val-rmse:0.439245       train-rmse:0.329003
+Stopping. Best iteration: 1483
+2016-04-23 23:22:25 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 5    
+)
+
+On 09:
+2016-04-23 23:13:44 Starting local validation
+[1780]  val-rmse:0.439063       train-rmse:0.318219     Apr23_xgb3    LB:  0.44294   [another best]
+Stopping. Best iteration: 1734
+2016-04-23 23:24:31 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.5,                
+                subsample           = 0.9,
+                min_child_weight    = 2    
+)
+
+On 10:
+2016-04-23 23:14:44 Starting local validation
+[1340]  val-rmse:0.439412       train-rmse:0.331312
+Stopping. Best iteration: 1293
+2016-04-23 23:23:44 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.5,                
+                subsample           = 1.0,
+                min_child_weight    = 5    
+)
+
+On 01:
+2016-04-23 23:17:30 Starting local validation
+[1920]  val-rmse:0.439385       train-rmse:0.324296
+Stopping. Best iteration: 1881
+2016-04-23 23:30:09 Finished local validation
 ###########################################################################
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
@@ -101,46 +254,319 @@ param <- list(  objective = "reg:linear",
                 max_depth           = 7, 
                 eta                 = 0.01,
                 colsample_bytree    = 0.6,                
-                subsample           = 0.8,
-                min_child_weight    = 8    
+                subsample           = 0.7,
+                min_child_weight    = 5   
 )
 
+On 04:
+2016-04-23 23:22:10 Starting local validation
+[1540]  val-rmse:0.439228       train-rmse:0.324494
+Stopping. Best iteration: 1507
+2016-04-23 23:34:10 Finished local validation
 ###########################################################################
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
                 eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
-                colsample_bytree    = 0.6,                
-                subsample           = 0.8,
-                min_child_weight    = 8    
+                colsample_bytree    = 0.5,                
+                subsample           = 0.95,
+                min_child_weight    = 5    
 )
 
+On 05:
+2016-04-23 23:24:37 Starting local validation
+[1360]  val-rmse:0.439449       train-rmse:0.333274
+Stopping. Best iteration: 1314
+2016-04-23 23:33:47 Finished local validation
 ###########################################################################
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
                 eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
-                colsample_bytree    = 0.6,                
-                subsample           = 0.8,
-                min_child_weight    = 8    
+                colsample_bytree    = 0.5,                
+                subsample           = 0.95,
+                min_child_weight    = 2    
 )
 
+On 06:
+2016-04-23 23:26:52 Starting local validation
+[1620]  val-rmse:0.439370       train-rmse:0.323042
+Stopping. Best iteration: 1578
+2016-04-23 23:37:42 Finished local validation
 ###########################################################################
 param <- list(  objective = "reg:linear",   
                 booster = "gbtree",
                 eval_metric = "rmse",
                 max_depth           = 7, 
                 eta                 = 0.01,
-                colsample_bytree    = 0.6,                
-                subsample           = 0.8,
-                min_child_weight    = 8    
+                colsample_bytree    = 0.55,                
+                subsample           = 0.95,
+                min_child_weight    = 5    
 )
 
+On 07:
+2016-04-23 23:28:47 Starting local validation
+[1160]  val-rmse:0.439876       train-rmse:0.340034
+Stopping. Best iteration: 1113
+2016-04-23 23:38:26 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.55,                
+                subsample           = 0.95,
+                min_child_weight    = 2    
+)
 
+On 08:
+2016-04-23 23:29:55 Starting local validation
+[1160]  val-rmse:0.439876       train-rmse:0.340034
+Stopping. Best iteration: 1113
+2016-04-23 23:38:26 Finished local validation
 ###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.95,
+                min_child_weight    = 5    
+)
+
+On 10:
+2016-04-23 23:33:51 Starting local validation
+[1440]  val-rmse:0.439671       train-rmse:0.331154
+Stopping. Best iteration: 1407
+2016-04-23 23:42:41 Finished local validation
 ###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 5    
+)
+
+On 05:
+2016-04-23 23:35:52 Starting local validation
+[1780]  val-rmse:0.439063       train-rmse:0.318219       <<***********************
+Stopping. Best iteration: 1734
+2016-04-23 23:46:44 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.85,
+                min_child_weight    = 5    
+)
+
+On 10:
+2016-04-24 00:04:47 Starting local validation
+2016-04-24 00:05:36 Starting local validation
+[1340]  val-rmse:0.439624       train-rmse:0.332502
+Stopping. Best iteration: 1309
+2016-04-24 00:13:02 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 3    
+)
+
+On 09:
+[1800]  val-rmse:0.438989       train-rmse:0.316151
+Stopping. Best iteration: 1761
+2016-04-24 00:16:30 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 7    
+)
+
+On 08:
+2016-04-24 00:06:04 Starting local validation
+[1520]  val-rmse:0.439336       train-rmse:0.327965
+Stopping. Best iteration: 1475
+2016-04-24 00:15:20 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 2    
+)
+
+On 01:
+2016-04-24 00:21:28 Starting local validation
+[1780]  val-rmse:0.439145       train-rmse:0.316466
+Stopping. Best iteration: 1732
+2016-04-24 00:32:19 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 1  
+)
+
+On 02:
+2016-04-24 00:21:52 Starting local validation
+[1480]  val-rmse:0.439208       train-rmse:0.326398
+Stopping. Best iteration: 1446
+2016-04-24 00:30:57 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.85,
+                min_child_weight    = 2  
+)
+
+On 03:
+2016-04-24 00:29:55 Starting local validation
+[1420]  val-rmse:0.439716       train-rmse:0.328235
+Stopping. Best iteration: 1384
+2016-04-24 00:38:42 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.85,
+                min_child_weight    = 1  
+)
+
+On 04:
+2016-04-24 00:24:35 Starting local validation
+[1420]  val-rmse:0.439640       train-rmse:0.328490
+Stopping. Best iteration: 1379
+2016-04-24 00:33:18 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.95,
+                min_child_weight    = 1  
+)
+
+On 05:
+2016-04-24 00:24:37 Starting local validation
+[1480]  val-rmse:0.439802       train-rmse:0.328041
+Stopping. Best iteration: 1432
+2016-04-24 00:33:43 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.85,
+                min_child_weight    = 2  
+)
+
+On 06:
+2016-04-24 00:26:35 Starting local validation
+[1420]  val-rmse:0.439716       train-rmse:0.328235
+Stopping. Best iteration: 1384
+2016-04-24 00:35:23 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.85,
+                min_child_weight    = 2 
+)
+
+On 07:
+2016-04-24 00:26:38 Starting local validation
+[1420]  val-rmse:0.439716       train-rmse:0.328235
+Stopping. Best iteration: 1384
+2016-04-24 00:35:21 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.95,
+                min_child_weight    = 2
+)
+
+On 08:
+2016-04-24 00:26:39 Starting local validation
+[1480]  val-rmse:0.439593       train-rmse:0.328191
+Stopping. Best iteration: 1432
+2016-04-24 00:35:41 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 4
+)
+On 01:
+2016-04-24 00:51:15 Starting local validation
+[1560]  val-rmse:0.439390       train-rmse:0.324463
+Stopping. Best iteration: 1520
+2016-04-24 01:00:49 Finished local validation
+###########################################################################
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 7, 
+                eta                 = 0.01,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 6
+)
+
+On 02:
+2016-04-24 00:51:17 Starting local validation
+[1780]  val-rmse:0.439248       train-rmse:0.318364
+Stopping. Best iteration: 1741
+2016-04-24 01:02:04 Finished local validation
+
 
 
 
