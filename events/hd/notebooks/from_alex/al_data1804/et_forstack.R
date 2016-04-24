@@ -24,8 +24,8 @@ runname <- "forstack_Apr24_et01"
 XGB_SEED <- 111
 ############################################################
 
-ntree <-300
-numRandomCuts <- 3
+ntree <-200
+numRandomCuts <- 4
 NCOL <- 3183
 mtry <- NCOL/3
 nodesize <- 4

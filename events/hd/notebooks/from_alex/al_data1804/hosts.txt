@@ -113,5 +113,33 @@ XGB_SEED <- 131
 
 
 
+scp ec2-52-36-46-153.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et01_10.csv .
+scp ec2-52-36-221-118.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et02_10.csv .
+scp ec2-52-36-150-175.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et03_10.csv .
+scp ec2-52-32-181-14.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et04_10.csv .
+scp ec2-52-37-23-208.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et05_10.csv .
+scp ec2-52-36-104-210.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et06_10.csv .
+scp ec2-52-36-48-220.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et07_10.csv .
+scp ec2-52-35-146-114.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et08_10.csv .
+scp ec2-52-38-13-0.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et09_10.csv .
+scp ec2-52-10-108-163.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et10_10.csv .
+
+scp ec2-52-36-46-153.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et01_10.csv .
+scp ec2-52-36-221-118.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et02_10.csv .
+scp ec2-52-36-150-175.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et03_10.csv .
+scp ec2-52-32-181-14.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et04_10.csv .
+scp ec2-52-37-23-208.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et05_10.csv .
+scp ec2-52-36-104-210.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et06_10.csv .
+scp ec2-52-36-48-220.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et07_10.csv .
+scp ec2-52-35-146-114.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et08_10.csv .
+scp ec2-52-38-13-0.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et09_10.csv .
+scp ec2-52-10-108-163.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et10_10.csv .
+
+
+
+
+
+
+
 
 
