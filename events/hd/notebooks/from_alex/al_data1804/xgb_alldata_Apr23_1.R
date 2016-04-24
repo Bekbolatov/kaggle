@@ -81,7 +81,22 @@ write_csv(submission, submission_filename)
 cat(paste(Sys.time()), "Finished generating submission", "\n")
 ############################################################
 ############################################################
+
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 9, 
+                eta                 = 0.006,
+                colsample_bytree    = 0.45,                
+                subsample           = 0.9,
+                min_child_weight    = 5
+)
+
+NROUNDS <- 1710
 # generate for stacking
+XGB_SEED <- XGB_SEED + 26
+runname <- paste(runname, 'b', sep="")
+
 cat(paste(Sys.time()), "Starting stacking", "\n")
 
 num_fold<-10
@@ -126,6 +141,70 @@ write.table(results,
 cat(paste(Sys.time()), "Finished stacking", "\n")
 ############################################################
 ############################################################
+
+
+############################################################
+############################################################
+############################################################
+### NEXT BATCH   -  overnight
+param <- list(  objective = "reg:linear",   
+                booster = "gbtree",
+                eval_metric = "rmse",
+                max_depth           = 6, 
+                eta                 = 0.008,
+                colsample_bytree    = 0.4,                
+                subsample           = 0.9,
+                min_child_weight    = 5    
+)
+NROUNDS <- 2612
+
+XGB_SEED <- XGB_SEED + 26
+runname <- paste(runname, 'b', sep="")
+
+cat(paste(Sys.time()), "Starting stacking", "\n")
+
+num_fold<-10
+set.seed(123)
+k<-sample(c(1:num_fold),nrow(train_all),replace=TRUE)
+indxFile<-data.frame(k = k,TestIndex=c(1:nrow(train_all)))
+indxK <- unique(indxFile[,"k"])
+
+prt <- 0
+pr <- orig_label
+fono <- 1
+
+for (K in indxK) {
+  cat(paste(Sys.time()), "Starting fold #: ", fono, "\n")
+  fono <- fono + 1
+  currentIdx <- indxFile[indxFile[,"k"] == K,"TestIndex"]
+  xtrain_B <-  train_all[-currentIdx,]
+  xtrain_S <-  train_all[currentIdx,]
+  #modeling
+  xgtrain = xgb.DMatrix(as.matrix(xtrain_B), label = orig_label[-currentIdx], missing = NA)
+  xgtest = xgb.DMatrix(as.matrix(xtrain_S), missing = NA)
+  
+  set.seed(XGB_SEED)
+  x.mod.t  <- xgb.train(params=param, data=xgtrain, nrounds=NROUNDS, watchlist=list(val=dval), print.every.n=200)
+  
+  pr[currentIdx]<- predict(x.mod.t, xgtest)
+  prt<-prt+ predict(x.mod.t, dtest_all)
+}
+
+results <- data.frame("alldata" = pr)
+colnames(results) <- list(paste('alldata_', runname, sep=""))
+write.table(results, 
+            file = paste('~/moredata/al_data1804/train_', runname, '_',num_fold,'.csv',sep=""), 
+            row.names = F, col.names = T, sep = ",", quote = F)
+
+results <- data.frame("alldata" = prt/num_fold)
+colnames(results) <- list(paste('alldata_', runname, sep=""))
+write.table(results, 
+            file = paste('~/moredata/al_data1804/test_', runname, '_', num_fold, '.csv', sep="") , 
+            row.names = F, col.names = T, sep = ",", quote = F)
+
+cat(paste(Sys.time()), "Finished stacking", "\n")
+
+
 
 
   

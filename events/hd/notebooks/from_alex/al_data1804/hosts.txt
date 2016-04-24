@@ -18,3 +18,6 @@ big10: ec2-52-10-108-163.us-west-2.compute.amazonaws.com
 :/home/ec2-user/moredata/al_data1804/
 
 
+
+
+ec2-52-36-46-153.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/
