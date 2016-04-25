@@ -23,8 +23,20 @@ big10: ec2-52-10-108-163.us-west-2.compute.amazonaws.com
 
 ec2-52-36-46-153.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/
 
+orig_label<-read_csv('~/data/kaggle/homedepot/train.csv')$relevance
 
 
+htr<-read.csv('~/repos/gh/bekbolatov/kaggle/events/hd/notebooks/from_alex/al_data1804/train_rows.csv')[,1]+1
+h<-read.csv('~/repos/gh/bekbolatov/kaggle/events/hd/notebooks/from_alex/al_data1804/val_rows.csv')[,1]+1
+
+test<-train_all[h,]
+y_t<-orig_label[h]
+
+train2 <- train[ , !(colnames(train) %in% c('ratio_title'))]
+test2 <- test[ , !(colnames(test) %in% c('ratio_title'))]
+dtrain<-xgb.DMatrix(data=data.matrix(train),label=y,missing=NA)
+dval<-xgb.DMatrix(data=data.matrix(test),label=y_t,missing=NA)
+importance2 <- xgb.importance(colnames(train2), model = clf)
 
 
 
@@ -139,7 +151,39 @@ scp ec2-52-10-108-163.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al
 
 
 
+scp ec2-52-36-46-153.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et01b_10.csv .
+scp ec2-52-36-221-118.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et02b_10.csv .
+scp ec2-52-36-150-175.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et03b_10.csv .
+scp ec2-52-32-181-14.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et04b_10.csv .
+scp ec2-52-37-23-208.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et05b_10.csv .
+scp ec2-52-36-104-210.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et06b_10.csv .
+scp ec2-52-36-48-220.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et07b_10.csv .
+scp ec2-52-35-146-114.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et08b_10.csv .
+scp ec2-52-38-13-0.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et09b_10.csv .
+scp ec2-52-10-108-163.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/test_forstack_Apr24_et10b_10.csv .
 
+scp ec2-52-36-46-153.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et01b_10.csv .
+scp ec2-52-36-221-118.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et02b_10.csv .
+scp ec2-52-36-150-175.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et03b_10.csv .
+scp ec2-52-32-181-14.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et04b_10.csv .
+scp ec2-52-37-23-208.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et05b_10.csv .
+scp ec2-52-36-104-210.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et06b_10.csv .
+scp ec2-52-36-48-220.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et07b_10.csv .
+scp ec2-52-35-146-114.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et08b_10.csv .
+scp ec2-52-38-13-0.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et09b_10.csv .
+scp ec2-52-10-108-163.us-west-2.compute.amazonaws.com:/home/ec2-user/moredata/al_data1804/train_forstack_Apr24_et10b_10.csv .
+
+
+
+
+
+            Feature       Gain       Cover   Frequence
+1:      ratio_title 0.13939580 0.007901484 0.001164649
+2:        pawet_116 0.03347590 0.006367086 0.001604778
+3: query_title_ica2 0.02432170 0.004478919 0.001638634
+4:        pawet_227 0.01442154 0.013991002 0.002925165
+5:        pawet_113 0.01296211 0.005193785 0.001421955
+6:        pawet_103 0.01094269 0.007214688 0.001990737
 
 
 

@@ -1,6 +1,6 @@
 library(readr)
 library(xgboost)
-runname <- "forstack_Apr23_xgb02"
+runname <- "forstack_Apr24_xgb01"
 XGB_SEED <- 247
 NROUNDS <- 1761
 ############################################################
@@ -209,7 +209,7 @@ cat(paste(Sys.time()), "Finished stacking", "\n")
 
 
 
-  
+
 
 
 
